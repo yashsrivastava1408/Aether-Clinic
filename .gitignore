@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+
+# ML artifacts (optional – comment if you want to track models)
+# ml/models/*.pkl
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+
+# Vite / build
+dist/

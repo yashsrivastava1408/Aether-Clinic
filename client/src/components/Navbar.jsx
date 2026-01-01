@@ -40,6 +40,9 @@ export default function Navbar({ navigate, currentPage }) {
           >
             Report Analyzer
           </button>
+          <button onClick={() => navigate("heart")}>
+            Heart Risk
+          </button>
 
           <button
             onClick={() => navigate("about")}

@@ -5,6 +5,7 @@ import Consultation from "./pages/Consultation";
 import About from "./pages/About";
 import Chatbot from "./pages/Chatbot";
 import ReportAnalyzer from "./pages/ReportAnalyzer";
+import HeartRisk from "./pages/HeartRisk";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState("dashboard");
@@ -41,6 +42,8 @@ export default function App() {
     // ✅ ONLY ADDITION — Report Analyzer
     if (currentPage === "report")
       return <ReportAnalyzer />;
+    if (currentPage === "heart")
+      return <HeartRisk />;
   };
 
   return (

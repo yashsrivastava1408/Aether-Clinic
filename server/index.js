@@ -2,11 +2,9 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 
-// existing routes
 import chatRoutes from "./routes/chat.js";
-
-// report analyzer route (new, added only)
 import reportRoutes from "./routes/report.js";
+import mlRoutes from "./routes/mlRoutes.js";
 
 dotenv.config();
 
@@ -21,11 +19,12 @@ app.get("/", (req, res) => {
   res.send("✅ AI Doctor Backend is running!");
 });
 
-// existing API (UNCHANGED)
+// existing APIs
 app.use("/api/chat", chatRoutes);
-
-// new API (ADDED ONLY)
 app.use("/api/report", reportRoutes);
+
+// ML APIs (NEW)
+app.use("/api/ml", mlRoutes);
 
 // server start
 const PORT = process.env.PORT || 5050;
