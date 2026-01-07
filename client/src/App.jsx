@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
+import SplashScreen from "./components/SplashScreen";
 import Dashboard from "./pages/Dashboard";
 import Consultation from "./pages/Consultation";
 import About from "./pages/About";
@@ -10,6 +11,15 @@ import HeartRisk from "./pages/HeartRisk";
 export default function App() {
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [showSplash, setShowSplash] = useState(true);
+
+  // Hide splash screen after 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSelectDoctor = (doctor) => {
     setSelectedDoctor(doctor);
@@ -47,7 +57,10 @@ export default function App() {
   };
 
   return (
-    <div className="bg-slate-50 min-h-screen text-gray-800 font-sans">
+    <div className="bg-slate-950 min-h-screen text-gray-100 font-sans">
+      {/* Splash Screen */}
+      {showSplash && <SplashScreen />}
+
       <Navbar
         navigate={setCurrentPage}
         currentPage={currentPage}
