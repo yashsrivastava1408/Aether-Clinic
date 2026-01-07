@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: aether-ml-job
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      containers:
+        - name: ml-risk-engine
+          image: aether-ml-risk
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5001
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+      restartPolicy: Never

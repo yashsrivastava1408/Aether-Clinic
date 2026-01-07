@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aether-ml
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aether-ml
+  template:
+    metadata:
+      labels:
+        app: aether-ml
+    spec:
+      containers:
+        - name: ml-risk-engine
+          image: aether-ml-risk
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5001
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+              memory: "512Mi"

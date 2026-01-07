@@ -73,4 +73,8 @@ def predict_diabetes():
 # Run Server
 # =========================
 if __name__ == "__main__":
-    app.run(port=5001, debug=True)
+    app.run(
+        host="0.0.0.0",   # required for Docker/K8s
+        port=5001,
+        debug=False       # ❌ MUST be false in K8s
+    )

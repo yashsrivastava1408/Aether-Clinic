@@ -6,6 +6,9 @@ import chatRoutes from "./routes/chat.js";
 import reportRoutes from "./routes/report.js";
 import mlRoutes from "./routes/mlRoutes.js";
 
+
+
+
 dotenv.config();
 
 const app = express();
@@ -25,6 +28,7 @@ app.use("/api/report", reportRoutes);
 
 // ML APIs (NEW)
 app.use("/api/ml", mlRoutes);
+
 
 // server start
 const PORT = process.env.PORT || 5050;
