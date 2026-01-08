@@ -208,6 +208,8 @@ const NanoBots = () => {
 
 import TiltCard from "../components/TiltCard";
 import NeuralMap from "../components/NeuralMap";
+import NeuralBackground from "../components/NeuralBackground";
+import BiometricPulse from "../components/BiometricPulse";
 
 // 🧬 Glitch Morph Component (Unified)
 const GlitchText = ({ initialText, hoverText, isHovered, className = "", redShift = false, blueShift = false }) => {
@@ -490,7 +492,7 @@ export default function Dashboard({ navigate }) {
   }, []);
 
   return (
-    <div className="overflow-hidden bg-[#030303] pb-8">
+    <div className="overflow-hidden bg-[#030303] pb-8 glitch-reveal">
       <SystemFooter />
       <HolographicHUD />
       <NanoBots />
@@ -532,8 +534,8 @@ export default function Dashboard({ navigate }) {
           <div className="absolute bottom-1/3 right-1/4 w-[400px] h-[400px] rounded-full blur-[80px] bg-gray-800/20" />
         </div>
 
-        {/* Particles */}
-        <Particles />
+        {/* Particles replaced by NeuralBackground */}
+        <NeuralBackground />
 
         {/* Subtle ring decoration */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none">
@@ -701,7 +703,7 @@ export default function Dashboard({ navigate }) {
 
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-[200px]">
             {/* Card 1: Main AI Engine (Large 2x2) */}
-            <TiltCard className="md:col-span-2 md:row-span-2 relative group rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a0a] reveal">
+            <TiltCard className="md:col-span-2 md:row-span-2 relative group rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a0a] reveal scan-overlay">
               <div className="absolute inset-0 bg-emerald-900/10 group-hover:bg-emerald-900/20 transition-colors" />
               <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-screen grayscale group-hover:grayscale-0 transition-all duration-700">
                 <source src="/assets/section1.mp4" type="video/mp4" />
@@ -716,8 +718,11 @@ export default function Dashboard({ navigate }) {
             </TiltCard>
 
             {/* Card 2: Real-time Analytics (Tall 1x2) */}
-            <TiltCard className="md:col-span-1 md:row-span-2 relative group rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a0a] p-6 flex flex-col reveal delay-100">
+            <TiltCard className="md:col-span-1 md:row-span-2 relative group rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a0a] p-6 flex flex-col reveal delay-100 scan-overlay">
               <h3 className="text-lg font-semibold text-white mb-4">Live Vitals</h3>
+              <div className="mb-4">
+                <BiometricPulse color="#10b981" speed="1.5s" />
+              </div>
               <div className="flex-1 space-y-3 relative overflow-hidden">
                 {/* Fake scrolling data */}
                 <div className="absolute inset-0 flex flex-col gap-3 animate-scroll-up opacity-50">

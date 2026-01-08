@@ -1,143 +1,89 @@
+# Aether Clinic 🛰️
 
-# Aether Clinic
+**Aether Clinic** is a next-generation, AI-powered healthcare intelligence system designed to provide accessible, high-tech, and private medical guidance. It combines advanced Machine Learning with a futuristic, holographic user experience.
 
-An AI-powered healthcare intelligence system for accessible, affordable, and private medical guidance
+---
 
+## 🌌 Project Overview
 
-#  Project Overview
+Aether Clinic bridges the gap between individuals and reliable medical guidance. In regions with limited healthcare access, language barriers, or high costs, Aether Clinic provides instant, trustworthy, and easy-to-understand medical insights.
 
-Aether Clinic is an AI-driven healthcare intelligence platform designed to bridge the gap between people and reliable medical guidance. In many regions, access to healthcare is limited due to language barriers, high consultation costs, long waiting times, and a shortage of medical professionals. Aether Clinic addresses these challenges by providing instant, trustworthy, and easy-to-understand medical insights using artificial intelligence.
+It acts as a **digital immune system**, helping users understand symptoms, identify risks, and interpret medical reports using state-of-the-art AI.
 
-Rather than replacing doctors, Aether Clinic acts as a first-level medical assistant, helping users understand symptoms, identify possible conditions, and decide appropriate next steps such as home care, monitoring, or seeking professional medical attention.
+---
 
+## ⚡ Key Features
 
-# Problem Statement
+- **Holographic Dashboard**: A high-tech HUD with mouse-tracking "Flashlight" reveal and Nano-bot swarm interactions.
+- **3D Specialist Carousel**: Navigate medical specialists in a futuristic 3D carousel.
+- **AI Chatbot 2.0 ("The Session")**: A holographic command center for medical consultation powered by Llama 3.2.
+- **Vision Report Scanner**: A "Holographic Laser Scanner" that uses **Llama 3.2 Vision** and OCR to analyze medical reports (blood tests, etc.) from images.
+- **Cinematic About Page**: A "Dossier Access" experience with cinematic motion and HUD overlays.
+- **Disease Risk Assessment**: ML models for specific health risk predictions (Heart, Diabetes).
 
-Millions of people delay or avoid medical consultation due to:
-    •   High consultation costs
-    •   Lack of nearby doctors, especially in rural areas
-    •   Language and communication barriers
-    •   Fear or uncertainty about symptoms
+---
 
-This delay often leads to worsening health conditions that could have been managed earlier with timely guidance.
+## 🛠️ Technology Stack
 
+### Application Layer
+- **Frontend**: React (Vite), Tailwind CSS, Framer Motion, Axios.
+- **Backend**: Node.js, Express.
+- **AI/LLM**: **Ollama** (Llama 3.2 & Llama 3.2 Vision).
+- **OCR**: Tesseract.js.
+- **Styling**: Vanilla CSS + Tailwind for a "Professional but Crazy" science-fiction aesthetic.
 
-# Our Solution
+### DevOps & Infrastructure
+- **Containerization**: Docker (Multi-service setup with Docker Compose).
+- **Orchestration**: Kubernetes (Workload Jobs for batch ML inference).
+- **Environment**: Local LLM execution for absolute data privacy.
 
-Aether Clinic provides an AI-powered medical guidance system that:
-    •   Interprets user-described symptoms in simple language
-    •   Generates medically aligned insights using AI models
-    •   Suggests safe and responsible next steps
-    •   Educates users with verified healthcare information
-    •   Maintains user privacy and data confidentiality
+---
 
-The system is designed to be assistive, not diagnostic, and encourages professional medical consultation whenever required.
+## 🚀 Getting Started
 
- 
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18+)
+- [Docker](https://www.docker.com/) & Docker Compose
+- [Ollama](https://ollama.com/) (Running locally or in container)
 
-# Key Features
-    •    AI-Based Symptom Understanding
-Interprets user inputs and maps them to possible medical insights.
-    •    Multilingual Support
-Enables users to interact in their preferred language for better accessibility.
-    •    Privacy-First Architecture
-No unnecessary data storage; user confidentiality is prioritized.
-    •    Health Awareness & Education
-Provides verified medical knowledge and preventive care information.
-    •    Scalable Cloud Backend
-Designed for secure and scalable execution.
+### Quick Start (Local)
 
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yashsrivastava1408/Aether-Clinic.git
+   cd ai-doctor-final
+   ```
 
-# Technology Stack (Application Layer)
-    •   Backend: Zoho Catalyst (Serverless Functions)
-    •   AI/ML: Large Language Models (LLMs via APIs / Ollama)
-    •   Frontend: Web-based Interface (React)
-    •   Database: Catalyst Data Store
-    •   Security: Role-based access & authentication
+2. **Run with Docker Compose**
+   ```bash
+   docker-compose up --build
+   ```
 
+3. **Install AI Models** (If not already present in Ollama container)
+   ```bash
+   docker exec -it ai-doctor-final-ollama-1 ollama pull llama3.2
+   docker exec -it ai-doctor-final-ollama-1 ollama pull llama3.2-vision
+   ```
 
-## Machine Learning & Intelligence Layer
+4. **Access the App**
+   - Frontend: `http://localhost:5173`
+   - Backend API: `http://localhost:5050`
 
-Aether Clinic includes a dedicated ML-based health risk assessment engine:
-    •   Disease-specific ML models:
-    •   Diabetes Risk Model
-    •   Heart Disease Risk Model
-    •   Ensemble risk scoring with confidence estimation
-    •   Explainable AI (feature contribution insights)
-    •   Risk visualization using charts
+---
 
-The system provides risk awareness, not medical diagnosis.
+## 🧪 Documentation
 
+Detailed documentation for each layer can be found here:
+- [Client (Frontend) Documentation](./client/README.md)
+- [Server (Backend) Documentation](./server/README.md)
 
-## Containerization (Docker)
+---
 
-The ML inference system is fully containerized using Docker to ensure:
-    •   Reproducible execution
-    •   Environment isolation
-    •   Cloud-native portability
+## ⚖️ Disclaimer
 
-Docker Image:
-```
-aether-ml-risk
+**Aether Clinic does not provide medical diagnoses or replace licensed healthcare professionals.** 
+It is a technology demonstration project intended for educational and health-awareness purposes only. Always consult a doctor for medical concerns.
 
-Build Image
+---
 
-docker build -t aether-ml-risk .
-
-Run Locally
-
-docker run --rm aether-ml-risk
-```
-
-
-## Kubernetes Deployment (DevOps Layer)
-
-The containerized ML workload is deployed on Kubernetes following production-correct workload design.
-
-Kubernetes Job (Batch ML Inference)
-
-Since the ML engine performs run-to-completion inference, it is deployed as a Kubernetes Job, not a long-running service.
-
-Why Job instead of Deployment?
-    •   ML inference is batch-oriented
-    •   Job ensures single execution
-    •   Clean lifecycle and logging
-    •   No unnecessary restarts
-
-
-## Run ML Job
-```
-kubectl apply -f k8s/ml-job.yaml
-kubectl get jobs
-kubectl get pods
-kubectl logs aether-ml-job-xxxxx
-```
-
-
-## Observability & Logs
-
-    ML execution logs captured via kubectl logs
-    Risk outputs available for auditing and monitoring
-    Resource limits applied to ensure cluster safety
-
-
-## Impact
-
-    •   Reduces unnecessary hospital visits
-    •   Encourages early health awareness
-    •   Improves healthcare accessibility
-    •   Supports underserved and remote communities
-
-
-## Vision
-
-Aether Clinic aims to become a responsible AI healthcare companion that empowers individuals with knowledge, supports healthcare systems, and improves health outcomes through early intervention and awareness.
-
-
-## Disclaimer
-
-Aether Clinic does not provide medical diagnoses or replace licensed healthcare professionals.
-It is intended for educational and guidance purposes only.
-
-
-
+Developed with 💚 by **Yash Srivastava**

@@ -1319,6 +1319,144 @@ body {
     }
 }
 
-.animate-noise {
-    animation: noise-grain 0.2s steps(4) infinite;
+
+/* Voice Pulse Animation */
+@keyframes voice-pulse {
+
+    0%,
+    100% {
+        height: 20%;
+        opacity: 0.5;
+    }
+
+    50% {
+        height: 100%;
+        opacity: 1;
+    }
+}
+
+.animate-voice-pulse {
+    animation: voice-pulse ease-in-out infinite;
+}
+
+/* Holographic Beam Effect */
+.holographic-beam {
+    position: relative;
+    overflow: hidden;
+}
+
+.holographic-beam::after {
+    content: "";
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: linear-gradient(to bottom,
+            transparent,
+            rgba(34, 211, 238, 0.2),
+            rgba(34, 211, 238, 0.5),
+            rgba(34, 211, 238, 0.2),
+            transparent);
+    filter: blur(8px);
+    animation: scan-beam 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes scan-beam {
+    0% {
+        top: -100%;
+    }
+
+    100% {
+        top: 200%;
+    }
+}
+
+/* Neural Network Pulse Border */
+.neural-border {
+    position: relative;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.neural-border::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(90deg, #3b82f6, #06b6d4, #8b5cf6, #3b82f6);
+    background-size: 400% 400%;
+    z-index: -1;
+    filter: blur(10px);
+    opacity: 0;
+    transition: opacity 0.5s;
+    border-radius: inherit;
+    animation: gradientShift 4s linear infinite;
+}
+
+.neural-border:hover::before {
+    opacity: 0.6;
+}
+
+/* 🔦 Laser Scan Overlay */
+.scan-overlay {
+    position: relative;
+    overflow: hidden;
+}
+
+.scan-overlay::after {
+    content: "";
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom,
+            transparent,
+            rgba(16, 185, 129, 0.05) 40%,
+            rgba(16, 185, 129, 0.4) 50%,
+            rgba(16, 185, 129, 0.05) 60%,
+            transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.scan-overlay:hover::after {
+    opacity: 1;
+    animation: scanner-move 2s linear infinite;
+}
+
+@keyframes scanner-move {
+    0% {
+        top: -100%;
+    }
+
+    100% {
+        top: 100%;
+    }
+}
+
+/* 💫 Glitch Transition Reveal */
+.glitch-reveal {
+    animation: glitch-init 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes glitch-init {
+    0% {
+        transform: scale(1.1);
+        filter: brightness(2) contrast(2) hue-rotate(90deg);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(0.98) skewX(5deg);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(1) skewX(0);
+        filter: brightness(1) contrast(1) hue-rotate(0deg);
+        opacity: 1;
+    }
 }

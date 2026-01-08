@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import TiltCard from "../components/TiltCard";
+import VoiceVisualizer from "../components/VoiceVisualizer";
 
 export default function Chatbot({ doctor, onBack }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState(null);
   const chatEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Fake "System Init" state
   const [isInitializing, setIsInitializing] = useState(true);
@@ -31,33 +35,53 @@ export default function Chatbot({ doctor, onBack }) {
         {
           sender: "ai",
           text: `Neural Link Active. I am the ${doctor.role || "Specialist"} Interface.
-State your symptoms for analysis.`,
+State your symptoms or upload a photo for analysis.`,
         },
       ]);
     }
   }, [doctor]);
 
-  const sendMessage = async () => {
-    if (!input.trim()) return;
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      setImagePreview(URL.createObjectURL(file));
+      setError(null);
+    }
+  };
 
-    const userMsg = { sender: "user", text: input };
+  const removeImage = () => {
+    setImage(null);
+    setImagePreview(null);
+  };
+
+  const sendMessage = async () => {
+    if (!input.trim() && !image) return;
+
+    const userMsg = {
+      sender: "user",
+      text: input,
+      image: imagePreview
+    };
+
     setMessages((prev) => [...prev, userMsg]);
+
+    const formData = new FormData();
+    formData.append("message", input);
+    formData.append("specialization", doctor?.name || "General");
+    if (image) {
+      formData.append("image", image);
+    }
+
     setInput("");
+    removeImage();
     setIsTyping(true);
     setError(null);
 
     try {
-      /*
-      // MOCK MODE DISABLED - Connecting to Neural Core
-      setTimeout(() => {
-        // ... (Mock code preserved here if needed for fallback, but commented)
-      }, 2000);
-      */
-
       // REAL API CALL
-      const res = await axios.post("http://localhost:5050/api/chat", {
-        message: input,
-        specialization: doctor?.name || "General",
+      const res = await axios.post("http://localhost:5050/api/chat", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       if (res.data.reply) {
@@ -114,14 +138,7 @@ State your symptoms for analysis.`,
 
         {/* Visualizer (Mini) */}
         <div className="hidden md:flex items-center gap-1 h-8">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="w-1 bg-emerald-500/50 rounded-full animate-pulse"
-              style={{
-                height: isTyping ? `${Math.random() * 100}%` : '20%',
-                animationDuration: `${0.5 + i * 0.1}s`
-              }}
-            />
-          ))}
+          {isTyping && <VoiceVisualizer />}
         </div>
       </div>
 
@@ -159,6 +176,9 @@ State your symptoms for analysis.`,
                 ? "bg-blue-600/20 border-blue-500/30 text-blue-100 rounded-br-none"
                 : "bg-emerald-500/10 border-emerald-500/20 text-emerald-100 rounded-bl-none"
               }`}>
+              {msg.image && (
+                <img src={msg.image} alt="Uploaded" className="max-w-full h-auto rounded-lg mb-2 border border-white/10" />
+              )}
               {msg.text}
             </div>
           </div>
@@ -174,8 +194,42 @@ State your symptoms for analysis.`,
 
       {/* CLI Input Area */}
       <div className="p-4 bg-[#0a0a0a]/90 border-t border-white/5 relative z-20">
+
+        {/* Image Preview */}
+        {imagePreview && (
+          <div className="mb-4 relative inline-block">
+            <img src={imagePreview} alt="Preview" className="h-20 w-20 object-cover rounded-lg border border-emerald-500/50" />
+            <button
+              onClick={removeImage}
+              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] hover:bg-red-600"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         <div className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 ${isTyping ? 'border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-white/10'
           } bg-black/50`}>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageChange}
+            accept="image/*"
+            className="hidden"
+          />
+
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="text-gray-400 hover:text-emerald-500 transition-colors"
+            title="Upload medical image"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+
           <span className="text-emerald-500 font-mono text-lg">{'>'}</span>
           <input
             value={input}
@@ -188,7 +242,7 @@ State your symptoms for analysis.`,
           />
           <button
             onClick={sendMessage}
-            disabled={isTyping || !input.trim()}
+            disabled={isTyping || (!input.trim() && !image)}
             className="text-xs font-mono text-emerald-500 hover:text-white disabled:text-gray-600 uppercase tracking-wider transition-colors"
           >
             [ EXECUTE ]

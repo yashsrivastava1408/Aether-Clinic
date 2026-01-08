@@ -1,12 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
+import ScanningHUD from "../components/ScanningHUD";
+import BiometricPulse from "../components/BiometricPulse";
+import NeuralSyncSequence from "../components/NeuralSyncSequence";
 
 export default function ReportAnalyzer() {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [error, setError] = useState("");
+  const [displayedResult, setDisplayedResult] = useState(null);
+
+  // Initial Page Loading
+  useEffect(() => {
+    // NeuralSyncSequence handles the transition internally via its progress
+    // but we can also use a fallback timeout if needed.
+  }, []);
+
+  // Result Reconstruction Effect
+  useEffect(() => {
+    if (result && !displayedResult) {
+      let timer = setTimeout(() => {
+        setDisplayedResult(result);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+    if (!result) setDisplayedResult(null);
+  }, [result]);
 
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
@@ -44,6 +66,10 @@ export default function ReportAnalyzer() {
 
   return (
     <div className="min-h-screen pt-20 pb-12 px-6 bg-[#0a0a0a] text-white overflow-hidden relative">
+      {/* Initial Splash Overhaul */}
+      {pageLoading && (
+        <NeuralSyncSequence onComplete={() => setPageLoading(false)} />
+      )}
 
       {/* Background Ambience */}
       <div className="absolute inset-0 pointer-events-none">
@@ -77,32 +103,28 @@ export default function ReportAnalyzer() {
             <div className="relative h-[500px] bg-black/50 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden flex flex-col">
 
               {/* Scanner Window */}
-              <div className="flex-1 relative flex items-center justify-center border-b border-white/5 p-6">
+              <div className={`flex-1 relative border-b border-white/5 p-6`}>
+                <ScanningHUD active={loading}>
+                  {preview ? (
+                    <div className="relative w-full h-full rounded-lg overflow-hidden border border-emerald-500/30">
+                      <img src={preview} alt="Scan Target" className="w-full h-full object-contain opacity-80" />
 
-                {preview ? (
-                  <div className="relative w-full h-full rounded-lg overflow-hidden border border-emerald-500/30">
-                    <img src={preview} alt="Scan Target" className="w-full h-full object-contain opacity-80" />
-
-                    {/* Scanning Laser Animation */}
-                    {loading && (
-                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-500/20 to-transparent w-full h-[20%] animate-scan pointer-events-none border-b border-emerald-400/50 shadow-[0_0_20px_rgba(16,185,129,0.5)]" />
-                    )}
-
-                    {/* Grid Overlay */}
-                    <div className="absolute inset-0 bg-[url('/assets/grid.svg')] opacity-20 pointer-events-none" />
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all group/upload">
-                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover/upload:scale-110 transition-transform">
-                      <svg className="w-8 h-8 text-gray-400 group-hover/upload:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                      </svg>
+                      {/* Grid Overlay */}
+                      <div className="absolute inset-0 bg-[url('/assets/grid.svg')] opacity-20 pointer-events-none" />
                     </div>
-                    <span className="text-gray-400 font-medium group-hover/upload:text-white">Drop Report File</span>
-                    <span className="text-xs text-gray-600 mt-2">Supports JPG, PNG (Max 5MB)</span>
-                    <input type="file" className="hidden" onChange={handleFileChange} />
-                  </label>
-                )}
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all group/upload">
+                      <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover/upload:scale-110 transition-transform">
+                        <svg className="w-8 h-8 text-gray-400 group-hover/upload:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                      </div>
+                      <span className="text-gray-400 font-medium group-hover/upload:text-white">Drop Report File</span>
+                      <span className="text-xs text-gray-600 mt-2">Supports JPG, PNG (Max 5MB)</span>
+                      <input type="file" className="hidden" onChange={handleFileChange} />
+                    </label>
+                  )}
+                </ScanningHUD>
               </div>
 
               {/* Controls */}
@@ -136,7 +158,25 @@ export default function ReportAnalyzer() {
           </div>
 
           {/* Right: Analysis Results */}
-          <div className="space-y-4 h-[500px] overflow-y-auto pr-2 scrollbar-hide">
+          <div className="space-y-4 h-[500px] overflow-y-auto pr-2 scrollbar-hide relative">
+
+            {/* DNA Helix Background (CSS-only replacement for missing SVG) */}
+            {loading && (
+              <div className="absolute inset-0 z-0 pointer-events-none opacity-20 overflow-hidden flex flex-col items-center">
+                <div className="flex gap-4 animate-[marquee_20s_linear_infinite] opacity-50">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <div key={i} className="flex flex-col gap-10">
+                      {Array.from({ length: 20 }).map((_, j) => (
+                        <div key={j} className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981] animate-pulse" />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-20 scale-150">
+                  <BiometricPulse color="#10b981" speed="1s" />
+                </div>
+              </div>
+            )}
 
             {!result && !error && (
               <div className="h-full flex flex-col items-center justify-center text-center p-8 border border-dashed border-white/10 rounded-2xl text-gray-600">
@@ -154,8 +194,8 @@ export default function ReportAnalyzer() {
               </div>
             )}
 
-            {result && (
-              <div className="space-y-6 animate-fade-in-up">
+            {displayedResult && (
+              <div className="space-y-6 animate-fade-in-up relative z-10 glitch-reveal">
 
                 {/* Summary Card */}
                 <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">

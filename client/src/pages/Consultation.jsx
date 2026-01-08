@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import TiltCard from "../components/TiltCard";
+import VoiceVisualizer from "../components/VoiceVisualizer";
+import NeuralSyncSequence from "../components/NeuralSyncSequence";
 
 // --- Assets / Icons ---
 // Reuse same icons as before
@@ -115,18 +117,10 @@ export default function Consultation({ onSelectDoctor }) {
       className="h-screen bg-[#030303] overflow-hidden relative flex flex-col items-center justify-center perspective-1000"
       style={{ perspective: "1500px" }}
     >
-      {/* Module Splash Screen */}
-      <div className={`absolute inset-0 z-[100] bg-black flex flex-col items-center justify-center transition-opacity duration-700 ${loading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div className="font-mono text-emerald-500 text-sm tracking-widest mb-4">
-          {loading ? '> ESTABLISHING NEURAL LINK...' : '> ACCESS GRANTED'}
-        </div>
-        <div className="w-48 h-1 bg-gray-900 rounded-full overflow-hidden">
-          <div className="h-full bg-emerald-500 animate-[loading_2s_ease-in-out_forwards]" style={{ width: '100%' }} />
-        </div>
-        {/* Hexagon Pulse */}
-        <div className="absolute mt-32 w-24 h-24 border border-emerald-500/20 animate-spin-slow" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }} />
-        <div className="absolute mt-32 w-16 h-16 border border-emerald-500/40 animate-ping" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)', animationDuration: '2s' }} />
-      </div>
+      {/* Module Splash Screen Overhaul */}
+      {loading && (
+        <NeuralSyncSequence onComplete={() => setLoading(false)} />
+      )}
 
       {/* Background Grid */}
       <div className="absolute inset-0 opacity-[0.05] pointer-events-none"
