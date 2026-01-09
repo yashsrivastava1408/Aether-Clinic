@@ -280,14 +280,14 @@ const SynapseSection = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [demoStep, setDemoStep] = useState(0);
 
-  const demoScript = [
+  const demoScript = React.useMemo(() => [
     { sender: 'user', text: 'I have a sharp pain in my left shoulder and vivid dreams.', delay: 1000 },
     { sender: 'bot', text: 'Analyzing symptoms... Correlating with recent vital scans.', delay: 2000, typing: true },
     { sender: 'bot', text: 'Potential indication of stress-induced varying arrhythmia. Advise immediate EKG.', delay: 1000 },
     { sender: 'user', text: 'Can I book an appointment?', delay: 1500 },
     { sender: 'bot', text: 'Affirmative. Dr. Sarah Chen is available at 14:00. Scheduling now...', delay: 1500, typing: true },
     { sender: 'system', text: 'APPOINTMENT_CONFIRMED [ID: #9X29]', delay: 500 }
-  ];
+  ], []);
 
   useEffect(() => {
     let timeout;
@@ -315,7 +315,7 @@ const SynapseSection = () => {
       }, 5000);
     }
     return () => clearTimeout(timeout);
-  }, [demoStep]);
+  }, [demoStep, demoScript]);
 
   const addMessage = (step) => {
     setMessages(prev => [...prev, { id: Date.now(), sender: step.sender, text: step.text }]);

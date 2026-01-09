@@ -28,7 +28,7 @@ export default function ReportAnalyzer() {
       return () => clearTimeout(timer);
     }
     if (!result) setDisplayedResult(null);
-  }, [result]);
+  }, [result, displayedResult]);
 
   const handleFileChange = (e) => {
     const selected = e.target.files[0];

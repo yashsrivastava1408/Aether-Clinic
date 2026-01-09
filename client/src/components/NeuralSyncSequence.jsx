@@ -5,16 +5,16 @@ const NeuralSyncSequence = ({ onComplete }) => {
     const [statusLogs, setStatusLogs] = useState([]);
     const [progress, setProgress] = useState(0);
 
-    const logs = [
-        "INITIALIZING NEURAL LINK...",
-        "CALIBRATING SYNAPTIC INTERFACE...",
-        "SYNCHRONIZING BIOMETRIC DATA...",
-        "MAPPING NEURAL PATHWAYS...",
-        "AETHER_CORE OPTIMIZED.",
-        "SYNC_SUCCESSFUL [ID: #9X29]"
-    ];
-
     useEffect(() => {
+        const logs = [
+            "INITIALIZING NEURAL LINK...",
+            "CALIBRATING SYNAPTIC INTERFACE...",
+            "SYNCHRONIZING BIOMETRIC DATA...",
+            "MAPPING NEURAL PATHWAYS...",
+            "AETHER_CORE OPTIMIZED.",
+            "SYNC_SUCCESSFUL [ID: #9X29]"
+        ];
+
         let logIndex = 0;
         const logInterval = setInterval(() => {
             if (logIndex < logs.length) {
