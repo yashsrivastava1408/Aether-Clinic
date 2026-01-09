@@ -35,7 +35,7 @@ export async function analyzeReport(text, imageBase64 = null) {
   `;
 
   try {
-    const rawResponse = await generateResponse(prompt, imageBase64);
+    const rawResponse = await generateResponse(prompt, imageBase64, { provider: "gemini" });
 
     // Attempt to clean and parse JSON
     let cleanJson = rawResponse.trim();

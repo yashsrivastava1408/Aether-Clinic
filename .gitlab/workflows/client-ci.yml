@@ -1,0 +1,21 @@
+client-build:
+  stage: build
+  image: node:20
+  script:
+    - cd client
+    - npm ci
+    - npm run build
+  only:
+    changes:
+      - "client/**/*"
+
+client-type-check:
+  stage: type-check
+  image: node:20
+  script:
+    - cd client
+    - npm ci
+    - npx tsc --noEmit
+  only:
+    changes:
+      - "client/**/*"

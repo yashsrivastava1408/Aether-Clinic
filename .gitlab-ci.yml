@@ -1,0 +1,9 @@
+stages:
+  - build
+  - test
+  - type-check
+  - schema-check
+
+include:
+  - local: '.gitlab/workflows/client-ci.yml'
+  - local: '.gitlab/workflows/server-ci.yml'

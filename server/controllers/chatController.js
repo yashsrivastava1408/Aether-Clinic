@@ -1,13 +1,15 @@
 import { generateResponse } from "../services/llmService.js";
 import fs from "fs";
+import Chat from "../models/Chat.js";
 
 export const handleChat = async (req, res) => {
   try {
-    const { message, specialization = "General Medicine" } = req.body;
+    const { message, specialization = "General Medicine", userId } = req.body;
     const file = req.file;
 
-    if (!message && !file) {
-      return res.status(400).json({ error: "Message or image is required" });
+    // Validation
+    if ((!message && !file) || !userId) {
+      return res.status(400).json({ error: "Message/Image and UserID are required" });
     }
 
     let imageBase64 = null;
@@ -19,6 +21,11 @@ export const handleChat = async (req, res) => {
     const visionContext = file
       ? "The user has provided an image for analysis. Focus on describing what you see in the context of their symptoms and the specialization."
       : "";
+
+    // 1. Retrieve previous context (optional, but good for continuity)
+    // For now, we just fetch the last few messages to build context if needed, 
+    // but the prompt structure currently is single-turn focused.
+    // We will stick to the existing prompt structure for consistency, but save the result.
 
     const prompt = `
 You are Dr. AI, an intelligent, empathetic medical assistant for "Aether Clinic". 
@@ -72,17 +79,91 @@ User Message: ${message || "Image provided for analysis"}
 Dr. AI:
 `;
 
-    const aiReply = await generateResponse(prompt, imageBase64);
+    const aiReply = await generateResponse(prompt, imageBase64, { provider: "ollama" });
 
     // Cleanup the uploaded file if needed
     if (file) {
+      try { frame.unlinkSync(file.path); } catch (e) { } // best effort cleanup
       fs.unlinkSync(file.path);
     }
+
+    // 2. Save to Database
+    let chat = await Chat.findOne({ userId, specialist: specialization });
+
+    if (!chat) {
+      chat = new Chat({ userId, specialist: specialization, messages: [] });
+    }
+
+    // Add User Message
+    chat.messages.push({
+      sender: "user",
+      text: message || "Image uploaded",
+      image: imageBase64 ? `data:${file.mimetype};base64,${imageBase64}` : null,
+      timestamp: new Date()
+    });
+
+    // Add AI Message
+    chat.messages.push({
+      sender: "ai",
+      text: aiReply,
+      timestamp: new Date()
+    });
+
+    chat.lastActive = new Date();
+    await chat.save();
+
+    // --- JSON FILE LOGGING (For easy viewing) ---
+    try {
+      const logPath = "./chat_logs.json";
+      let logs = [];
+      if (fs.existsSync(logPath)) {
+        const data = fs.readFileSync(logPath);
+        logs = JSON.parse(data);
+      }
+
+      // Find or create simple log entry
+      let logEntry = logs.find(l => l.userId === userId && l.specialist === specialization);
+      if (!logEntry) {
+        logEntry = { userId, specialist: specialization, messages: [] };
+        logs.push(logEntry);
+      }
+
+      logEntry.messages.push({ sender: "user", text: message || "Image", timestamp: new Date() });
+      logEntry.messages.push({ sender: "ai", text: aiReply, timestamp: new Date() });
+
+      fs.writeFileSync(logPath, JSON.stringify(logs, null, 2));
+    } catch (err) {
+      console.error("JSON Log Error:", err);
+    }
+    // ---------------------------------------------
 
     res.json({ reply: aiReply });
 
   } catch (error) {
     console.error("❌ Chat error:", error);
     res.status(500).json({ error: "Something went wrong" });
+  }
+};
+
+export const getChatHistory = async (req, res) => {
+  try {
+    const { userId, specialization } = req.params;
+    const chat = await Chat.findOne({ userId, specialist: specialization });
+
+    if (!chat) return res.json({ messages: [] });
+
+    res.json({ messages: chat.messages });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch history" });
+  }
+};
+
+export const deleteChat = async (req, res) => {
+  try {
+    const { userId, specialization } = req.params;
+    await Chat.deleteOne({ userId, specialist: specialization });
+    res.json({ message: "Chat deleted" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete chat" });
   }
 };

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import TiltCard from "../components/TiltCard";
 import VoiceVisualizer from "../components/VoiceVisualizer";
+import { getUserId } from "../utils/user";
 
 export default function Chatbot({ doctor, onBack }) {
   const [messages, setMessages] = useState([]);
@@ -24,20 +25,34 @@ export default function Chatbot({ doctor, onBack }) {
   // Initial greeting when doctor selected
   useEffect(() => {
     if (doctor) {
-      setTimeout(() => setIsInitializing(false), 2000);
-
-      setMessages([
-        {
-          sender: "ai",
-          text: `// INITIATING SECURE SESSION WITH SPECIALIST ${doctor.name.toUpperCase()}...`,
-          isSystem: true
-        },
-        {
-          sender: "ai",
-          text: `Neural Link Active. I am the ${doctor.role || "Specialist"} Interface.
+      // Fetch history logic
+      const userId = getUserId();
+      axios.get(`http://localhost:5050/api/chat/history/${userId}/${doctor.name}`)
+        .then(res => {
+          if (res.data.messages && res.data.messages.length > 0) {
+            setMessages(res.data.messages);
+            setIsInitializing(false); // Skip intro if history exists
+          } else {
+            // Default Intro
+            setTimeout(() => setIsInitializing(false), 2000);
+            setMessages([
+              {
+                sender: "ai",
+                text: `// INITIATING SECURE SESSION WITH SPECIALIST ${doctor.name.toUpperCase()}...`,
+                isSystem: true
+              },
+              {
+                sender: "ai",
+                text: `Neural Link Active. I am the ${doctor.role || "Specialist"} Interface.
 State your symptoms or upload a photo for analysis.`,
-        },
-      ]);
+              },
+            ]);
+          }
+        })
+        .catch(err => {
+          console.error("Failed to load history", err);
+          setIsInitializing(false);
+        });
     }
   }, [doctor]);
 
@@ -69,6 +84,7 @@ State your symptoms or upload a photo for analysis.`,
     const formData = new FormData();
     formData.append("message", input);
     formData.append("specialization", doctor?.name || "General");
+    formData.append("userId", getUserId());
     if (image) {
       formData.append("image", image);
     }

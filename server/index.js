@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+dotenv.config();
 
 import chatRoutes from "./routes/chat.js";
 import reportRoutes from "./routes/report.js";
@@ -9,9 +10,17 @@ import mlRoutes from "./routes/mlRoutes.js";
 
 
 
-dotenv.config();
+import mongoose from "mongoose";
 
 const app = express();
+
+// MongoDB Connection
+const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/ai-doctor";
+
+mongoose.connect(MONGO_URI)
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => console.error("❌ MongoDB Connection Error:", err));
+
 
 // middlewares
 app.use(cors());

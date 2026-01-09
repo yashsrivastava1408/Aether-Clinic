@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import TiltCard from "../components/TiltCard";
 import VoiceVisualizer from "../components/VoiceVisualizer";
 import NeuralSyncSequence from "../components/NeuralSyncSequence";
+import { getUserId } from "../utils/user";
+import axios from "axios";
 
 // --- Assets / Icons ---
 // Reuse same icons as before
@@ -51,6 +53,11 @@ export default function Consultation({ onSelectDoctor }) {
   const rafRef = useRef(null);
   const [loading, setLoading] = useState(true);
 
+  // Modal State
+  const [pendingDoctor, setPendingDoctor] = useState(null);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [isCheckingHistory, setIsCheckingHistory] = useState(false);
+
   useEffect(() => {
     // Simulate Neural Link initialization
     const timer = setTimeout(() => {
@@ -89,6 +96,48 @@ export default function Consultation({ onSelectDoctor }) {
     }
   }, []);
 
+  const handleDoctorSelect = async (doctor) => {
+    setPendingDoctor(doctor);
+    setIsCheckingHistory(true);
+    const userId = getUserId();
+
+    try {
+      const res = await axios.get(`http://localhost:5050/api/chat/history/${userId}/${doctor.name}`);
+      if (res.data.messages && res.data.messages.length > 0) {
+        setShowHistoryModal(true);
+      } else {
+        onSelectDoctor(doctor);
+      }
+    } catch (e) {
+      console.error("History check failed, proceeding as new", e);
+      onSelectDoctor(doctor);
+    } finally {
+      setIsCheckingHistory(false);
+    }
+  };
+
+  const handleContinue = () => {
+    onSelectDoctor(pendingDoctor);
+    setShowHistoryModal(false);
+    setPendingDoctor(null);
+  }
+
+  const handleNewChat = async () => {
+    const userId = getUserId();
+    try {
+      // Clear history for this doctor
+      await axios.delete(`http://localhost:5050/api/chat/history/${userId}/${pendingDoctor.name}`);
+    } catch (e) {
+      console.error("Failed to clear history", e);
+    }
+    // Convert to simple "New Chat" logic by just proceeding. 
+    // The backend won't find history now (or we deleted it).
+    onSelectDoctor(pendingDoctor);
+    setShowHistoryModal(false);
+    setPendingDoctor(null);
+  }
+
+
   const getColorClass = (color) => {
     switch (color) {
       case 'rose': return 'text-rose-500 border-rose-500/30 bg-rose-500/10 group-hover:bg-rose-500/20 group-hover:border-rose-500/50';
@@ -120,6 +169,24 @@ export default function Consultation({ onSelectDoctor }) {
       {/* Module Splash Screen Overhaul */}
       {loading && (
         <NeuralSyncSequence onComplete={() => setLoading(false)} />
+      )}
+
+      {/* History Selection Modal */}
+      {showHistoryModal && (
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#0f0f0f] border border-emerald-500/30 p-8 rounded-2xl max-w-md w-full text-center shadow-[0_0_50px_rgba(16,185,129,0.2)]">
+            <h3 className="text-xl font-bold text-white mb-2">Previous Session Detected</h3>
+            <p className="text-gray-400 text-sm mb-6">A consultation history exists with {pendingDoctor?.name}. Would you like to resume where you left off?</p>
+            <div className="flex gap-4 justify-center">
+              <button onClick={handleNewChat} className="px-6 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all text-sm font-mono uppercase">
+                Start New
+              </button>
+              <button onClick={handleContinue} className="px-6 py-2 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 hover:bg-emerald-500/30 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all text-sm font-mono uppercase">
+                Resume Session
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Background Grid */}
@@ -174,7 +241,7 @@ export default function Consultation({ onSelectDoctor }) {
               }}
             >
               <div
-                onClick={() => onSelectDoctor(spec)}
+                onClick={() => handleDoctorSelect(spec)}
                 className="w-full h-full cursor-pointer transition-all duration-300 hover:scale-105"
               >
                 {/* Reduced blur from xl to md for performance */}

@@ -4,6 +4,7 @@ import { analyzeReport } from "../../services/reportAnalyzer.js";
 export async function analyzeReportController(req, res) {
   try {
     let imageBase64 = null;
+    let text = "";
 
     if (req.file) {
       // ❌ Block PDFs (Tesseract can't read them)
