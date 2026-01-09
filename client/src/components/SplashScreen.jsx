@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 
 // 🔥 Letter-by-Letter Animation Component
 const AnimatedLetters = ({ text, className = "", delay = 0, staggerMs = 60 }) => {

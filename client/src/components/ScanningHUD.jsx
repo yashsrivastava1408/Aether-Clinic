@@ -24,7 +24,7 @@ const ScanningHUD = ({ active, children }) => {
 
         // Magnifier movement logic
         const moveMagnifier = () => {
-            setMagnifierPos(prev => ({
+            setMagnifierPos(() => ({
                 x: 30 + Math.sin(Date.now() / 1000) * 40 + 20,
                 y: 30 + Math.cos(Date.now() / 1500) * 40 + 20
             }));

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 // Optimized Floating Particles - Reduced count
 const Particles = () => {

@@ -206,6 +206,13 @@ export default function Consultation({ onSelectDoctor }) {
         </div>
         <h2 className="text-4xl font-bold text-white mb-2">Neural Orbit</h2>
         <p className="text-gray-500 text-sm">Scroll to rotate • Click node to engage</p>
+
+        {/* Loading Indicator for History Check */}
+        {isCheckingHistory && (
+          <div className="mt-2 text-emerald-500 text-xs font-mono animate-pulse">
+            SCANNING_HISTORY...
+          </div>
+        )}
       </div>
 
       {/* Central Hologram Core */}

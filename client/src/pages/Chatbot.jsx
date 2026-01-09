@@ -208,6 +208,13 @@ State your symptoms or upload a photo for analysis.`,
         <div ref={chatEndRef} />
       </div>
 
+      {/* Error Message Display */}
+      {error && (
+        <div className="px-6 pb-2 text-red-500 text-xs font-mono animate-pulse">
+          {">"} ERROR: {error}
+        </div>
+      )}
+
       {/* CLI Input Area */}
       <div className="p-4 bg-[#0a0a0a]/90 border-t border-white/5 relative z-20">
 
