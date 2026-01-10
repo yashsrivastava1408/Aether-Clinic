@@ -69,6 +69,13 @@ export default function SplashScreen({ onComplete }) {
     const [isExiting, setIsExiting] = useState(false);
     const [progress, setProgress] = useState(0);
 
+    const startExit = React.useCallback(() => {
+        setIsExiting(true);
+        setTimeout(() => {
+            if (onComplete) onComplete();
+        }, 800); // Wait for fade out animation
+    }, [onComplete]);
+
     useEffect(() => {
         const video = videoRef.current;
         if (video) {
@@ -102,13 +109,6 @@ export default function SplashScreen({ onComplete }) {
         }
     }, [startExit]);
 
-    const startExit = React.useCallback(() => {
-        setIsExiting(true);
-        setTimeout(() => {
-            if (onComplete) onComplete();
-        }, 800); // Wait for fade out animation
-    }, [onComplete]);
-
     return (
         <div className={`fixed inset-0 z-[100] bg-black flex items-center justify-center overflow-hidden transition-opacity duration-1000 ${isExiting ? 'opacity-0' : 'opacity-100'}`}>
 
@@ -124,8 +124,16 @@ export default function SplashScreen({ onComplete }) {
                 muted={true}
                 defaultMuted={true}
                 playsInline
-                autoPlay
+                onError={(e) => {
+                    console.error("Video Error:", e);
+                    // Fallback if video fails: just start exit timer
+                    setTimeout(startExit, 2000);
+                }}
             />
+            {/* Fallback Text in case video is black/invisible */}
+            <div className="absolute top-10 left-0 right-0 text-center text-emerald-500/20 text-xs font-mono pointer-events-none z-10">
+                INITIALIZING...
+            </div>
 
             {/* 🌑 Cinematic Vignette & Overlay (Lighter for clarity) */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />

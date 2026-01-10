@@ -22,9 +22,9 @@ export default function App() {
 
   // Hide splash screen after 3 seconds
   // Hide splash screen callback
-  const handleSplashComplete = () => {
+  const handleSplashComplete = React.useCallback(() => {
     setShowSplash(false);
-  };
+  }, []);
 
   const handleSelectDoctor = (doctor) => {
     setSelectedDoctor(doctor);
