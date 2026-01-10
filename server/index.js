@@ -12,7 +12,23 @@ import mlRoutes from "./routes/mlRoutes.js";
 
 import mongoose from "mongoose";
 
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
+
 const app = express();
+
+// Security Headers
+app.use(helmet());
+
+// Rate Limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again after 15 minutes",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
 
 // MongoDB Connection
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/ai-doctor";

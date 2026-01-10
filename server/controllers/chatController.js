@@ -1,6 +1,7 @@
 import { generateResponse } from "../services/llmService.js";
 import fs from "fs";
 import Chat from "../models/Chat.js";
+import { encrypt, decrypt } from "../utils/encryption.js";
 
 export const handleChat = async (req, res) => {
   try {
@@ -22,10 +23,79 @@ export const handleChat = async (req, res) => {
       ? "The user has provided an image for analysis. Focus on describing what you see in the context of their symptoms and the specialization."
       : "";
 
-    // 1. Retrieve previous context (optional, but good for continuity)
-    // For now, we just fetch the last few messages to build context if needed, 
-    // but the prompt structure currently is single-turn focused.
-    // We will stick to the existing prompt structure for consistency, but save the result.
+    // 1. Retrieve & Prepare Context
+    // We fetch the chat history FIRST to provide context to the AI.
+    let chat = await Chat.findOne({ userId, specialist: specialization });
+
+    if (!chat) {
+      chat = new Chat({ userId, specialist: specialization, messages: [] });
+    }
+
+    // Get last 10 messages to track conversation depth
+    const recentMessages = chat.messages.slice(-10);
+    const historyContext = recentMessages
+      .map((msg) => {
+        const role = msg.sender === "user" ? "User" : "Dr. AI";
+        const content = decrypt(msg.text);
+        return `${role}: ${content}`;
+      })
+      .join("\n");
+
+    // Check if the previous message was a final report (contains "Summary:")
+    // If so, we reset the count because the user is likely starting a NEW topic.
+    const lastAiMessage = recentMessages.filter(m => m.sender === "ai").pop();
+    const lastWasReport = lastAiMessage && decrypt(lastAiMessage.text).includes("Summary:");
+
+    // Calculate how many questions Dr. AI has already asked since the last report
+    let aiQuestionCount = 0;
+
+    // We only count questions that happened AFTER the last report (if any)
+    let searchMessages = recentMessages;
+    if (lastWasReport) {
+      // Find index of last report and slice messages after it
+      // This effectively "resets" the counter for the new topic
+      const lastReportIndex = recentMessages.findIndex(m => m === lastAiMessage);
+      searchMessages = recentMessages.slice(lastReportIndex + 1);
+    }
+
+    aiQuestionCount = searchMessages.filter(
+      (m) => m.sender === "ai" && decrypt(m.text).includes("?")
+    ).length;
+
+    const forceConclusion = aiQuestionCount >= 3; // Limit to ~3 turns of active investigation
+
+    // Logic Control: Determine which instruction set to show
+    let logicInstruction = "";
+    if (forceConclusion) {
+      logicInstruction = `
+[MODE: FINAL REPORT]
+You have gathered enough information. You MUST now provide the full structured report.
+FOLLOW THIS EXACT STRUCTURE:
+
+📝 Summary: One friendly sentence summarizing their concern or the image provided.  
+
+💡 General Possibilities:  
+- 2–3 likely, general factors related to ${specialization} or the visual findings in the image.  
+
+🧠 Suggestions:  
+- Safe lifestyle or monitoring advice (hydration, tracking symptoms, breathing, rest, etc).  
+- Clear, practical steps to manage or observe symptoms.  
+
+🚨 When to Seek Urgent Care:  
+- 1–2 critical warning signs (e.g., infection signs for wounds, spreading pain, etc).  
+
+🤔 Follow-up:  
+- End with one warm, natural question that invites the user to share more details.
+      `;
+    } else {
+      logicInstruction = `
+[MODE: INVESTIGATION]
+The user has shared a symptom. You need more details.
+1. Check Previous Conversation below.
+2. Ask 1-2 SHORT, warm questions (e.g., "Sharp or dull?", "How long?").
+3. DO NOT give the full report yet. Just ask kindly.
+      `;
+    }
 
     const prompt = `
 You are Dr. AI, an intelligent, empathetic medical assistant for "Aether Clinic". 
@@ -54,22 +124,15 @@ CONTEXT CHECK:
 If the user's message is just a greeting (e.g., "Hi", "Hello", "Hey") and NO image is provided, reply warmly:
 "👋 Hello! I am Dr. AI, your ${specialization} assistant. I'm here to listen. How are you feeling today?"
 
-If the user provides a symptom, health concern, OR an image, YOU MUST FOLLOW THIS EXACT STRUCTURE:
+---
 
-📝 Summary: One friendly sentence summarizing their concern or the image provided.  
+⚠️ CURRENT INSTRUCTION:
+${logicInstruction}
 
-💡 General Possibilities:  
-- 2–3 likely, general factors related to ${specialization} or the visual findings in the image.  
+---
 
-🧠 Suggestions:  
-- Safe lifestyle or monitoring advice (hydration, tracking symptoms, breathing, rest, etc).  
-- Clear, practical steps to manage or observe symptoms.  
-
-🚨 When to Seek Urgent Care:  
-- 1–2 critical warning signs (e.g., infection signs for wounds, spreading pain, etc).  
-
-🤔 Follow-up:  
-- End with one warm, natural question that invites the user to share more details.
+📜 Previous Conversation (For Context Only):
+${historyContext}
 
 ---
 
@@ -83,30 +146,25 @@ Dr. AI:
 
     // Cleanup the uploaded file if needed
     if (file) {
-      try { frame.unlinkSync(file.path); } catch (e) { } // best effort cleanup
-      fs.unlinkSync(file.path);
+      try {
+        fs.unlinkSync(file.path);
+      } catch (e) { } // best effort cleanup
     }
 
-    // 2. Save to Database
-    let chat = await Chat.findOne({ userId, specialist: specialization });
-
-    if (!chat) {
-      chat = new Chat({ userId, specialist: specialization, messages: [] });
-    }
-
+    // 2. Save new messages to Database
     // Add User Message
     chat.messages.push({
       sender: "user",
-      text: message || "Image uploaded",
+      text: encrypt(message || "Image uploaded"),
       image: imageBase64 ? `data:${file.mimetype};base64,${imageBase64}` : null,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     // Add AI Message
     chat.messages.push({
       sender: "ai",
-      text: aiReply,
-      timestamp: new Date()
+      text: encrypt(aiReply),
+      timestamp: new Date(),
     });
 
     chat.lastActive = new Date();
@@ -122,14 +180,24 @@ Dr. AI:
       }
 
       // Find or create simple log entry
-      let logEntry = logs.find(l => l.userId === userId && l.specialist === specialization);
+      let logEntry = logs.find(
+        (l) => l.userId === userId && l.specialist === specialization
+      );
       if (!logEntry) {
         logEntry = { userId, specialist: specialization, messages: [] };
         logs.push(logEntry);
       }
 
-      logEntry.messages.push({ sender: "user", text: message || "Image", timestamp: new Date() });
-      logEntry.messages.push({ sender: "ai", text: aiReply, timestamp: new Date() });
+      logEntry.messages.push({
+        sender: "user",
+        text: encrypt(message || "Image"),
+        timestamp: new Date(),
+      });
+      logEntry.messages.push({
+        sender: "ai",
+        text: encrypt(aiReply),
+        timestamp: new Date(),
+      });
 
       fs.writeFileSync(logPath, JSON.stringify(logs, null, 2));
     } catch (err) {
@@ -152,7 +220,12 @@ export const getChatHistory = async (req, res) => {
 
     if (!chat) return res.json({ messages: [] });
 
-    res.json({ messages: chat.messages });
+    const decryptedMessages = chat.messages.map(msg => ({
+      ...msg.toObject(),
+      text: decrypt(msg.text)
+    }));
+
+    res.json({ messages: decryptedMessages });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch history" });
   }
