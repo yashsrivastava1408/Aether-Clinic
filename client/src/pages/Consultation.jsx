@@ -4,6 +4,7 @@ import VoiceVisualizer from "../components/VoiceVisualizer";
 import NeuralSyncSequence from "../components/NeuralSyncSequence";
 import { getUserId } from "../utils/user";
 import axios from "axios";
+import { useTheme } from "../context/ThemeContext";
 
 // --- Assets / Icons ---
 // Reuse same icons as before
@@ -52,6 +53,8 @@ export default function Consultation({ onSelectDoctor }) {
   const carouselRef = useRef(null);
   const rafRef = useRef(null);
   const [loading, setLoading] = useState(true);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   // Modal State
   const [pendingDoctor, setPendingDoctor] = useState(null);
@@ -102,7 +105,7 @@ export default function Consultation({ onSelectDoctor }) {
     const userId = getUserId();
 
     try {
-      const res = await axios.get(`http://localhost:5050/api/chat/history/${userId}/${doctor.name}`);
+      const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/api/chat/history/${userId}/${doctor.name}`);
       if (res.data.messages && res.data.messages.length > 0) {
         setShowHistoryModal(true);
       } else {
@@ -125,13 +128,10 @@ export default function Consultation({ onSelectDoctor }) {
   const handleNewChat = async () => {
     const userId = getUserId();
     try {
-      // Clear history for this doctor
-      await axios.delete(`http://localhost:5050/api/chat/history/${userId}/${pendingDoctor.name}`);
+      await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/api/chat/history/${userId}/${pendingDoctor.name}`);
     } catch (e) {
       console.error("Failed to clear history", e);
     }
-    // Convert to simple "New Chat" logic by just proceeding. 
-    // The backend won't find history now (or we deleted it).
     onSelectDoctor(pendingDoctor);
     setShowHistoryModal(false);
     setPendingDoctor(null);
@@ -151,7 +151,6 @@ export default function Consultation({ onSelectDoctor }) {
 
   const getGlow = (color) => {
     switch (color) {
-      // Reduced shadow intensity for performance
       case 'rose': return 'shadow-[0_0_20px_rgba(244,63,94,0.1)] group-hover:shadow-[0_0_30px_rgba(244,63,94,0.3)]';
       case 'violet': return 'shadow-[0_0_20px_rgba(139,92,246,0.1)] group-hover:shadow-[0_0_30px_rgba(139,92,246,0.3)]';
       case 'cyan': return 'shadow-[0_0_20px_rgba(6,182,212,0.1)] group-hover:shadow-[0_0_30px_rgba(6,182,212,0.3)]';
@@ -163,7 +162,7 @@ export default function Consultation({ onSelectDoctor }) {
 
   return (
     <div
-      className="h-screen bg-[#030303] overflow-hidden relative flex flex-col items-center justify-center perspective-1000"
+      className={`h-screen overflow-hidden relative flex flex-col items-center justify-center perspective-1000 transition-colors duration-500 ${isDark ? 'bg-[#030303]' : 'bg-slate-50'}`}
       style={{ perspective: "1500px" }}
     >
       {/* Module Splash Screen Overhaul */}
@@ -174,14 +173,14 @@ export default function Consultation({ onSelectDoctor }) {
       {/* History Selection Modal */}
       {showHistoryModal && (
         <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#0f0f0f] border border-emerald-500/30 p-8 rounded-2xl max-w-md w-full text-center shadow-[0_0_50px_rgba(16,185,129,0.2)]">
-            <h3 className="text-xl font-bold text-white mb-2">Previous Session Detected</h3>
-            <p className="text-gray-400 text-sm mb-6">A consultation history exists with {pendingDoctor?.name}. Would you like to resume where you left off?</p>
+          <div className={`border p-8 rounded-2xl max-w-md w-full text-center shadow-[0_0_50px_rgba(16,185,129,0.2)] ${isDark ? 'bg-[#0f0f0f] border-emerald-500/30' : 'bg-white border-emerald-300'}`}>
+            <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Previous Session Detected</h3>
+            <p className={`text-sm mb-6 ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>A consultation history exists with {pendingDoctor?.name}. Would you like to resume where you left off?</p>
             <div className="flex gap-4 justify-center">
-              <button onClick={handleNewChat} className="px-6 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all text-sm font-mono uppercase">
+              <button onClick={handleNewChat} className={`px-6 py-2 rounded-lg border transition-all text-sm font-mono uppercase ${isDark ? 'border-white/10 text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5' : 'border-slate-300 text-slate-500 hover:text-slate-900 hover:border-slate-400 hover:bg-slate-100'}`}>
                 Start New
               </button>
-              <button onClick={handleContinue} className="px-6 py-2 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 hover:bg-emerald-500/30 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all text-sm font-mono uppercase">
+              <button onClick={handleContinue} className="px-6 py-2 rounded-lg bg-emerald-500/20 text-emerald-500 border border-emerald-500/50 hover:bg-emerald-500/30 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all text-sm font-mono uppercase">
                 Resume Session
               </button>
             </div>
@@ -190,22 +189,22 @@ export default function Consultation({ onSelectDoctor }) {
       )}
 
       {/* Background Grid */}
-      <div className="absolute inset-0 opacity-[0.05] pointer-events-none"
+      <div className={`absolute inset-0 pointer-events-none ${isDark ? 'opacity-[0.05]' : 'opacity-[0.03]'}`}
         style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                                  linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} 1px, transparent 1px),
+                                  linear-gradient(90deg, ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} 1px, transparent 1px)`,
           backgroundSize: '40px 40px'
         }}
       />
 
       {/* Floating Header */}
       <div className="absolute top-24 left-1/2 -translate-x-1/2 text-center z-50 pointer-events-none">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-mono tracking-widest uppercase mb-4">
+        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-mono tracking-widest uppercase mb-4 ${isDark ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-emerald-500/30 bg-white/80 text-emerald-600 shadow-sm'}`}>
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           System Online
         </div>
-        <h2 className="text-4xl font-bold text-white mb-2">Neural Orbit</h2>
-        <p className="text-gray-500 text-sm">Scroll to rotate • Click node to engage</p>
+        <h2 className={`text-4xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Neural Orbit</h2>
+        <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-slate-500'}`}>Scroll to rotate • Click node to engage</p>
 
         {/* Loading Indicator for History Check */}
         {isCheckingHistory && (
@@ -218,8 +217,8 @@ export default function Consultation({ onSelectDoctor }) {
       {/* Central Hologram Core */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
         <div className="relative animate-pulse opacity-60">
-          <div className="absolute inset-0 bg-emerald-500/20 blur-[80px] rounded-full mix-blend-screen" />
-          <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white/20 to-transparent tracking-tighter select-none">
+          <div className={`absolute inset-0 blur-[80px] rounded-full mix-blend-screen ${isDark ? 'bg-emerald-500/20' : 'bg-emerald-400/10'}`} />
+          <h1 className={`text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b tracking-tighter select-none ${isDark ? 'from-white/20 to-transparent' : 'from-slate-900/10 to-transparent'}`}>
             AETHER
           </h1>
           <div className="text-emerald-500/30 text-lg md:text-xl font-mono tracking-[1.2em] text-center mt-[-10px] ml-[1.2em] select-none">
@@ -251,29 +250,27 @@ export default function Consultation({ onSelectDoctor }) {
                 onClick={() => handleDoctorSelect(spec)}
                 className="w-full h-full cursor-pointer transition-all duration-300 hover:scale-105"
               >
-                {/* Reduced blur from xl to md for performance */}
-                <TiltCard className={`relative group w-full h-full bg-[#0a0a0a]/90 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:border-white/30 transition-all duration-500 ${getGlow(spec.color)}`}>
-                  {/* Card Content Reuse */}
+                <TiltCard className={`relative group w-full h-full backdrop-blur-md border rounded-2xl overflow-hidden transition-all duration-500 ${isDark ? 'bg-[#0a0a0a]/90 border-white/10 hover:border-white/30' : 'bg-white/90 border-slate-200 hover:border-slate-300 shadow-lg'} ${getGlow(spec.color)}`}>
                   <div className="p-6 h-full flex flex-col">
                     <div className="flex justify-between items-start mb-4">
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center p-2.5 border ${getColorClass(spec.color)}`}>
                         {spec.icon}
                       </div>
-                      <div className="text-[10px] font-mono text-white/30">ID_{String(spec.id).padStart(2, '0')}</div>
+                      <div className={`text-[10px] font-mono ${isDark ? 'text-white/30' : 'text-slate-400'}`}>ID_{String(spec.id).padStart(2, '0')}</div>
                     </div>
 
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold text-white mb-1">{spec.name}</h3>
+                      <h3 className={`text-xl font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>{spec.name}</h3>
                       <div className={`text-${spec.color}-500/80 text-xs font-medium uppercase tracking-wider mb-2`}>{spec.role}</div>
-                      <p className="text-gray-500 text-xs leading-relaxed line-clamp-3">{spec.description}</p>
+                      <p className={`text-xs leading-relaxed line-clamp-3 ${isDark ? 'text-gray-500' : 'text-slate-600'}`}>{spec.description}</p>
                     </div>
 
-                    <div className="pt-4 border-t border-white/5 flex justify-between items-end mt-2">
+                    <div className={`pt-4 border-t flex justify-between items-end mt-2 ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
                       <div>
-                        <div className="text-[9px] text-gray-500 uppercase tracking-wider">Accuracy</div>
-                        <div className="text-sm font-mono font-bold text-white">{spec.accuracy}</div>
+                        <div className={`text-[9px] uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>Accuracy</div>
+                        <div className={`text-sm font-mono font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{spec.accuracy}</div>
                       </div>
-                      <div className="w-16 h-1 bg-white/10 rounded-full overflow-hidden">
+                      <div className={`w-16 h-1 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
                         <div className={`h-full bg-${spec.color}-500 w-[${spec.accuracy.slice(0, -1)}%]`} />
                       </div>
                     </div>
@@ -286,7 +283,7 @@ export default function Consultation({ onSelectDoctor }) {
       </div>
 
       {/* Floor Reflection Gradient */}
-      <div className="absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-[#030303] to-transparent z-40 pointer-events-none" />
+      <div className={`absolute bottom-0 w-full h-1/3 bg-gradient-to-t z-40 pointer-events-none ${isDark ? 'from-[#030303] to-transparent' : 'from-slate-50 to-transparent'}`} />
     </div>
   );
 }

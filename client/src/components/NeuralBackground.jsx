@@ -1,7 +1,9 @@
 import React, { useEffect, useRef } from 'react';
+import { useTheme } from '../context/ThemeContext';
 
 const NeuralBackground = () => {
     const canvasRef = useRef(null);
+    const { theme } = useTheme();
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -11,6 +13,12 @@ const NeuralBackground = () => {
         const particles = [];
         const particleCount = 80;
         const connectionDistance = 150;
+
+        // Theme-based colors
+        const isDark = theme === 'dark';
+        const particleColor = isDark ? 'rgba(59, 130, 246, 0.5)' : 'rgba(15, 23, 42, 0.3)'; // Blue vs Dark Slate
+        const lineColor = isDark ? '59, 130, 246' : '100, 116, 139'; // extracted for template literal
+        const pulseColor = isDark ? 'rgba(16, 185, 129, 0.8)' : 'rgba(37, 99, 235, 0.8)'; // Emerald vs Blue
 
         const resize = () => {
             canvas.width = window.innerWidth;
@@ -40,7 +48,7 @@ const NeuralBackground = () => {
             draw() {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(59, 130, 246, 0.5)';
+                ctx.fillStyle = particleColor;
                 ctx.fill();
             }
         }
@@ -59,7 +67,7 @@ const NeuralBackground = () => {
 
                 ctx.beginPath();
                 ctx.arc(x, y, 2, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(16, 185, 129, 0.8)';
+                ctx.fillStyle = pulseColor;
                 ctx.fill();
 
                 this.progress += this.speed;
@@ -89,7 +97,7 @@ const NeuralBackground = () => {
                         ctx.beginPath();
                         ctx.moveTo(p.x, p.y);
                         ctx.lineTo(p2.x, p2.y);
-                        ctx.strokeStyle = `rgba(59, 130, 246, ${0.2 * (1 - dist / connectionDistance)})`;
+                        ctx.strokeStyle = `rgba(${lineColor}, ${0.2 * (1 - dist / connectionDistance)})`;
                         ctx.lineWidth = 0.5;
                         ctx.stroke();
 
@@ -117,7 +125,7 @@ const NeuralBackground = () => {
             window.removeEventListener('resize', resize);
             cancelAnimationFrame(animationFrameId);
         };
-    }, []);
+    }, [theme]); // Re-run effect when theme changes
 
     return (
         <canvas
