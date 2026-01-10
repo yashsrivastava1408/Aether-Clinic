@@ -100,14 +100,14 @@ export default function SplashScreen({ onComplete }) {
                 clearTimeout(safetyTimer);
             };
         }
-    }, []);
+    }, [startExit]);
 
-    const startExit = () => {
+    const startExit = React.useCallback(() => {
         setIsExiting(true);
         setTimeout(() => {
             if (onComplete) onComplete();
         }, 800); // Wait for fade out animation
-    };
+    }, [onComplete]);
 
     return (
         <div className={`fixed inset-0 z-[100] bg-black flex items-center justify-center overflow-hidden transition-opacity duration-1000 ${isExiting ? 'opacity-0' : 'opacity-100'}`}>

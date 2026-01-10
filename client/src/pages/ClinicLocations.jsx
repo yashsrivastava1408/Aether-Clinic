@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import NeuralBackground from '../components/NeuralBackground';
 import { useTheme } from '../context/ThemeContext';
 
@@ -320,7 +320,7 @@ export default function ClinicLocations() {
                                         </div>
                                         {/* Status Badge */}
                                         <div className={`ml-2 px-2 py-1 rounded text-[10px] font-bold border whitespace-nowrap ${activeCity.status === 'ONLINE' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' :
-                                                (activeCity.status === 'BUSY' ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' : 'bg-red-500/10 border-red-500/30 text-red-500')
+                                            (activeCity.status === 'BUSY' ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' : 'bg-red-500/10 border-red-500/30 text-red-500')
                                             }`}>
                                             {activeCity.status.replace('_', ' ')}
                                         </div>

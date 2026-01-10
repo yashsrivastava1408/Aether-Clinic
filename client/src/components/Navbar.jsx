@@ -14,16 +14,16 @@ export default function Navbar({ navigate, currentPage }) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const messages = [
+    "SYSTEM: ONLINE",
+    "ENCRYPTION: AES-256",
+    "LATENCY: 14ms",
+    "NEURAL NET: ACTIVE",
+    "NODES: 4,096"
+  ];
+
   const StatusTicker = () => {
     const [index, setIndex] = useState(0);
-    const messages = [
-      "SYSTEM: ONLINE",
-      "ENCRYPTION: AES-256",
-      "LATENCY: 14ms",
-      "NEURAL NET: ACTIVE",
-      "NODES: 4,096"
-    ];
-
     useEffect(() => {
       const interval = setInterval(() => {
         setIndex((prev) => (prev + 1) % messages.length);
@@ -126,8 +126,8 @@ export default function Navbar({ navigate, currentPage }) {
           <button
             onClick={toggleTheme}
             className={`p-2 rounded-full transition-all duration-300 ${theme === 'dark'
-                ? 'bg-white/5 hover:bg-white/10 text-yellow-400 shadow-[0_0_10px_rgba(253,224,71,0.2)]'
-                : 'bg-gray-100 hover:bg-gray-200 text-slate-700 shadow-sm'
+              ? 'bg-white/5 hover:bg-white/10 text-yellow-400 shadow-[0_0_10px_rgba(253,224,71,0.2)]'
+              : 'bg-gray-100 hover:bg-gray-200 text-slate-700 shadow-sm'
               }`}
             title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
           >
@@ -165,8 +165,8 @@ export default function Navbar({ navigate, currentPage }) {
           <button
             onClick={toggleTheme}
             className={`p-2 rounded-full transition-all duration-300 ${theme === 'dark'
-                ? 'bg-white/5 text-yellow-400'
-                : 'bg-gray-100 text-slate-700'
+              ? 'bg-white/5 text-yellow-400'
+              : 'bg-gray-100 text-slate-700'
               }`}
           >
             {theme === 'dark' ? (
