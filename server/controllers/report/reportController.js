@@ -1,10 +1,16 @@
 import Tesseract from "tesseract.js";
 import { analyzeReport } from "../../services/reportAnalyzer.js";
+import { encrypt } from "../../utils/encryption.js";
+import Report from "../../models/Report.js";
 
 export async function analyzeReportController(req, res) {
   try {
     let imageBase64 = null;
     let text = "";
+
+    // We assume userId comes in body or we use a demo ID if missing (since no auth middleware yet)
+    // Ideally request should strictly require userId
+    const userId = req.body.userId || "demo-user";
 
     if (req.file) {
       // ❌ Block PDFs (Tesseract can't read them)
@@ -30,10 +36,25 @@ export async function analyzeReportController(req, res) {
 
     console.log("Sending text and image to AI Analyzer...");
     const analysis = await analyzeReport(text, imageBase64);
-    console.log("AI Analysis Result:", JSON.stringify(analysis, null, 2));
+    // console.log("AI Analysis Result:", JSON.stringify(analysis, null, 2));
+
+    // --- ENCRYPTION & SAVE (NEW) ---
+    const encryptedAnalysis = encrypt(JSON.stringify(analysis));
+    const encryptedSummary = encrypt(analysis.summary || "No summary");
+
+    const newReport = new Report({
+      userId,
+      summary: encryptedSummary,
+      encryptedAnalysis: encryptedAnalysis
+    });
+
+    await newReport.save();
+    console.log("✅ Report saved & encrypted.");
+    // -------------------------------
 
     res.json(analysis);
   } catch (err) {
+
     console.error("REPORT CONTROLLER ERROR FULL TRACE:", err);
     res.status(500).json({ error: "Report analysis failed", details: err.message });
   }
