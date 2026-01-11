@@ -11,25 +11,25 @@ The system operates on a microservices-inspired architecture where the backend o
 ```mermaid
 graph TD
     subgraph "Frontend Layer"
-        M[📱 Mobile App (React Native)] -->|REST API| G[Gateway (Server)]
-        W[💻 Web Dashboard (React)] -->|REST API| G
+        M["📱 Mobile App (React Native)"] -->|REST API| G["Gateway (Server)"]
+        W["💻 Web Dashboard (React)"] -->|REST API| G
     end
 
     subgraph "Core Backend (Node.js)"
-        G -->|Store/Retrieve| DB[(Dictionary: MongoDB)]
-        G -->|OCR & Analysis| S[Report Service]
-        G -->|Secure Chat| C[Chat Controller]
+        G -->|Store/Retrieve| DB[("Dictionary: MongoDB")]
+        G -->|OCR & Analysis| S["Report Service"]
+        G -->|Secure Chat| C["Chat Controller"]
     end
 
     subgraph "Intelligence Layer"
-        S -->|Forward Image| V[Gemini Vision (Cloud)]
-        C -->|Text Prompt| L[Ollama (Local LLM)]
-        G -->|Risk Data| ML[Python ML Service (Flask)]
+        S -->|Forward Image| V["Gemini Vision (Cloud)"]
+        C -->|Text Prompt| L["Ollama (Local LLM)"]
+        G -->|Risk Data| ML["Python ML Service (Flask)"]
     end
 
     subgraph "ML Service (Python)"
-        ML -->|Predict| H[Heart Disease Model]
-        ML -->|Predict| D[Diabetes Model]
+        ML -->|Predict| H["Heart Disease Model"]
+        ML -->|Predict| D["Diabetes Model"]
     end
 ```
 

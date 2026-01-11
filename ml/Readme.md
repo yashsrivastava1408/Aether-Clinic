@@ -12,12 +12,12 @@ This service does not use LLMs. Instead, it uses traditional, explainable Machin
 
 ```mermaid
 graph TD
-    Input[JSON Vector] --> Preprocess[Scaler/Normalizer]
-    Preprocess --> Model[Joblib Loaded Model]
-    Model --> Prob[Probability Score (0.0 - 1.0)]
-    Model --> Class[Binary Class (0/1)]
-    Prob --> Logic[Risk Level Logic]
-    Logic --> Output[JSON Response]
+    Input["JSON Vector"] --> Preprocess["Scaler/Normalizer"]
+    Preprocess --> Model["Joblib Loaded Model"]
+    Model --> Prob["Probability Score (0.0 - 1.0)"]
+    Model --> Class["Binary Class (0/1)"]
+    Prob --> Logic["Risk Level Logic"]
+    Logic --> Output["JSON Response"]
 ```
 
 ---

@@ -17,12 +17,12 @@ graph TD
     Layout --> Sidebar
     Layout --> MainContent
     
-    MainContent -->|Route: /| Dashboard[Overview Stats]
-    MainContent -->|Route: /chat| DoctorChat[Specialist Interface]
-    MainContent -->|Route: /risk| HeartRisk[Deep Risk Analysis]
+    MainContent -->|Route: /| Dashboard["Overview Stats"]
+    MainContent -->|Route: /chat| DoctorChat["Specialist Interface"]
+    MainContent -->|Route: /risk| HeartRisk["Deep Risk Analysis"]
     
-    HeartRisk --> FactorImpact[SHAP Value Visualization]
-    HeartRisk --> ResultGauge[Probability Meter]
+    HeartRisk --> FactorImpact["SHAP Value Visualization"]
+    HeartRisk --> ResultGauge["Probability Meter"]
 ```
 
 ---

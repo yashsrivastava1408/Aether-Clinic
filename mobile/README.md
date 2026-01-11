@@ -6,7 +6,7 @@
 
 ## 🎨 Design Philosophy: "Aether UI"
 
-The mobile application implements a custom **"Aether" Design System**, focusing on dark-mode aesthetics, holographic gradients, and fluid micro-interactions.
+The mobile application implements a custom **"Aether" Design System**, focusing on darker modes, holographic gradients, and fluid micro-interactions.
 
 ### Key Visual Technologies:
 *   **React Native Reanimated**: Powering the *Fireflies*, *Aurora Backgrounds*, and *card tilt* effects.
@@ -22,11 +22,11 @@ The central hub for the patient. It features a "Sentient Core" that greets the u
 
 ```mermaid
 graph LR
-    User -->|Opens App| Splash[Animated Splash]
-    Splash --> Home[Home Dashboard]
-    Home -->|Tap| Chat[Aether AI Chat]
-    Home -->|Tap| Analyzer[Report Scanner]
-    Home -->|Tap| Risk[Risk Engine]
+    User -->|Opens App| Splash["Animated Splash"]
+    Splash --> Home["Home Dashboard"]
+    Home -->|Tap| Chat["Aether AI Chat"]
+    Home -->|Tap| Analyzer["Report Scanner"]
+    Home -->|Tap| Risk["Risk Engine"]
 ```
 
 ### 2. Aether AI Chat (`/chat`)

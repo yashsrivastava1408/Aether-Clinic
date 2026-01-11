@@ -10,13 +10,13 @@ The server implements a smart routing mechanism to choose the best AI model for 
 
 ```mermaid
 graph LR
-    Request[API Request] --> Manager[LLM Service Manager]
+    Request["API Request"] --> Manager["LLM Service Manager"]
     
-    Manager -->|Decision: Chat/Text?| RouteA{Simple Query?}
-    Manager -->|Decision: Image?| RouteB[Gemini Vision]
+    Manager -->|Decision: Chat/Text?| RouteA{"Simple Query?"}
+    Manager -->|Decision: Image?| RouteB["Gemini Vision"]
     
-    RouteA -->|Yes| Ollama[Local Llama 3.2 (Privacy)]
-    RouteA -->|No/Complex| Gemini[Google Gemini Flash (Power)]
+    RouteA -->|Yes| Ollama["Local Llama 3.2 (Privacy)"]
+    RouteA -->|No/Complex| Gemini["Google Gemini Flash (Power)"]
     
     Ollama --> Response
     Gemini --> Response

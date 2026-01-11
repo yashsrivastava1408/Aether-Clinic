@@ -10,13 +10,13 @@ The application uses a standard 3-tier Kubernetes deployment strategy.
 
 ```mermaid
 graph TD
-    Ingress[Nginx Ingress] -->|/api| Server[Server Service]
-    Ingress -->|/| Client[Client Service]
+    Ingress["Nginx Ingress"] -->|/api| Server["Server Service"]
+    Ingress -->|/| Client["Client Service"]
     
     subgraph "Cluster Internal"
-        Server -->|Internal DNS| ML[ML Service]
-        Server -->|Internal DNS| Mongo[MongoDB Service]
-        ML -->|Scale| Pods[ML Replicas]
+        Server -->|Internal DNS| ML["ML Service"]
+        Server -->|Internal DNS| Mongo["MongoDB Service"]
+        ML -->|Scale| Pods["ML Replicas"]
     end
 ```
 
