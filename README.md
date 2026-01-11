@@ -1,139 +1,70 @@
-# Aether Clinic 🛰️
+# 🏥 Aether Clinic: AI-Powered Healthcare System
 
-**Aether Clinic** is a next-generation, AI-powered healthcare intelligence system designed to provide accessible, high-tech, and private medical guidance. It combines advanced Machine Learning with a futuristic, holographic user experience.
-
----
-
-## 🌌 Project Overview
-
-Aether Clinic bridges the gap between individuals and reliable medical guidance. In regions with limited healthcare access, language barriers, or high costs, Aether Clinic provides instant, trustworthy, and easy-to-understand medical insights.
-
-It acts as a **digital immune system**, helping users understand symptoms, identify risks, and interpret medical reports using state-of-the-art AI.
+**A comprehensive, privacy-first healthcare platform integrating React Native Mobile, Modern Web Clients, Node.js Backend, and Python ML Services.**
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ High-Level Architecture
 
-Aether Clinic is built as a modular microservices architecture, ensuring privacy by running heavy AI workloads locally.
+The system operates on a microservices-inspired architecture where the backend orchestrates communication between the user interfaces (Mobile/Web) and the specialized Intelligence Layer (Machine Learning & LLMs).
 
 ```mermaid
 graph TD
-    User((User))
-    
     subgraph "Frontend Layer"
-        Web[React / Vite Web App]
-        Mobile[Expo / React Native App]
-    end
-    
-    subgraph "Orchestration Layer"
-        Server[Node.js / Express Server]
-    end
-    
-    subgraph "Intelligence Layer"
-        Ollama[Ollama LLM Engine]
-        ML[Python / Flask ML Service]
-    end
-    
-    subgraph "Data Storage"
-        Reports[Analyzed Reports JSON]
+        M[📱 Mobile App (React Native)] -->|REST API| G[Gateway (Server)]
+        W[💻 Web Dashboard (React)] -->|REST API| G
     end
 
-    User --> Web
-    User --> Mobile
-    Web & Mobile --> Server
-    Server --> Ollama
-    Server --> ML
-    Server --> Reports
+    subgraph "Core Backend (Node.js)"
+        G -->|Store/Retrieve| DB[(Dictionary: MongoDB)]
+        G -->|OCR & Analysis| S[Report Service]
+        G -->|Secure Chat| C[Chat Controller]
+    end
+
+    subgraph "Intelligence Layer"
+        S -->|Forward Image| V[Gemini Vision (Cloud)]
+        C -->|Text Prompt| L[Ollama (Local LLM)]
+        G -->|Risk Data| ML[Python ML Service (Flask)]
+    end
+
+    subgraph "ML Service (Python)"
+        ML -->|Predict| H[Heart Disease Model]
+        ML -->|Predict| D[Diabetes Model]
+    end
 ```
 
-### 🛠️ Core Workflow
-1.  **Ingestion**: User Input via futuristic HUD (Text/Image).
-2.  **Processing**: Node.js Backend orchestrates requests.
-3.  **Intelligence**: 
-    -   **Chat**: Ollama (Llama 3.2) provides clinical reasoning.
-    -   **Reports**: Llama 3.2 Vision + Tesseract OCR analyze physical documents.
-    -   **Risks**: Python Scikit-learn models predict specific health risks (Heart/Diabetes).
-4.  **Visualization**: Results rendered with cinematic motion and HUD overlays.
+---
+
+## 🚀 Key System Components
+
+| Component | Tech Stack | Role & Functionality |
+| :--- | :--- | :--- |
+| **Mobile App** | React Native, Expo, Reanimated | Patient-facing app. Features "Aether" UI, biometric security, real-time chat, and report scanning. |
+| **Web Client** | React, Vite, TailwindCSS | Doctor/Admin dashboard. Visualizes patient trends, displays aggregated risk profiles, and manages clinics. |
+| **Backend API** | Node.js, Express, MongoDB | The central nervous system. Handles auth, data persistence, and orchestrates AI requests. |
+| **ML Engine** | Python, Flask, Scikit-Learn | Specialized service for numerical health predictions (Heart Disease, Diabetes). |
+| **LLM Service** | Google Gemini + Ollama | Hybrid Intelligence. Uses Cloud Gemini for complex vision tasks and Local Ollama for privacy-focused chat. |
+| **Infrastructure** | Kubernetes, Docker | Containerized deployment strategies for scalability and resilience. |
 
 ---
 
-## ⚡ Key Features
+## 🔐 Security & Privacy Architecture
 
-- **Holographic Dashboard**: A high-tech HUD with mouse-tracking "Flashlight" reveal and Nano-bot swarm interactions.
-- **3D Specialist Carousel**: Navigate medical specialists in a futuristic 3D carousel.
-- **AI Chatbot 2.0 ("The Session")**: A holographic command center for medical consultation powered by Llama 3.2.
-- **Vision Report Scanner**: A "Holographic Laser Scanner" that uses **Llama 3.2 Vision** and OCR to analyze medical reports (blood tests, etc.) from images.
-- **Disease Risk Assessment**: ML models for specific health risk predictions (Heart, Diabetes).
-- **Cinematic Experience**: Dossier-style About page with motion-tracked HUD overlays.
+The system prioritizes user data privacy through a "Local-First" intelligence approach and rigorous encryption standards.
 
----
-
-## 🛠️ Technology Stack
-
-### Application Layer
-- **Frontend**: React (Vite), Tailwind CSS, Framer Motion, Axios.
-- **Backend**: Node.js, Express.
-- **AI/LLM**: **Ollama** (Llama 3.2 & Llama 3.2 Vision).
-- **OCR**: Tesseract.js.
-- **ML Microservice**: Python, Flask, Scikit-learn.
-
-### DevOps & Infrastructure
-- **Containerization**: Docker (Multi-service setup with Docker Compose).
-- **Orchestration**: Kubernetes (Workload Jobs for batch ML inference).
-- **Environment**: Local LLM execution for absolute data privacy.
+*   **Zero-Knowledge Chat**: Routine conversations are processed via **Local Ollama**, ensuring chats don't leave the server infrastructure.
+*   **Encrypted Storage**: Medical reports and analysis results are encrypted before storage in MongoDB.
+*   **Ephemeral processing**: Images sent to Cloud Vision are processed in memory and not permanently stored on external servers.
 
 ---
 
-## 🚀 Getting Started
+## 📂 Repository Structure
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v18+)
-- [Docker](https://www.docker.com/) & Docker Compose
-- [Ollama](https://ollama.com/) (Running locally or in container)
-
-### Quick Start (Local)
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yashsrivastava1408/Aether-Clinic.git
-   cd ai-doctor-final
-   ```
-
-2. **Run with Docker Compose**
-   ```bash
-   docker-compose up --build
-   ```
-
-3. **Install AI Models** (If not already present in Ollama container)
-   ```bash
-   docker exec -it ai-doctor-final-ollama-1 ollama pull llama3.2
-   docker exec -it ai-doctor-final-ollama-1 ollama pull llama3.2-vision
-   ```
-
-4. **Access the App**
-   - Frontend: `http://localhost:5173`
-   - Backend API: `http://localhost:5050`
-   - ML Service: `http://localhost:5001`
+*   **/mobile**: The React Native application source code.
+*   **/client**: The Web Dashboard source code.
+*   **/server**: The Node.js Express backend and API routes.
+*   **/ml**: The Python Flask service serving the trained `.pkl` models.
+*   **/k8s**: Kubernetes manifests for deployment.
 
 ---
-
-## 🧪 Documentation
-
-Detailed documentation for each layer can be found here:
-- [Client (Frontend)](./client/README.md)
-- [Server (Backend)](./server/README.md)
-- [Mobile (App)](./mobile/README.md)
-- [ML (Models)](./ml/README.md)
-- [K8s (DevOps)](./k8s/README.md)
-
----
-
-## ⚖️ Disclaimer
-
-**Aether Clinic does not provide medical diagnoses or replace licensed healthcare professionals.** 
-It is a technology demonstration project intended for educational and health-awareness purposes only. Always consult a doctor for medical concerns.
-
----
-
-Developed with 💚 by **Yash Srivastava**
-
+*Built with ❤️ for the Future of Healthcare.*

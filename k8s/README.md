@@ -1,50 +1,44 @@
-# Aether Clinic - Kubernetes (K8s) ☸️
+# ☸️ Aether K8s: Kubernetes Deployment
 
-This directory contains the Kubernetes manifests used to deploy and scale the Aether Clinic's intelligence layer, specifically the Machine Learning microservices.
-
----
-
-## 🏗️ Deployment Architecture
-
-The current setup focuses on making the ML inference capabilities resilient and scalable.
-
-### 1. ML Deployment (`ml-deployment.yaml`)
-- **Role**: Manages the Flask-based ML microservice.
-- **Scaling**: Configured for 2 replicas by default to ensure high availability.
-- **Resources**: Assigned specific CPU/Memory limits to ensure stable inference performance.
-
-### 2. ML Service (`ml-service.yaml`)
-- **Type**: ClusterIP.
-- **Role**: Provides a stable internal DNS name (`ml-service`) that the Node.js backend uses to communicate with the ML models.
-
-### 3. ML Job (`ml-job.yaml`)
-- **Role**: Designed for batch processing or one-time intensive model training/updates.
-- **Workflow**: Spins up a container, executes the specific `train.py` logic, and terminates upon completion.
+**Manifests for orchestrating the Aether Clinic microservices in a production environment.**
 
 ---
 
-## 🚀 Deployment Instructions
+## ☁️ Cluster Topology
 
-### 1. Apply Manifests
-Ensure you have `kubectl` configured and connected to your cluster, then run:
-```bash
-kubectl apply -f .
-```
+The application uses a standard 3-tier Kubernetes deployment strategy.
 
-### 2. Verify Status
-```bash
-# Check Pods
-kubectl get pods
-
-# Check Services
-kubectl get svc
+```mermaid
+graph TD
+    Ingress[Nginx Ingress] -->|/api| Server[Server Service]
+    Ingress -->|/| Client[Client Service]
+    
+    subgraph "Cluster Internal"
+        Server -->|Internal DNS| ML[ML Service]
+        Server -->|Internal DNS| Mongo[MongoDB Service]
+        ML -->|Scale| Pods[ML Replicas]
+    end
 ```
 
 ---
 
-## 🛠️ Scaling & Performance
-- **Horizontal Scaling**: To scale the ML service based on load:
-  ```bash
-  kubectl scale deployment ml-deployment --replicas=5
-  ```
-- **Updates**: Use `kubectl rollout restart deployment/ml-deployment` to apply model updates without downtime.
+## 📦 Deployment Resources
+
+### 1. Core Services
+*   **backend-deployment.yaml**: Deploys the Node.js API server. Configured with readiness/liveness probes.
+*   **client-deployment.yaml**: Serves the React Web Client (Nginx container).
+*   **ml-deployment.yaml**: Deploys the Python Flask service.
+
+### 2. Infrastructure
+*   **mongo-statefulset.yaml**: Manages the database persistence with Persistent Volume Claims (PVC).
+*   **ingress.yaml**: Routes external HTTP traffic to the appropriate internal services.
+
+---
+
+## 🚀 Scalability
+
+*   **Horizontal Pod Autoscaling (HPA)**: Configured to scale the Node.js backend based on CPU utilization > 70%.
+*   **Rolling Updates**: Zero-downtime deployment strategy enables seamless updates.
+
+---
+*Orchestrating Health at Scale.*

@@ -1,60 +1,57 @@
-# Aether Clinic - Mobile 📱
+# 📱 Aether Mobile: Patient Companion App
 
-The mobile companion for Aether Clinic, built with **React Native** and **Expo**. It provides a streamlined, portable version of the medical intelligence system with optimized biometric-style UI.
-
----
-
-## 🚀 Tech Stack
-
-- **Framework**: [Expo](https://expo.dev/) (SDK 50+)
-- **Runtime**: [React Native](https://reactnative.dev/)
-- **Navigation**: [Expo Router](https://docs.expo.dev/router/introduction/) (File-based routing)
-- **Styling**: NativeWind (Tailwind CSS for React Native)
-- **Animations**: Reanimated & Lucide Icons for high-performance UI feedback.
+**A futuristic, visually immersive React Native application designed for patient engagement and health tracking.**
 
 ---
 
-## ✨ Features
+## 🎨 Design Philosophy: "Aether UI"
 
-- **Analyze Tab**: Mobile-optimized interface for uploading clinical reports directly from the camera or photo library.
-- **Biometric UI**: Circular progress indicators and holographic typography that mimics medical diagnostic hardware.
-- **Neural Sync**: Seamlessly interfaces with the Node.js backend to provide AI insights on the go.
-- **Responsive Layout**: Designed for both iOS and Android with tactical HUD frames.
+The mobile application implements a custom **"Aether" Design System**, focusing on dark-mode aesthetics, holographic gradients, and fluid micro-interactions.
 
----
-
-## 🏗️ Project Structure
-
-- `app/`: Contains the main screens using Expo Router.
-  - `(tabs)/`: Main bottom-tab navigation (Home, Analyze, Profile).
-  - `_layout.tsx`: Root layout with theme providers and font loading.
-- `components/`: Pure UI components like `AnalyzeScreen`, `HolographicButton`, etc.
-- `constants/`: Theme colors and configuration.
-- `hooks/`: Custom React hooks for API calls and device permissions.
+### Key Visual Technologies:
+*   **React Native Reanimated**: Powering the *Fireflies*, *Aurora Backgrounds*, and *card tilt* effects.
+*   **Expo Haptics**: Providing tactile feedback for "Digital Decoder" text effects and button interactions.
+*   **Glassmorphism**: Extensive use of blur views and semi-transparent layers to create depth.
 
 ---
 
-## 🛠️ Setup & Development
+## 🧩 Core Mobile Modules
 
-1. **Install dependencies**
-   ```bash
-   npm install
-   ```
+### 1. The Neural Home (Dashboard)
+The central hub for the patient. It features a "Sentient Core" that greets the user and dynamic Bento Grid cards for quick navigation.
 
-2. **Configure Backend URL**
-   - Update the API base URL in `constants/Config.ts` (or equivalent) to point to your development machine's IP address.
+```mermaid
+graph LR
+    User -->|Opens App| Splash[Animated Splash]
+    Splash --> Home[Home Dashboard]
+    Home -->|Tap| Chat[Aether AI Chat]
+    Home -->|Tap| Analyzer[Report Scanner]
+    Home -->|Tap| Risk[Risk Engine]
+```
 
-3. **Start the app**
-   ```bash
-   npx expo start
-   ```
+### 2. Aether AI Chat (`/chat`)
+A secure interface for conversational health assistance.
+*   **Feature**: Real-time streaming responses.
+*   **Visuals**: Voice visualizer animations and "AI typing" indicators.
+*   **Safety**: Local red-teaming ensures no medical advice is given as absolute fact.
 
-4. **Run on Device/Emulator**
-   - Press `i` for iOS simulator.
-   - Press `a` for Android emulator.
-   - Scan the QR code with the **Expo Go** app on your physical device.
+### 3. Report Vision (`/analyze`)
+Allows users to upload medical reports (PDF/Images) for instant breakdown.
+*   **Process**: Image -> Base64 -> Backend -> OCR -> Gemini 1.5 Pro -> Structured JSON Summary.
+
+### 4. Risk Engine (`/risk`)
+A form-based interface connecting directly to the Python ML Service.
+*   **Input**: Age, BP, Cholesterol, etc.
+*   **Output**: Real-time "Gauge Animation" showing probability of heart disease.
 
 ---
 
-## 🎨 Visual Identity
-The mobile app maintains the same **Emerald & Obsidian** aesthetic as the web version but uses simplified motion to ensure 60FPS performance on mobile hardware.
+## 🛠️ Tech Stack & Configuration
+
+*   **Framework**: Expo (React Native)
+*   **Language**: TypeScript
+*   **Network**: Axios (with centralized `Config.ts` for ease of IP switching)
+*   **Navigation**: Expo Router (File-based routing)
+
+---
+*Designed for iOS and Android.*
