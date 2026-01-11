@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import NeuralBackground from "../components/NeuralBackground";
 import { useTheme } from "../context/ThemeContext";
+import MLResultGauge from "../components/MLResultGauge";
+import FactorImpact from "../components/FactorImpact";
 
 export default function HeartRisk() {
   const [features, setFeatures] = useState(Array(13).fill(""));
@@ -33,6 +35,7 @@ export default function HeartRisk() {
 
   const submit = async () => {
     setLoading(true);
+    setResult(null); // Clear previous result for re-animation
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/api/ml/heart`, {
         method: "POST",
@@ -43,11 +46,16 @@ export default function HeartRisk() {
       });
 
       const data = await res.json();
-      setResult(data);
+
+      // Artificial delay for "Neural Sync" effect
+      setTimeout(() => {
+        setResult(data);
+        setLoading(false);
+      }, 1500);
     } catch (error) {
       console.error("Analysis Failed:", error);
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -146,28 +154,20 @@ export default function HeartRisk() {
                 </h3>
 
                 <div className="space-y-6 relative z-10">
-                  <div className={`rounded-xl p-4 border ${isDark ? 'bg-[#0a0a0a]/40 border-white/5' : 'bg-slate-50 border-slate-200'}`}>
-                    <p className={`text-xs uppercase tracking-widest mb-1 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>Risk Assessment</p>
-                    <p className={`text-2xl font-bold ${result.prediction ? 'text-red-500' : 'text-emerald-500'} ${isDark ? 'drop-shadow-[0_0_10px_rgba(currentColor,0.5)]' : ''}`}>
-                      {result.prediction ? "DETECTED" : "NEGATIVE"}
-                    </p>
+                  <div className="flex justify-center py-4">
+                    <MLResultGauge
+                      percentage={result.risk_percentage}
+                      level={result.risk_level}
+                      isDark={isDark}
+                    />
                   </div>
 
-                  <div className={`rounded-xl p-4 border ${isDark ? 'bg-[#0a0a0a]/40 border-white/5' : 'bg-slate-50 border-slate-200'}`}>
-                    <p className={`text-xs uppercase tracking-widest mb-2 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>Probability Metric</p>
-                    <div className={`relative h-4 rounded-full overflow-hidden ${isDark ? 'bg-gray-800' : 'bg-slate-200'}`}>
-                      <div
-                        className={`absolute top-0 left-0 h-full transition-all duration-1000 ease-out ${result.prediction ? 'bg-gradient-to-r from-red-600 to-orange-500' : 'bg-gradient-to-r from-emerald-600 to-teal-500'}`}
-                        style={{ width: `${result.risk_percentage}%` }}
-                      />
-                    </div>
-                    <div className="mt-2 flex justify-between items-baseline">
-                      <span className={`text-3xl font-mono font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{result.risk_percentage}%</span>
-                      <span className={`text-sm font-semibold ${result.risk_level === 'High' ? 'text-red-500' : 'text-emerald-600'}`}>
-                        {result.risk_level} RISK
-                      </span>
-                    </div>
-                  </div>
+                  <FactorImpact
+                    features={features}
+                    labels={labels}
+                    results={result}
+                    isDark={isDark}
+                  />
 
                   <div className={`p-4 rounded-lg border text-sm leading-relaxed ${isDark ? 'bg-blue-500/10 border-blue-500/20 text-blue-200/80' : 'bg-blue-50 border-blue-100 text-blue-800'}`}>
                     <strong className="text-blue-500 block mb-1">AI Recommendation:</strong>

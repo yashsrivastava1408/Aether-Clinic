@@ -4,16 +4,18 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
+import * as Haptics from 'expo-haptics';
+import MLResultGauge from '../../components/MLResultGauge';
+import { Config } from '@/constants/Config';
 
-// Using the same reliable IP address
-const API_URL = 'http://192.168.1.6:5050';
+const API_URL = Config.API_URL;
 
 export default function RiskScreen() {
     const colorScheme = useColorScheme() ?? 'light';
     const isDark = colorScheme === 'dark';
 
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState<string | null>(null);
+    const [result, setResult] = useState<any | null>(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -49,28 +51,38 @@ export default function RiskScreen() {
         try {
             // Convert string inputs to numbers
             const payload = {
-                age: parseInt(formData.age),
-                sex: parseInt(formData.sex),
-                cp: parseInt(formData.cp),
-                trestbps: parseInt(formData.trestbps),
-                chol: parseInt(formData.chol),
-                fbs: parseInt(formData.fbs),
-                restecg: parseInt(formData.restecg),
-                thalach: parseInt(formData.thalach),
-                exang: parseInt(formData.exang),
-                oldpeak: parseFloat(formData.oldpeak || "0"),
-                slope: parseInt(formData.slope),
-                ca: parseInt(formData.ca),
-                thal: parseInt(formData.thal)
+                features: [
+                    parseInt(formData.age),
+                    parseInt(formData.sex),
+                    parseInt(formData.cp),
+                    parseInt(formData.trestbps),
+                    parseInt(formData.chol),
+                    parseInt(formData.fbs),
+                    parseInt(formData.restecg),
+                    parseInt(formData.thalach),
+                    parseInt(formData.exang),
+                    parseFloat(formData.oldpeak || "0"),
+                    parseInt(formData.slope),
+                    parseInt(formData.ca),
+                    parseInt(formData.thal)
+                ]
             };
 
-            const res = await axios.post(`${API_URL}/api/ml/predict_heart_disease`, payload);
+            // Using the /api/ml/heart endpoint which returns structured data
+            const res = await axios.post(`${API_URL}/api/ml/heart`, payload);
 
-            // Backend returns: { prediction: "Heart Disease Detected" } or "No Heart Disease..."
-            setResult(res.data.prediction);
+            // Trigger Haptic Feedback
+            if (res.data.risk_level === 'High') {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            } else {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+
+            setResult(res.data);
 
         } catch (error) {
             console.error("ML Error:", error);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
             Alert.alert("Error", "Could not analyze data. Check server connection.");
         } finally {
             setLoading(false);
@@ -91,17 +103,18 @@ export default function RiskScreen() {
                 {/* Result Card */}
                 {result && (
                     <View style={[styles.resultCard, {
-                        backgroundColor: result.includes('No') ? '#10b98120' : '#ef444420',
-                        borderColor: result.includes('No') ? '#10b981' : '#ef4444'
+                        backgroundColor: isDark ? '#ffffff05' : '#fff',
+                        borderColor: result.risk_level === 'High' ? '#ef444450' : '#10b98150',
                     }]}>
-                        <IconSymbol
-                            name={result.includes('No') ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"}
-                            size={40}
-                            color={result.includes('No') ? '#10b981' : '#ef4444'}
+                        <MLResultGauge
+                            percentage={result.risk_percentage}
+                            level={result.risk_level}
                         />
-                        <Text style={[styles.resultText, { color: result.includes('No') ? '#10b981' : '#ef4444' }]}>
-                            {result}
-                        </Text>
+                        <View style={[styles.badgeContainer, { backgroundColor: result.prediction ? '#ef444420' : '#10b98120' }]}>
+                            <Text style={[styles.resultText, { color: result.prediction ? '#ef4444' : '#10b981' }]}>
+                                {result.prediction ? "CARDIAC ANOMALY DETECTED" : "NO SIGNIFICANT ANOMALIES"}
+                            </Text>
+                        </View>
                     </View>
                 )}
 
@@ -236,6 +249,7 @@ const styles = StyleSheet.create({
     predictBtn: { backgroundColor: '#ef4444', height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center', shadowColor: '#ef4444', shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } },
     predictBtnText: { color: '#fff', fontSize: 18, fontWeight: '800', letterSpacing: 1 },
 
-    resultCard: { padding: 24, borderRadius: 20, borderWidth: 2, alignItems: 'center', gap: 12, marginBottom: 32 },
-    resultText: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' }
+    resultCard: { padding: 32, borderRadius: 24, borderWidth: 1, alignItems: 'center', gap: 24, marginBottom: 32, overflow: 'hidden' },
+    badgeContainer: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+    resultText: { fontSize: 13, fontWeight: '800', textAlign: 'center', letterSpacing: 0.5 }
 });

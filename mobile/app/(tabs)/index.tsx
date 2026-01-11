@@ -1,323 +1,331 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Animated, Dimensions, Platform, StatusBar } from 'react-native';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { StyleSheet, View, Text, ScrollView, StatusBar, Dimensions, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Easing } from 'react-native';
+import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence, Easing, withDelay } from 'react-native-reanimated';
 
-const { width } = Dimensions.get('window');
+import { BentoCard } from '@/components/ui/BentoCard';
+import { GlitchText } from '@/components/ui/GlitchText';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 
-// -----------------------------------------------------------------------------
-// 🔮 VISUAL CONSTANTS
-// -----------------------------------------------------------------------------
+const { width, height } = Dimensions.get('window');
+const GRID_GAP = 12;
+
+/* -------------------------------------------------------------------------- */
+/*                                   THEME                                    */
+/* -------------------------------------------------------------------------- */
 const THEME = {
   dark: {
     bg: '#050505',
     card: '#0a0a0a',
     border: 'rgba(255, 255, 255, 0.1)',
-    primary: '#10b981', // Emerald 500
-    primaryDim: 'rgba(16, 185, 129, 0.1)',
-    text: '#ffffff',
+    primary: '#10b981',
+    accent: '#3b82f6',
     textDim: '#a1a1aa',
-    accent: '#3b82f6', // Blue
   },
 };
-
-// -----------------------------------------------------------------------------
-// 🧩 COMPONENTS
-// -----------------------------------------------------------------------------
 
 const HolographicCorner = ({ style, color }: { style?: any, color: string }) => (
   <View style={[styles.corner, { borderColor: color }, style]} />
 );
 
-// 📟 Friendly Glitch Text
-const GlitchText = ({ text, style, color }: { text: string, style?: any, color: string }) => {
-  const [glitchFactor, setGlitchFactor] = useState(0);
+/* -------------------------------------------------------------------------- */
+/*                       AETHER COMMAND CARD (FLEX LAYOUT)                    */
+/* -------------------------------------------------------------------------- */
+const AetherCommandCard = () => {
+  const pulse = useSharedValue(0.5);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (Math.random() > 0.98) {
-        setGlitchFactor(Math.random() * 3);
-        setTimeout(() => setGlitchFactor(0), 100);
-      }
-    }, 300);
-    return () => clearInterval(interval);
+    pulse.value = withRepeat(
+      withTiming(1, { duration: 1500 }),
+      -1,
+      true
+    );
   }, []);
 
+  const dotStyle = useAnimatedStyle(() => ({
+    opacity: pulse.value,
+    transform: [{ scale: pulse.value }]
+  }));
+
   return (
-    <View>
-      <Text style={[style, { color: color }]}>{text}</Text>
-      {glitchFactor > 0 && (
-        <Text style={[style, { position: 'absolute', top: 0, left: 0, color: 'rgba(255,255,255,0.8)', opacity: 0.7, transform: [{ translateX: glitchFactor * 0.5 }, { translateY: -glitchFactor / 4 }] }]}>{text}</Text>
-      )}
-    </View>
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        router.push('/(tabs)/chat');
+      }}
+      style={styles.commandCard}
+    >
+      <LinearGradient
+        colors={['rgba(59, 130, 246, 0.15)', 'rgba(5, 5, 5, 0.8)']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      {/* Glow Border */}
+      <View style={styles.commandBorder} />
+
+      {/* Content Container with Flex Layout */}
+      <View style={styles.commandContainer}>
+        {/* Header Row */}
+        <View style={styles.commandHeader}>
+          <View style={styles.iconBox}>
+            <IconSymbol name="brain.head.profile" size={24} color="#60a5fa" />
+          </View>
+          <View style={styles.statusBox}>
+            <Animated.View style={[styles.statusDot, dotStyle]} />
+            <Text style={styles.statusText}>NEURAL LINK ACTIVE</Text>
+          </View>
+        </View>
+
+        {/* Bottom Row */}
+        <View style={styles.commandBottom}>
+          <View style={{ flex: 1, marginRight: 16 }}>
+            <Text style={styles.commandTitle} numberOfLines={1} adjustsFontSizeToFit>AETHER AI</Text>
+            <Text style={styles.commandSubtitle} numberOfLines={1}>Ask anything, anytime.</Text>
+          </View>
+
+          <View style={styles.enterButton}>
+            <IconSymbol name="arrow.right" size={20} color="#fff" />
+          </View>
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 };
 
-// 🧘 Chill Quotes Component
-const ChillQuotes = ({ color }: { color: string }) => {
-  const QUOTES = [
-    "KEEP CALM",
-    "WE GOT THIS",
-    "JUST BREATHE",
-    "STAY POSITIVE",
-    "ALL IS WELL"
-  ];
-  const [index, setIndex] = useState(0);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+/* -------------------------------------------------------------------------- */
+/*                          DIGITAL AURORA (BREATHING BG)                     */
+/* -------------------------------------------------------------------------- */
+const AuroraBackground = () => {
+  const opacity = useSharedValue(0.1);
 
   useEffect(() => {
-    const cycle = () => {
-      // Fade Out
-      Animated.timing(fadeAnim, { toValue: 0, duration: 1000, useNativeDriver: true }).start(() => {
-        setIndex((prev) => (prev + 1) % QUOTES.length);
-        // Fade In
-        Animated.timing(fadeAnim, { toValue: 1, duration: 1000, useNativeDriver: true }).start();
-      });
-    };
-
-    // Initial fade in
-    Animated.timing(fadeAnim, { toValue: 1, duration: 1000, useNativeDriver: true }).start();
-
-    const interval = setInterval(cycle, 4000); // Change every 4s
-    return () => clearInterval(interval);
+    opacity.value = withRepeat(
+      withTiming(0.4, { duration: 6000, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true
+    );
   }, []);
 
+  const style = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
   return (
-    <Animated.View style={{ opacity: fadeAnim }}>
-      <Text style={{ fontSize: 10, fontWeight: '900', letterSpacing: 3, textAlign: 'center', color: color }}>
-        {QUOTES[index]}
-      </Text>
+    <Animated.View style={[StyleSheet.absoluteFill, style]} pointerEvents="none">
+      <LinearGradient
+        colors={['#050505', '#064e3b', '#050505']}
+        locations={[0, 0.5, 1]}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
     </Animated.View>
   );
 };
 
+/* -------------------------------------------------------------------------- */
+/*                          AMBIENT FIREFLIES                                 */
+/* -------------------------------------------------------------------------- */
+const Firefly = ({ index }: { index: number }) => {
+  const randomX = Math.random() * width;
+  const randomY = Math.random() * height;
+  const size = Math.random() * 4 + 2;
 
-// 💧 LIQUID ENERGY COMPONENT (CRAZY OPTION 4)
-const LiquidBlob = ({ color, size, duration, delay, reverse }: any) => {
-  const anim = useRef(new Animated.Value(0)).current;
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const scale = useSharedValue(1);
 
   useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(anim, { toValue: 1, duration: duration, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.timing(anim, { toValue: 0, duration: duration, easing: Easing.inOut(Easing.ease), useNativeDriver: true })
-      ])
-    ).start();
+    const duration = 3000 + Math.random() * 3000;
+    const delay = Math.random() * 2000;
+
+    opacity.value = withDelay(delay, withRepeat(withSequence(
+      withTiming(Math.random() * 0.6 + 0.2, { duration: duration / 2 }),
+      withTiming(0, { duration: duration / 2 })
+    ), -1, true));
+
+    translateY.value = withDelay(delay, withRepeat(
+      withTiming(-50 - Math.random() * 50, { duration: duration, easing: Easing.linear }),
+      -1, false
+    ));
   }, []);
 
-  const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1.2] });
-  const rotate = anim.interpolate({ inputRange: [0, 1], outputRange: reverse ? ['0deg', '-180deg'] : ['0deg', '180deg'] });
-  const translateX = anim.interpolate({ inputRange: [0, 1], outputRange: [-10, 10] }); // Gentle wobble
+  const style = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }, { scale: scale.value }],
+  }));
 
   return (
-    <Animated.View style={[
-      styles.liquidBlob,
-      {
-        width: size, height: size, borderRadius: size / 2, backgroundColor: color,
-        transform: [{ scale }, { rotate }, { translateX }]
-      }
-    ]} />
+    <Animated.View
+      style={[
+        style,
+        {
+          position: 'absolute',
+          left: randomX,
+          top: randomY,
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          backgroundColor: index % 2 === 0 ? '#10b981' : '#3b82f6'
+        }
+      ]}
+    />
   );
 };
 
-const LiquidCore = ({ color, accent }: { color: string, accent: string }) => {
+const AmbientFireflies = () => {
   return (
-    <View style={styles.liquidContainer}>
-      {/* Multiple overlapping blobs to create "liquid" effect */}
-      <View style={{ position: 'absolute', opacity: 0.3 }}>
-        <LiquidBlob color={color} size={180} duration={8000} delay={0} />
-      </View>
-      <View style={{ position: 'absolute', opacity: 0.4 }}>
-        <LiquidBlob color={accent} size={160} duration={12000} delay={1000} reverse />
-      </View>
-      <View style={{ position: 'absolute', opacity: 0.5 }}>
-        <LiquidBlob color={color} size={140} duration={6000} delay={500} />
-      </View>
-
-      {/* Central Glow */}
-      <View style={[styles.singularity, { shadowColor: color, width: 60, height: 60, borderRadius: 30, borderWidth: 0, backgroundColor: '#fff', opacity: 0.9, shadowOpacity: 0.5, shadowRadius: 30 }]} />
-
-      {/* Floating particles around it */}
-      {[...Array(6)].map((_, i) => (
-        <View key={i} style={StyleSheet.absoluteFill}>
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: `${i * 60}deg` }] }}>
-            <View style={{ width: 4, height: 4, backgroundColor: color, borderRadius: 2, transform: [{ translateY: -100 }] }} />
-          </View>
-        </View>
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {Array.from({ length: 15 }).map((_, i) => (
+        <Firefly key={i} index={i} />
       ))}
     </View>
   );
 };
 
-// ✨ Daily Insight Component
-const DailyInsight = ({ colors }: { colors: any }) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const starSpin = useRef(new Animated.Value(0)).current;
+/* -------------------------------------------------------------------------- */
+/*                          HYPER SCRAMBLE ANIMATION                          */
+/* -------------------------------------------------------------------------- */
+const CHARS = '!<>-_\\/[]{}—=+*^?#________';
+
+const HyperScramble = ({ text, style }: { text: string, style: any }) => {
+  const [displayText, setDisplayText] = useState(
+    text.split('').map(() => CHARS[Math.floor(Math.random() * CHARS.length)]).join('')
+  );
+  const iterations = useRef(0);
+  const hasFinished = useRef(false);
 
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1500,
-      delay: 500,
-      useNativeDriver: true
-    }).start();
+    const interval = setInterval(() => {
+      setDisplayText(() =>
+        text.split('').map((char, index) => {
+          if (index < iterations.current) {
+            return text[index];
+          }
+          return CHARS[Math.floor(Math.random() * CHARS.length)];
+        }).join('')
+      );
 
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(starSpin, { toValue: 1, duration: 3000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.timing(starSpin, { toValue: 0, duration: 3000, easing: Easing.inOut(Easing.ease), useNativeDriver: true })
-      ])
-    ).start();
-  }, []);
+      if (iterations.current >= text.length) {
+        clearInterval(interval);
+        if (!hasFinished.current) {
+          hasFinished.current = true;
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+      }
 
-  const starOpacity = starSpin.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.5, 1, 0.5] });
-  const starScale = starSpin.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.2, 1] });
+      iterations.current += 1 / 2;
+    }, 40);
+
+    return () => clearInterval(interval);
+  }, [text]);
 
   return (
-    <Animated.View style={[styles.insightCard, { borderColor: colors.accent, backgroundColor: colors.accent + '10', opacity: fadeAnim, transform: [{ translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }]}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-        <Animated.View style={{ opacity: starOpacity, transform: [{ scale: starScale }] }}>
-          <IconSymbol name="star.fill" size={16} color={colors.accent} />
-        </Animated.View>
-        <Text style={{ color: colors.accent, fontWeight: 'bold', marginLeft: 8, fontSize: 12 }}>DAILY INSIGHT</Text>
-      </View>
-      <Text style={{ color: colors.text, fontSize: 14, lineHeight: 22, fontStyle: 'italic' }}>
-        "Staying hydrated boosts your cognitive performance. You're closely tracking your goal today—excellent work!"
-      </Text>
-    </Animated.View>
+    <Text style={style}>
+      {displayText}
+    </Text>
   );
 };
 
+/* -------------------------------------------------------------------------- */
+/*                          THE SENTIENT CORE (TEXT)                          */
+/* -------------------------------------------------------------------------- */
+const SentientCore = () => {
+  return (
+    <View style={styles.coreContainer}>
+      <View style={styles.coreGlow} />
 
-// -----------------------------------------------------------------------------
-// 🚀 MAIN SCREEN
-// -----------------------------------------------------------------------------
+      {/* The Text Logo with Hyper Scramble */}
+      <View style={{ transform: [{ scale: 1.0 }] }}>
+        <HyperScramble
+          text="AETHER CLINIC"
+          style={styles.coreTitle}
+        />
+      </View>
+
+      <Text style={styles.coreLabel}>YOUR PERSONAL HEALTH COMPANION</Text>
+    </View>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/*                          DAILY PROTOCOL (QUOTE)                            */
+/* -------------------------------------------------------------------------- */
+const DailyProtocol = () => (
+  <View style={styles.quoteCard}>
+    <View style={styles.quoteHeader}>
+      <Text style={styles.quoteLabel}>DAILY INSIGHT</Text>
+      <View style={styles.decorLine} />
+    </View>
+    <Text style={styles.quoteText}>
+      "Your health is a journey of understanding. We are here to provide clarity and calm at every step."
+    </Text>
+    <Text style={styles.quoteAuthor}>Aether Clinic</Text>
+  </View>
+);
 
 export default function HomeScreen() {
-  const isDark = true;
   const colors = THEME.dark;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <StatusBar barStyle='light-content' />
+      <StatusBar barStyle="light-content" />
 
-      <LinearGradient
-        colors={[colors.bg, '#080808', '#000000']}
-        style={StyleSheet.absoluteFill}
-      />
+      {/* 🌌 BACKGROUND LAYERS */}
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: '#000' }]} />
+      <AuroraBackground />
+      <AmbientFireflies />
       <View style={styles.bgGrid} pointerEvents="none" />
 
       <SafeAreaView style={{ flex: 1 }}>
 
-        <HolographicCorner style={{ top: 60, left: 24, borderTopWidth: 2, borderLeftWidth: 2, borderTopLeftRadius: 16 }} color={colors.primary} />
-        <HolographicCorner style={{ top: 60, right: 24, borderTopWidth: 2, borderRightWidth: 2, borderTopRightRadius: 16 }} color={colors.primary} />
+        {/* Holographic Corners */}
+        <HolographicCorner style={{ top: 20, left: 24, borderTopWidth: 2, borderLeftWidth: 2, borderTopLeftRadius: 16 }} color={colors.primary} />
+        <HolographicCorner style={{ top: 20, right: 24, borderTopWidth: 2, borderRightWidth: 2, borderTopRightRadius: 16 }} color={colors.primary} />
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-          {/* HEADER SECTION */}
+          {/* HEADER */}
           <View style={styles.header}>
             <View>
-              <View style={styles.systemBadge}>
-                <View style={[styles.statusDot, { backgroundColor: colors.primary }]} />
-                <Text style={[styles.systemText, { color: colors.primary }]}>Online • Ready to Help</Text>
-              </View>
-              <Text style={[styles.greeting, { color: colors.textDim }]}>Good Afternoon,</Text>
-
-              <GlitchText
-                text="Yash Srivastava"
-                style={styles.userName}
-                color={colors.text}
-              />
+              <Text style={styles.greetingSub}>WELCOME BACK</Text>
+              <GlitchText text="HELLO YASH" style={styles.greeting} color="#fff" />
             </View>
-            <TouchableOpacity style={[styles.profileButton, { borderColor: colors.border, backgroundColor: colors.card }]}>
-              <IconSymbol name="person.crop.circle" size={28} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-
-          {/* 💧 HERO: LIQUID ENERGY - WITH CHILL QUOTES */}
-          <Animated.View style={[styles.heroCard, { backgroundColor: colors.card, borderColor: colors.border, height: 300, justifyContent: 'center' }]}>
-            <LinearGradient
-              colors={[colors.primary + '05', 'transparent']}
-              style={StyleSheet.absoluteFill}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-            />
-
-            <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-              <LiquidCore color={colors.primary} accent={colors.accent} />
-
-              {/* Floating Text Overlay with Chill Quotes */}
-              <View style={{ position: 'absolute', bottom: 40 }}>
-                <ChillQuotes color={colors.text} />
-              </View>
-            </View>
-
-          </Animated.View>
-
-          {/* DAILY WELLNESS TIP */}
-          <DailyInsight colors={colors} />
-
-          {/* APP OVERVIEW SECTION */}
-          <View style={{ marginTop: 24 }}>
-            <Text style={[styles.sectionHeader, { color: colors.text }]}>How I Can Help</Text>
-
-            <View style={{ gap: 16 }}>
-              <View style={[styles.featureRow, { borderBottomColor: colors.border }]}>
-                <View style={[styles.featureIcon, { backgroundColor: colors.accent + '20' }]}>
-                  <IconSymbol name="brain.head.profile" size={20} color={colors.accent} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.featureTitle, { color: colors.text }]}>Chat with Dr. AI</Text>
-                  <Text style={[styles.featureDesc, { color: colors.textDim }]}>Feeling unwell? Describe your symptoms and get instant advice.</Text>
-                </View>
-              </View>
-
-              <View style={[styles.featureRow, { borderBottomColor: colors.border }]}>
-                <View style={[styles.featureIcon, { backgroundColor: colors.primary + '20' }]}>
-                  <IconSymbol name="doc.viewfinder" size={20} color={colors.primary} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.featureTitle, { color: colors.text }]}>Understand Reports</Text>
-                  <Text style={[styles.featureDesc, { color: colors.textDim }]}>Scan your medical docs or X-rays. I'll explain them in plain English.</Text>
-                </View>
-              </View>
-
-              <View style={[styles.featureRow, { borderBottomColor: colors.border }]}>
-                <View style={[styles.featureIcon, { backgroundColor: '#f59e0b20' }]}>
-                  <IconSymbol name="map.fill" size={20} color="#f59e0b" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.featureTitle, { color: colors.text }]}>Find Nearby Care</Text>
-                  <Text style={[styles.featureDesc, { color: colors.textDim }]}>Locate the best clinics, specialists, and pharmacies near you.</Text>
-                </View>
-              </View>
+            <View style={styles.statusBadge}>
+              <View style={styles.statusDot} />
+              <Text style={styles.statusText}>ACTIVE</Text>
             </View>
           </View>
 
-          {/* Quick Action / CTA */}
-          <TouchableOpacity
-            style={[styles.actionCard, { backgroundColor: colors.primary, borderColor: colors.primary, marginTop: 24 }]}
-            onPress={() => router.push('/(tabs)/explore')}
-            activeOpacity={0.8}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.actionTitle, { color: '#000' }]}>Start a Checkup</Text>
-              <Text style={[styles.actionSubtitle, { color: '#000', opacity: 0.7 }]}>Tap to access all health tools</Text>
+          {/* 🌑 SENTIENT CORE */}
+          <SentientCore />
+
+          {/* 📜 DAILY PROTOCOL */}
+          <DailyProtocol />
+
+          {/* 📂 PRIMARY COMMAND (ENHANCED) */}
+          <View style={styles.primaryCommand}>
+            <AetherCommandCard />
+          </View>
+
+          {/* 🛡️ TRUST PROTOCOL */}
+          <View style={styles.confidenceBox}>
+            <Text style={styles.confidenceText}>
+              "Dedicated to your well-being.
+              Secure, private, and always available to guide you."
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
+              <IconSymbol name="shield.fill" size={12} color="#10b981" />
+              <Text style={{ color: '#10b981', fontSize: 10, fontWeight: 'bold', letterSpacing: 1 }}>SECURE • PRIVATE</Text>
             </View>
-            <View style={[styles.actionIcon, { backgroundColor: 'rgba(0,0,0,0.1)', width: 40, height: 40 }]}>
-              <IconSymbol name="arrow.right" size={20} color="#000" />
-            </View>
-          </TouchableOpacity>
+          </View>
 
         </ScrollView>
-
-        <View style={[styles.footer, { borderColor: colors.border, backgroundColor: colors.bg }]}>
-          <Text style={[styles.footerText, { color: colors.primary }]}>SECURE • ENCRYPTED • PRIVATE</Text>
-        </View>
-
       </SafeAreaView>
     </View>
   );
@@ -329,36 +337,72 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 24, paddingBottom: 100 },
   corner: { position: 'absolute', width: 24, height: 24, opacity: 0.6 },
 
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, marginTop: 16 },
-  systemBadge: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-  statusDot: { width: 6, height: 6, borderRadius: 3, marginRight: 6 },
-  systemText: { fontSize: 10, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', letterSpacing: 1, fontWeight: '700' },
-  greeting: { fontSize: 14, fontWeight: '400', letterSpacing: 0.5 },
-  userName: { fontSize: 24, fontWeight: '900', letterSpacing: -0.5, textTransform: 'capitalize' },
-  profileButton: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, marginBottom: 16 },
+  greetingSub: { fontSize: 12, color: THEME.dark.primary, letterSpacing: 1.5, marginBottom: 4, fontWeight: '700' },
+  greeting: { fontSize: 24, fontWeight: '900', letterSpacing: 0.5 },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(16, 185, 129, 0.1)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.2)' },
+  statusDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#10b981', marginRight: 6 },
+  statusText: { color: '#10b981', fontSize: 10, fontWeight: 'bold', letterSpacing: 1 },
 
-  heroCard: { borderRadius: 24, padding: 24, borderWidth: 1, marginBottom: 24, overflow: 'hidden', height: 300 },
-  heroTitle: { fontSize: 12, fontWeight: '900', letterSpacing: 1.5 },
+  // Sentient Core
+  coreContainer: { alignItems: 'center', justifyContent: 'center', height: 200, marginBottom: 24, position: 'relative', marginTop: 32 },
+  coreGlow: { position: 'absolute', width: '80%', height: 100, borderRadius: 50, backgroundColor: '#10b981', opacity: 0.15 },
+  coreTitle: { fontSize: 36, fontWeight: '900', letterSpacing: 2, textAlign: 'center', color: '#fff' },
+  coreLabel: { position: 'absolute', bottom: 10, color: '#10b981', fontSize: 10, letterSpacing: 3, fontWeight: 'bold', opacity: 0.8 },
 
-  // Liquid Styles
-  liquidContainer: { width: 220, height: 220, alignItems: 'center', justifyContent: 'center', position: 'relative' },
-  liquidBlob: { position: 'absolute', opacity: 0.4 },
-  singularity: { position: 'absolute', zIndex: 10 },
+  // Quote
+  quoteCard: { backgroundColor: 'rgba(255,255,255,0.03)', padding: 20, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', marginBottom: 24 },
+  quoteHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  quoteLabel: { color: '#666', fontSize: 10, fontWeight: '900', letterSpacing: 1 },
+  decorLine: { height: 1, flex: 1, backgroundColor: '#333', marginLeft: 12 },
+  quoteText: { color: '#e2e8f0', fontSize: 18, fontStyle: 'italic', fontWeight: '500', lineHeight: 28 },
+  quoteAuthor: { color: '#10b981', fontSize: 12, marginTop: 12, textAlign: 'right', fontWeight: 'bold', letterSpacing: 1 },
 
-  insightCard: { marginVertical: 8, padding: 16, borderRadius: 16, borderWidth: 1 },
+  // Primary & Trust
+  primaryCommand: { marginBottom: 24 },
+  confidenceBox: { alignItems: 'center', paddingHorizontal: 32, marginBottom: 32 },
+  confidenceText: { color: '#94a3b8', fontSize: 14, fontStyle: 'italic', textAlign: 'center', lineHeight: 22 },
 
-  sectionHeader: { fontSize: 18, fontWeight: '700', marginBottom: 16, letterSpacing: 0.5 },
+  // Command Card Styles
+  commandCard: {
+    height: 160,
+    width: '100%',
+    borderRadius: 24,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  commandContainer: {
+    flex: 1,
+    padding: 24,
+    justifyContent: 'space-between', // Pushes Header up, Bottom down
+  },
+  commandBorder: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.4)', // Blue accent
+    borderRadius: 24,
+  },
+  commandHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  commandBottom: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' },
 
-  featureRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1 },
-  featureIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
-  featureTitle: { fontSize: 16, fontWeight: 'bold' },
-  featureDesc: { fontSize: 13, marginTop: 2, width: '95%', lineHeight: 18 },
+  iconBox: {
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  statusBox: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  statusText: { color: '#60a5fa', fontSize: 10, fontWeight: 'bold', letterSpacing: 1 },
 
-  actionCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 20, borderWidth: 1, gap: 16 },
-  actionIcon: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  actionTitle: { fontSize: 16, fontWeight: 'bold' },
-  actionSubtitle: { fontSize: 12 },
+  commandTitle: { color: '#fff', fontSize: 28, fontWeight: 'bold' },
+  commandSubtitle: { color: '#93c5fd', fontSize: 14, marginTop: 4 },
 
-  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 36, borderTopWidth: 1, justifyContent: 'center', alignItems: 'center', zIndex: 100 },
-  footerText: { fontSize: 10, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', opacity: 0.7, letterSpacing: 1 },
+  enterButton: {
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: '#3b82f6',
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#3b82f6', shadowOpacity: 0.5, shadowRadius: 10,
+  },
+
+  sectionTitle: { fontSize: 14, color: THEME.dark.textDim, letterSpacing: 2, marginBottom: 16, fontWeight: '600' },
+  gridContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP },
 });

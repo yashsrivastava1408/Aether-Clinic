@@ -4,6 +4,7 @@ import TiltCard from "../components/TiltCard";
 import VoiceVisualizer from "../components/VoiceVisualizer";
 import { getUserId } from "../utils/user";
 import { useTheme } from "../context/ThemeContext";
+import MLResultGauge from "../components/MLResultGauge";
 
 export default function Chatbot({ doctor, onBack }) {
   const [messages, setMessages] = useState([]);
@@ -195,12 +196,35 @@ State your symptoms or upload a photo for analysis.`,
                 ? "bg-blue-600/20 border-blue-500/30 text-blue-500 font-medium rounded-br-none"
                 : (isDark ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-100 rounded-bl-none" : "bg-emerald-50 border-emerald-200 text-slate-800 rounded-bl-none shadow-sm")
               }`}>
-              {/* Note: I changed user text color slightly for visibility in light mode if needed, but blue-100 might be hard to read on white. using blue-600/20 bg typically implies dark. Adjusted logic above. */}
               {msg.image && (
                 <img src={msg.image} alt="Uploaded" className="max-w-full h-auto rounded-lg mb-2 border border-white/10" />
               )}
               <span className={msg.sender === "user" ? (isDark ? "text-blue-100" : "text-blue-900") : ""}>
-                {msg.text}
+                {/* Parse for Risk Analysis code block */}
+                {(() => {
+                  const riskMatch = msg.text.match(/\[RISK_ANALYSIS:\s*({.*?})\]/);
+                  if (riskMatch) {
+                    try {
+                      const data = JSON.parse(riskMatch[1]);
+                      const cleanText = msg.text.replace(/\[RISK_ANALYSIS:.*?\]/, '').trim();
+                      return (
+                        <div className="space-y-4">
+                          <p>{cleanText}</p>
+                          <div className={`flex justify-center p-6 rounded-xl ${isDark ? 'bg-black/40' : 'bg-white/50 shadow-inner'}`}>
+                            <MLResultGauge
+                              percentage={data.percentage}
+                              level={data.level}
+                              isDark={isDark}
+                            />
+                          </div>
+                        </div>
+                      );
+                    } catch (e) {
+                      return msg.text;
+                    }
+                  }
+                  return msg.text;
+                })()}
               </span>
             </div>
           </div>

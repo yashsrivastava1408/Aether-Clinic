@@ -5,9 +5,9 @@ import axios from 'axios';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Config } from '@/constants/Config';
 
-// Using the same reliable IP address we fixed earlier
-const API_URL = 'http://192.168.1.6:5050';
+const API_URL = Config.API_URL;
 
 export default function AnalyzeScreen() {
     const colorScheme = useColorScheme() ?? 'light';
@@ -160,13 +160,20 @@ export default function AnalyzeScreen() {
                         {result.risk_assessment && (
                             <View style={styles.resultSection}>
                                 <Text style={[styles.sectionTitle, { color: isDark ? '#cbd5e1' : '#475569' }]}>RISK ASSESSMENT</Text>
-                                {/* Usually this is a markdown string or object, adjusting based on backend response shape */}
-                                {/* Assuming result.risk_assessment is a string for simplicity, or we check existing shape */}
                                 <Text style={[styles.sectionBody, { color: isDark ? '#fff' : '#1e293b' }]}>
                                     {typeof result.risk_assessment === 'string' ? result.risk_assessment : JSON.stringify(result.risk_assessment)}
                                 </Text>
                             </View>
                         )}
+
+                        {/* DISCLAIMER */}
+                        <View style={{ marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: isDark ? '#ffffff1a' : '#e2e8f0' }}>
+                            <Text style={{ color: isDark ? '#64748b' : '#94a3b8', fontSize: 11, fontStyle: 'italic', lineHeight: 16 }}>
+                                Report Interpretation Notice{'\n'}
+                                Report explanations are simplified AI-generated interpretations for understanding purposes only.
+                                They are not a substitute for a doctor’s evaluation or clinical diagnosis.
+                            </Text>
+                        </View>
                     </View>
                 )}
 

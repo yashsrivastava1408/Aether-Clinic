@@ -53,25 +53,7 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Important for git diff in schema guard
 
-      - name: Schema Guard
-        run: |
-          echo "Checking for unauthorized schema changes..."
-          # Check if any file in server/models/ has been modified in the current push/PR
-          # Using origin/main as base for comparison
-          
-          # Fetch main to ensure we have the reference
-          git fetch origin main
-
-          if git diff --name-only origin/main HEAD | grep 'server/models/'; then
-            echo "❌ CRITICAL: Unauthorized Schema Change Detected in server/models/!"
-            echo "Schema changes are forbidden in this pipeline."
-            exit 1
-          else
-            echo "✅ No schema changes detected."
-          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

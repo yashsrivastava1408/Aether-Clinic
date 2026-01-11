@@ -12,14 +12,59 @@ It acts as a **digital immune system**, helping users understand symptoms, ident
 
 ---
 
+## 🏗️ System Architecture
+
+Aether Clinic is built as a modular microservices architecture, ensuring privacy by running heavy AI workloads locally.
+
+```mermaid
+graph TD
+    User((User))
+    
+    subgraph "Frontend Layer"
+        Web[React / Vite Web App]
+        Mobile[Expo / React Native App]
+    end
+    
+    subgraph "Orchestration Layer"
+        Server[Node.js / Express Server]
+    end
+    
+    subgraph "Intelligence Layer"
+        Ollama[Ollama LLM Engine]
+        ML[Python / Flask ML Service]
+    end
+    
+    subgraph "Data Storage"
+        Reports[Analyzed Reports JSON]
+    end
+
+    User --> Web
+    User --> Mobile
+    Web & Mobile --> Server
+    Server --> Ollama
+    Server --> ML
+    Server --> Reports
+```
+
+### 🛠️ Core Workflow
+1.  **Ingestion**: User Input via futuristic HUD (Text/Image).
+2.  **Processing**: Node.js Backend orchestrates requests.
+3.  **Intelligence**: 
+    -   **Chat**: Ollama (Llama 3.2) provides clinical reasoning.
+    -   **Reports**: Llama 3.2 Vision + Tesseract OCR analyze physical documents.
+    -   **Risks**: Python Scikit-learn models predict specific health risks (Heart/Diabetes).
+4.  **Visualization**: Results rendered with cinematic motion and HUD overlays.
+
+---
+
 ## ⚡ Key Features
 
 - **Holographic Dashboard**: A high-tech HUD with mouse-tracking "Flashlight" reveal and Nano-bot swarm interactions.
 - **3D Specialist Carousel**: Navigate medical specialists in a futuristic 3D carousel.
 - **AI Chatbot 2.0 ("The Session")**: A holographic command center for medical consultation powered by Llama 3.2.
 - **Vision Report Scanner**: A "Holographic Laser Scanner" that uses **Llama 3.2 Vision** and OCR to analyze medical reports (blood tests, etc.) from images.
-- **Cinematic About Page**: A "Dossier Access" experience with cinematic motion and HUD overlays.
 - **Disease Risk Assessment**: ML models for specific health risk predictions (Heart, Diabetes).
+- **Cinematic Experience**: Dossier-style About page with motion-tracked HUD overlays.
 
 ---
 
@@ -30,7 +75,7 @@ It acts as a **digital immune system**, helping users understand symptoms, ident
 - **Backend**: Node.js, Express.
 - **AI/LLM**: **Ollama** (Llama 3.2 & Llama 3.2 Vision).
 - **OCR**: Tesseract.js.
-- **Styling**: Vanilla CSS + Tailwind for a "Professional but Crazy" science-fiction aesthetic.
+- **ML Microservice**: Python, Flask, Scikit-learn.
 
 ### DevOps & Infrastructure
 - **Containerization**: Docker (Multi-service setup with Docker Compose).
@@ -68,14 +113,18 @@ It acts as a **digital immune system**, helping users understand symptoms, ident
 4. **Access the App**
    - Frontend: `http://localhost:5173`
    - Backend API: `http://localhost:5050`
+   - ML Service: `http://localhost:5001`
 
 ---
 
 ## 🧪 Documentation
 
 Detailed documentation for each layer can be found here:
-- [Client (Frontend) Documentation](./client/README.md)
-- [Server (Backend) Documentation](./server/README.md)
+- [Client (Frontend)](./client/README.md)
+- [Server (Backend)](./server/README.md)
+- [Mobile (App)](./mobile/README.md)
+- [ML (Models)](./ml/README.md)
+- [K8s (DevOps)](./k8s/README.md)
 
 ---
 
@@ -87,3 +136,4 @@ It is a technology demonstration project intended for educational and health-awa
 ---
 
 Developed with 💚 by **Yash Srivastava**
+

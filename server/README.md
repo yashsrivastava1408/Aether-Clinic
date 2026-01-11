@@ -4,7 +4,7 @@ The backend of Aether Clinic is a Node.js/Express service that provides AI orche
 
 ---
 
-## 🚀 Teck Stack
+## 🚀 Tech Stack
 
 - **Runtime**: [Node.js](https://nodejs.org/)
 - **Framework**: [Express.js](https://expressjs.com/)
@@ -17,34 +17,46 @@ The backend of Aether Clinic is a Node.js/Express service that provides AI orche
 
 ## 🏗️ Core Services
 
-### 1. LLM Service (`services/llmService.js`)
-- Interfaces with the local Ollama API.
-- Supports **Hybrid Vision-OCR** analysis.
-- Dynamically switches models based on input:
-  - `llama3.2` for text-based chat.
-  - `llama3.2-vision` for medical report image analysis.
+### 1. LLM Orchestrator (`services/llmService.js`)
+- Interfaces with the local Ollama API (`localhost:11434`).
+- **Hybrid Vision-OCR Flow**:
+  1. Receives image from frontend.
+  2. Runs Tesseract OCR to extract raw text (high precision for numbers).
+  3. Sends image to `llama3.2-vision` to understand layout and context.
+  4. Combines both outputs for a final clinical summary.
 
-### 2. Report Analyzer (`services/reportAnalyzer.js`)
-- Processes raw text and images from medical reports.
-- Constructs complex clinical prompts for the AI.
-- Parses AI output into structured JSON: `summary`, `findings`, `alerts`, `suggestions`.
+### 2. Clinical Report Analyzer (`services/reportAnalyzer.js`)
+- Constructs complex, multi-stage prompts to ensure the AI follows medical safety protocols.
+- **Output Parsing**: Uses regex and structured JSON parsing to extract:
+  - `Summary`: 1-sentence executive overview.
+  - `Findings`: Detailed list of identified parameters.
+  - `Alerts`: High-priority concerns (Crimson level).
+  - `Suggestions`: Next steps and specialist recommendations.
 
 ### 3. OCR Engine
-- Uses Tesseract.js (with pre-loaded `eng.traineddata`) to extract text from JPG/PNG reports.
+- Uses Tesseract.js with the `eng.traineddata` language pack.
+- Optimized for medical terminology and tabular data found in blood reports.
 
 ---
 
 ## 🔌 API Endpoints
 
-### Chat
+### 💬 Chat Session
 - **POST** `/api/chat`
-  - Body: `{ message, specialization }`
-  - Returns AI-generated medical guidance.
+- **Body**: 
+  ```json
+  { "message": "I have a headache", "specialization": "Neurology" }
+  ```
+- **Description**: Returns AI-generated guidance based on the specified medical context.
 
-### Report Analysis
+### 📄 Report Analysis
 - **POST** `/api/report/analyze`
-  - Body: `Multipart/form-data` (file) or `{ text }`
-  - Returns structured diagnostic analysis.
+- **Body**: `Multipart/form-data` (file) or `{ "text": "..." }`
+- **Description**: Triggers the Vision/OCR pipeline. Returns structured JSON analysis of the medical report.
+
+### 💓 Heart Risk (Proxied)
+- **POST** `/api/predict/heart`
+- **Description**: Proxies request to the Python ML microservice for cardiac risk assessment.
 
 ---
 
@@ -70,8 +82,9 @@ The backend of Aether Clinic is a Node.js/Express service that provides AI orche
 
 ---
 
-## 🗄️ Structure
-- `controllers/`: Request handling logic.
-- `routes/`: API endpoint definitions.
-- `services/`: Business logic, AI orchestration, and OCR.
-- `uploads/`: Temporary storage for analyzed reports.
+## 🗄️ Project Structure
+- `controllers/`: Request handling and response formatting.
+- `routes/`: Express router definitions.
+- `services/`: Business logic, AI orchestration, and OCR engines.
+- `uploads/`: Temporary storage for medical images undergoing analysis.
+- `models/`: Mongoose/Schema definitions (if persistent storage is enabled).
