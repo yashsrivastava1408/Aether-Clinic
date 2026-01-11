@@ -1,6 +1,6 @@
 import React from 'react';
 
-const FactorImpact = ({ features, labels, results, isDark = true }) => {
+const FactorImpact = ({ features, labels, isDark = true }) => {
     // Mock impact calculation based on simple medical ranges
     // In a real scenario, this would come from SHAP values or the ML model
     const impacts = labels.map((item, i) => {

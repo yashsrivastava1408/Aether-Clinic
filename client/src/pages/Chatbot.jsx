@@ -219,7 +219,7 @@ State your symptoms or upload a photo for analysis.`,
                           </div>
                         </div>
                       );
-                    } catch (e) {
+                    } catch {
                       return msg.text;
                     }
                   }

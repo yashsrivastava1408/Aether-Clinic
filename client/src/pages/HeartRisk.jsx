@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import NeuralBackground from "../components/NeuralBackground";
 import { useTheme } from "../context/ThemeContext";
 import MLResultGauge from "../components/MLResultGauge";
