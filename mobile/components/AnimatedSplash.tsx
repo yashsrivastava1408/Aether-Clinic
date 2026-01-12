@@ -12,6 +12,7 @@ import Animated, {
     runOnJS,
     interpolateColor,
 } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 
 // 🚨 VERY IMPORTANT
 SplashScreen.preventAutoHideAsync();
@@ -42,7 +43,23 @@ export default function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
     // ─────────────────────────────────────
     // START ANIMATIONS (ONLY ONCE)
     // ─────────────────────────────────────
+
     const startAnimations = () => {
+        // 📳 HAPTICS LOOP
+        const pulseInterval = setInterval(() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }, 1600);
+
+        const ringInterval = setInterval(() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }, 2000);
+
+        // Clear intervals when finished
+        const cleanupHaptics = () => {
+            clearInterval(pulseInterval);
+            clearInterval(ringInterval);
+        };
+
         // 🌬 BREATHING CORE
         pulse.value = withRepeat(
             withTiming(1, { duration: 1600, easing: Easing.inOut(Easing.ease) }),
@@ -63,7 +80,9 @@ export default function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
             withDelay(
                 1000,
                 withTiming(26, { duration: 900, easing: Easing.in(Easing.cubic) }, () => {
+                    runOnJS(cleanupHaptics)();
                     containerOpacity.value = withTiming(0, { duration: 400 }, () => {
+                        runOnJS(Haptics.notificationAsync)(Haptics.NotificationFeedbackType.Success);
                         runOnJS(safeFinish)();
                     });
                 })
@@ -146,7 +165,7 @@ export default function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
 
             {/* Brand */}
             <Animated.View style={[styles.textContainer, textStyle]}>
-                <Text style={styles.title}>AETHER </Text>
+                <Text style={styles.title}>AETHER</Text>
                 <Text style={styles.subtitle}>INTELLIGENT HEALTHCARE</Text>
             </Animated.View>
         </Animated.View>
@@ -184,6 +203,8 @@ const styles = StyleSheet.create({
     textContainer: {
         position: 'absolute',
         alignItems: 'center',
+        width: '100%',
+        justifyContent: 'center',
     },
 
     title: {
@@ -194,6 +215,7 @@ const styles = StyleSheet.create({
         fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'sans-serif',
         textShadowColor: 'rgba(16,185,129,0.9)',
         textShadowRadius: 25,
+        textAlign: 'center',
     },
 
     subtitle: {

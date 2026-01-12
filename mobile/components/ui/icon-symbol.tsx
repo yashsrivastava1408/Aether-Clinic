@@ -25,6 +25,10 @@ const MAPPING = {
   'heart.text.square': 'monitor-heart',
   'arrow.up.right': 'call-made',
   'calendar': 'calendar-today',
+  'lungs.fill': 'air',
+  'pills.fill': 'medication',
+  'figure.walk': 'directions-run',
+  'cross.case.fill': 'medical-services',
 } as IconMapping;
 
 /**

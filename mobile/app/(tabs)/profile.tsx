@@ -1,9 +1,12 @@
 import React from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView, StatusBar } from 'react-native';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+
 import { GlitchText } from '@/components/ui/GlitchText';
+import { useAuth } from '@/context/AuthContext';
 
 const THEME = {
     bg: '#050505',
@@ -14,6 +17,8 @@ const THEME = {
 };
 
 export default function ProfileScreen() {
+    const router = useRouter();
+    const { user, logout } = useAuth();
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" />
@@ -43,8 +48,13 @@ export default function ProfileScreen() {
                             <Ionicons name="person" size={48} color={THEME.primary} />
                             <View style={[styles.onlineDot, { backgroundColor: THEME.primary }]} />
                         </LinearGradient>
-                        <Text style={styles.userName}>Yash Srivastava</Text>
-                        <Text style={styles.userId}>ID: 8492-AX-NExT</Text>
+                        <Text style={styles.userName}>{user?.name || 'Guest User'}</Text>
+                        <Text style={styles.userId}>ID: {user?.id.slice(0, 12).toUpperCase()}</Text>
+                        {user?.isGuest && (
+                            <TouchableOpacity style={styles.signInBadge} onPress={() => router.push('/login')}>
+                                <Text style={styles.signInText}>SECURE ACCOUNT</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
 
                     {/* 📊 STATS GRID */}
@@ -95,11 +105,38 @@ export default function ProfileScreen() {
                             </View>
 
                             {/* DATA */}
-                            <View style={[styles.legalItem, { borderBottomWidth: 0 }]}>
+                            <View style={styles.legalItem}>
                                 <Text style={styles.legalTitle}>Data & Privacy Notice</Text>
                                 <Text style={styles.legalText}>
                                     Your data is encrypted and handled securely.
                                     Aether Clinic does not share personal health information without user consent.
+                                </Text>
+                            </View>
+
+                            {/* TERMS */}
+                            <View style={styles.legalItem}>
+                                <Text style={styles.legalTitle}>Terms of Service</Text>
+                                <Text style={styles.legalText}>
+                                    By using this app, you agree to our Terms of Service.
+                                    Unauthorized use of the Neural Core API is prohibited.
+                                </Text>
+                            </View>
+
+                            {/* LICENSES */}
+                            <View style={styles.legalItem}>
+                                <Text style={styles.legalTitle}>Third Party Licenses</Text>
+                                <Text style={styles.legalText}>
+                                    This software uses open source components including React Native, Expo, and others.
+                                    Full license text available in Settings.
+                                </Text>
+                            </View>
+
+                            {/* AI LIMITATIONS */}
+                            <View style={[styles.legalItem, { borderBottomWidth: 0 }]}>
+                                <Text style={styles.legalTitle}>AI Limitations (Hallucinations)</Text>
+                                <Text style={styles.legalText}>
+                                    Generative AI models may produce inaccurate or hallucinated information.
+                                    Always verify critical health data with a medical professional.
                                 </Text>
                             </View>
                         </View>
@@ -109,6 +146,8 @@ export default function ProfileScreen() {
                         <TouchableOpacity style={styles.logoutBtn}>
                             <Text style={styles.logoutText}>DISCONNECT LINK</Text>
                         </TouchableOpacity>
+
+                        <Text style={styles.versionText}>Aether Clinic Mobile v1.0.0 (Build 2026.1)</Text>
                     </View>
 
                 </ScrollView>
@@ -192,4 +231,20 @@ const styles = StyleSheet.create({
     legalItem: { padding: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
     legalTitle: { color: '#e2e8f0', fontSize: 13, fontWeight: 'bold', marginBottom: 4 },
     legalText: { color: '#94a3b8', fontSize: 11, lineHeight: 16 },
+    versionText: { textAlign: 'center', color: '#555', fontSize: 10, marginTop: 24, letterSpacing: 1 },
+    signInBadge: {
+        marginTop: 12,
+        backgroundColor: 'rgba(16, 185, 129, 0.15)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(16, 185, 129, 0.3)',
+    },
+    signInText: {
+        color: '#10b981',
+        fontSize: 10,
+        fontWeight: 'bold',
+        letterSpacing: 1,
+    },
 });

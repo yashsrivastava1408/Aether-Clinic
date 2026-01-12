@@ -8,7 +8,7 @@ interface GlassCardProps {
     variant?: 'dark' | 'light' | 'primary';
 }
 
-export function GlassCard({ children, style, variant = 'dark' }: GlassCardProps) {
+export const GlassCard = React.memo(function GlassCard({ children, style, variant = 'dark' }: GlassCardProps) {
     let colors: readonly [string, string, ...string[]] = ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'];
     let borderColor = 'rgba(255,255,255,0.1)';
 
@@ -29,12 +29,13 @@ export function GlassCard({ children, style, variant = 'dark' }: GlassCardProps)
             </LinearGradient>
         </View>
     );
-}
+});
 
 const styles = StyleSheet.create({
     container: {
         borderRadius: 24,
         overflow: 'hidden',
+        // Removed potential shadow here as well if it existed, but it was clean.
     },
     gradient: {
         padding: 20,
@@ -44,3 +45,4 @@ const styles = StyleSheet.create({
         height: '100%',
     },
 });
+
