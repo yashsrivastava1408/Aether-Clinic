@@ -630,5 +630,47 @@
         "timestamp": "2026-01-10T17:16:58.375Z"
       }
     ]
+  },
+  {
+    "userId": "mobile-user-01",
+    "specialist": "Heart Specialist",
+    "messages": [
+      {
+        "sender": "user",
+        "text": "a736cce4b5923476b79761e5b90b055f:98b7bb3b06fb7591c030ecfc8d3909d1",
+        "timestamp": "2026-01-12T04:57:24.155Z"
+      },
+      {
+        "sender": "ai",
+        "text": "aea5b92c1783ba75704dde51cd1598bc:ec957146882cf6d3b19f74512f4b977313708f547c4a5f836e69b97d50cd336772d1e4e561a362accb36e0780aa1cad09e83c45ff33ba74e7983f698098c3e25b8680d38baea909cc1af1f80a9ddc590ccc2c8715549de305d828d4ff7fb972e9be4150f3326a4dbafc75f6d9df7b9bcaee06fbbd8608da78a61d1b5a5548224259e5264fc4c4a28bba0d2456e52fb7fb9ba8b491025effc91b08c1573910b2fe72ae566ed654e3bd64849c8bd5c4c5474f3ef7d92ff73c81483a53b528fca98c13a9b145aa6127e3e6771e9ad7b51372b776de7d5b897f5675356aef0aac393bd58fc595d76b6c70503fd06b932aefcd7217171a09a970a291e9c1a789bc8bfae58d26fb68248273880fd5b1c3c83568afa117fd0338a71be87be3819b237d798b6e2b13060d9770e5723d273f9a5e56891cdd7b31e7d9c1539cf9c702644e23a90b40d7f82080c6b1a64b6d2a4102be4880be8f604c302895a6ada0b390d174306393c777b56d728b7563449f650da",
+        "timestamp": "2026-01-12T04:57:24.155Z"
+      },
+      {
+        "sender": "user",
+        "text": "4fa3322a01dbeb9b3f14a38dbf4496f0:61ad1415a163f775259927b064c8d556",
+        "timestamp": "2026-01-12T05:05:01.134Z"
+      },
+      {
+        "sender": "ai",
+        "text": "a849880195e27879d259db2b5b7b13ac:a192257b1e6121f13950c174d373baf171f8c9357030cc052e5d5e77b96601639345a11b200c01854f415a604108be893e65d1ff14478e9528e37325e2e384085397d41998a26f5a156379f7119b53932b0d0d43c3308cd61e8e757b6dbe763e86f212088067471aa506f9da8d3f8814",
+        "timestamp": "2026-01-12T05:05:01.134Z"
+      }
+    ]
+  },
+  {
+    "userId": "guest-mkapqkpo-8av9v9ofl",
+    "specialist": "Heart Specialist",
+    "messages": [
+      {
+        "sender": "user",
+        "text": "ae109467f1cf80ff05f61fc65c297c80:b38e1a82fab2a2cc87bffa5abf423a0b",
+        "timestamp": "2026-01-12T05:19:35.765Z"
+      },
+      {
+        "sender": "ai",
+        "text": "faf0e4effbc7a937d2d362ae0b0f8b81:1368c89bfcc72a012f9c79ee5bb43d0966baef68ba8dfec0ff09204dd6e52db047941946e0bab65a4bbb4446ba40c9e50dd12a764b61725eae4ed4f4e2ec5f9d370e625a6575fdbe12305fd8627a01c0a16357bba96cf5921c521d5f9c5857ade12a19588f5c1e63d0732bc031a881ea",
+        "timestamp": "2026-01-12T05:19:35.765Z"
+      }
+    ]
   }
 ]

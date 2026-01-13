@@ -20,6 +20,10 @@ const app = express();
 // Security Headers
 app.use(helmet());
 
+// Data Sanitization (Prevent NoSQL Injection)
+import mongoSanitize from "express-mongo-sanitize";
+app.use(mongoSanitize());
+
 // Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

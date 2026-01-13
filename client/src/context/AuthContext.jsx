@@ -7,6 +7,7 @@ const AuthContext = createContext({
     logout: async () => { },
 });
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
@@ -20,7 +21,7 @@ export const AuthProvider = ({ children }) => {
 
     const [tokenUsage, setTokenUsage] = useState(0);
 
-    const [tokenUsage, setTokenUsage] = useState(0);
+
 
     // Auto-Logout Constants
     const INACTIVITY_LIMIT = 15 * 60 * 1000; // 15 Minutes
@@ -30,6 +31,7 @@ export const AuthProvider = ({ children }) => {
         loadUser();
         setupActivityListeners();
         return () => cleanupActivityListeners();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const setupActivityListeners = () => {
