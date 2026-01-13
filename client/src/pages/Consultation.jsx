@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import LegalModal from "../components/LegalModal";
 import TiltCard from "../components/TiltCard";
 import VoiceVisualizer from "../components/VoiceVisualizer";
 import NeuralSyncSequence from "../components/NeuralSyncSequence";
@@ -57,6 +58,7 @@ export default function Consultation({ onSelectDoctor }) {
   const isDark = theme === 'dark';
 
   // Modal State
+  const [showDisclaimer, setShowDisclaimer] = useState(true);
   const [pendingDoctor, setPendingDoctor] = useState(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [isCheckingHistory, setIsCheckingHistory] = useState(false);
@@ -169,6 +171,9 @@ export default function Consultation({ onSelectDoctor }) {
       {loading && (
         <NeuralSyncSequence onComplete={() => setLoading(false)} />
       )}
+
+      {/* Legal Disclaimer Gate */}
+      <LegalModal isOpen={showDisclaimer} onClose={() => setShowDisclaimer(false)} />
 
       {/* History Selection Modal */}
       {showHistoryModal && (

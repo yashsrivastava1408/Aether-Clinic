@@ -12,15 +12,18 @@ import HolographicCursor from "./components/HolographicCursor";
 import PageTransition from "./components/PageTransition";
 import SystemFooter from "./components/SystemFooter";
 import ThemeTransition from "./components/ThemeTransition";
+import WelcomeScreen from "./components/WelcomeScreen";
 
 import { ThemeProvider } from "./context/ThemeContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
-export default function App() {
+// Main Layout Component to access Auth Context
+const MainLayout = () => {
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [showSplash, setShowSplash] = useState(true);
+  const { hasOnboarded } = useAuth();
 
-  // Hide splash screen after 3 seconds
   // Hide splash screen callback
   const handleSplashComplete = React.useCallback(() => {
     setShowSplash(false);
@@ -64,31 +67,44 @@ export default function App() {
   };
 
   return (
-    <ThemeProvider>
-      <div className="bg-slate-50 dark:bg-[#030303] min-h-screen text-slate-900 dark:text-gray-100 font-sans transition-colors duration-500 app-container">
-        {/* Splash Screen - Overlays everything */}
-        {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
-        <ThemeTransition />
+    <div className="bg-slate-50 dark:bg-[#030303] min-h-screen text-slate-900 dark:text-gray-100 font-sans transition-colors duration-500 app-container">
+      {/* Splash Screen - Overlays everything */}
+      {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
+      <ThemeTransition />
 
-        {/* Hide Navbar during splash to prevent z-index issues */}
-        {!showSplash && (
+      {!showSplash && !hasOnboarded && (
+        <WelcomeScreen />
+      )}
+
+      {/* Hide Navbar during splash or welcome screen */}
+      {!showSplash && hasOnboarded && (
+        <>
           <Navbar
             navigate={setCurrentPage}
             currentPage={currentPage}
           />
-        )}
+          {/* Global Sci-Fi Cursor */}
+          <HolographicCursor />
 
-        {/* Global Sci-Fi Cursor */}
-        <HolographicCursor />
+          <main className="pt-20">
+            <PageTransition key={currentPage}>
+              {renderContent()}
+            </PageTransition>
+          </main>
 
-        <main className="pt-20">
-          <PageTransition key={currentPage}>
-            {renderContent()}
-          </PageTransition>
-        </main>
+          <SystemFooter />
+        </>
+      )}
+    </div>
+  );
+};
 
-        <SystemFooter />
-      </div>
-    </ThemeProvider>
+export default function App() {
+  return (
+    <AuthProvider>
+      <ThemeProvider>
+        <MainLayout />
+      </ThemeProvider>
+    </AuthProvider>
   );
 }

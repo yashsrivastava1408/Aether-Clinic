@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function Navbar({ navigate, currentPage }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const { user, login, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -150,13 +153,58 @@ export default function Navbar({ navigate, currentPage }) {
             <StatusTicker />
           </div>
 
-          <button
-            onClick={() => navigate("consultation")}
-            className="relative overflow-hidden group px-6 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold transition-all hover:bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)]"
-          >
-            <span className="relative z-10">Get Started</span>
-            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-          </button>
+          {/* Auth Section */}
+          {!user || user.isGuest ? (
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => login('user@example.com')} // Simulated Login
+                className={`text-sm font-medium transition-colors ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'}`}
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => login('user@example.com')} // Simulated Sign Up
+                className="relative overflow-hidden group px-6 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold transition-all hover:bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)]"
+              >
+                <span className="relative z-10">Sign Up</span>
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              </button>
+            </div>
+          ) : (
+            <div className="relative">
+              <button
+                onClick={() => setProfileOpen(!profileOpen)}
+                className="flex items-center gap-2 focus:outline-none"
+              >
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center border ${theme === 'dark' ? 'bg-emerald-900/20 border-emerald-500/30' : 'bg-emerald-50 border-emerald-200'}`}>
+                  {user.avatar ? (
+                    <img src={user.avatar} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    <span className="text-emerald-500 font-bold text-xs">{user.name?.charAt(0).toUpperCase()}</span>
+                  )}
+                </div>
+              </button>
+
+              {/* Profile Dropdown */}
+              {profileOpen && (
+                <div className={`absolute right-0 mt-4 w-48 rounded-xl border shadow-xl overflow-hidden backdrop-blur-xl animate-fade-in-up ${theme === 'dark' ? 'bg-[#0a0a0a]/90 border-white/10' : 'bg-white/90 border-gray-200'}`}>
+                  <div className="p-4 border-b border-white/5">
+                    <p className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{user.name}</p>
+                    <p className="text-[10px] text-emerald-500 font-mono">{user.id.split('-').pop().toUpperCase()}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setProfileOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2 ${theme === 'dark' ? 'text-red-400 hover:bg-white/5' : 'text-red-500 hover:bg-red-50'}`}
+                  >
+                    <span>Log Out</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -236,15 +284,54 @@ export default function Navbar({ navigate, currentPage }) {
               )}
             </button>
           ))}
-          <button
-            onClick={() => {
-              navigate("consultation");
-              setMobileMenuOpen(false);
-            }}
-            className="w-full mt-4 px-5 py-3 bg-emerald-600 text-white text-sm font-medium rounded-lg text-center shadow-lg shadow-emerald-900/20"
-          >
-            Get Started
-          </button>
+          {/* Auth Buttons Mobile */}
+          {!user || user.isGuest ? (
+            <div className="flex flex-col gap-3 mt-4">
+              <button
+                onClick={() => {
+                  login('user@example.com');
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full py-3 rounded-lg border font-medium ${theme === 'dark' ? 'border-white/10 text-white hover:bg-white/5' : 'border-gray-200 text-gray-900 hover:bg-gray-50'}`}
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => {
+                  login('user@example.com');
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full py-3 bg-emerald-600 text-white font-medium rounded-lg shadow-lg shadow-emerald-900/20"
+              >
+                Sign Up
+              </button>
+            </div>
+          ) : (
+            <div className="mt-4 pt-4 border-t border-white/5">
+              <div className="flex items-center gap-3 mb-4 px-2">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${theme === 'dark' ? 'bg-emerald-900/20 border-emerald-500/30' : 'bg-emerald-50 border-emerald-200'}`}>
+                  {user.avatar ? (
+                    <img src={user.avatar} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    <span className="text-emerald-500 font-bold">{user.name?.charAt(0).toUpperCase()}</span>
+                  )}
+                </div>
+                <div>
+                  <p className={`font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{user.name}</p>
+                  <p className="text-[10px] text-emerald-500 font-mono">{user.id.split('-').pop().toUpperCase()}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  logout();
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full text-left py-3 px-4 rounded-lg flex items-center gap-2 ${theme === 'dark' ? 'text-red-400 hover:bg-white/5' : 'text-red-500 hover:bg-red-50'}`}
+              >
+                Log Out
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

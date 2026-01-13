@@ -3,6 +3,7 @@ import axios from "axios";
 import TiltCard from "../components/TiltCard";
 import VoiceVisualizer from "../components/VoiceVisualizer";
 import { getUserId } from "../utils/user";
+import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import MLResultGauge from "../components/MLResultGauge";
 
@@ -16,6 +17,7 @@ export default function Chatbot({ doctor, onBack }) {
   const chatEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const { theme } = useTheme();
+  const { user, checkTokenLimit, consumeTokens, tokenUsage } = useAuth();
   const isDark = theme === 'dark';
 
   // Fake "System Init" state
@@ -77,6 +79,15 @@ State your symptoms or upload a photo for analysis.`,
   const sendMessage = async () => {
     if (!input.trim() && !image) return;
 
+    // Estimate token count (approx. 1 token per 4 chars, but we count chars for simplicity/safety)
+    const usageCost = input.length + (image ? 500 : 0); // Image fixed cost?
+
+    if (!checkTokenLimit(usageCost)) {
+      setError("DAILY LIMIT EXCEEDED. REQUEST TOKEN RESET OR SIGN IN.");
+      // Optional: Trigger a modal or just show the error
+      return;
+    }
+
     const userMsg = {
       sender: "user",
       text: input,
@@ -106,6 +117,10 @@ State your symptoms or upload a photo for analysis.`,
 
       if (res.data.reply) {
         setMessages((prev) => [...prev, { sender: "ai", text: res.data.reply }]);
+
+        // Consume tokens for Input + Output (Approx output if not provided)
+        const outputCost = res.data.reply ? res.data.reply.length : 100;
+        consumeTokens(usageCost + outputCost);
       }
       setIsTyping(false);
 
@@ -302,8 +317,8 @@ State your symptoms or upload a photo for analysis.`,
         </div>
         {/* Decorative Footer */}
         <div className="flex justify-between mt-2 px-2 text-[10px] text-gray-500 font-mono uppercase">
-          <span>MEM: 64TB / 128TB</span>
-          <span>ENC: AES-256</span>
+          <span>TOKENS: {tokenUsage.toLocaleString()} / {user?.isGuest ? '10,000' : '100,000'}</span>
+          <span>{user?.isGuest ? 'IDENTITY: GUEST' : 'IDENTITY: VERIFIED'}</span>
         </div>
       </div>
     </div>

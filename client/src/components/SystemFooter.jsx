@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
+import LegalModal from './LegalModal';
 
 export default function SystemFooter() {
+    const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
     const currentYear = new Date().getFullYear();
 
     // Random hex strings for the "data stream"
@@ -41,6 +43,15 @@ export default function SystemFooter() {
                         <p className="mt-1 text-[10px] uppercase tracking-wider text-emerald-900/60">
                             Unauthorized access to patient data is a federal offense.
                         </p>
+                        <p className="mt-2 text-[10px] text-gray-500 max-w-xs mx-auto">
+                            Aether Clinic does not provide medical advice. Consult a doctor.
+                        </p>
+                        <button
+                            onClick={() => setIsLegalModalOpen(true)}
+                            className="mt-2 text-[10px] text-emerald-600/60 hover:text-emerald-500 font-mono tracking-widest border-b border-transparent hover:border-emerald-500/50 transition-all"
+                        >
+                            [ VIEW_LEGAL_PROTOCOLS ]
+                        </button>
                     </div>
 
                     {/* Right: Uplinks */}
@@ -70,6 +81,8 @@ export default function SystemFooter() {
                     <span>UPTIME: 142:21:09</span>
                 </div>
             </div>
+            {/* Legal Modal */}
+            <LegalModal isOpen={isLegalModalOpen} onClose={() => setIsLegalModalOpen(false)} />
         </footer>
     );
 }
