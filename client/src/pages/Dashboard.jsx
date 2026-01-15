@@ -589,7 +589,7 @@ export default function Dashboard({ navigate }) {
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up stagger-3">
             <button
               className="group px-8 py-4 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-500 transition-all duration-300 transform hover:-translate-y-1 shadow-lg shadow-emerald-900/20"
-              onClick={() => navigate("consultation")}
+              onClick={() => navigate("/consultation")}
             >
               <span className="flex items-center justify-center gap-3">
                 Start Consultation
@@ -600,7 +600,7 @@ export default function Dashboard({ navigate }) {
             </button>
             <button
               className={`px-8 py-4 border font-semibold rounded-lg transition-all duration-300 ${isDark ? 'border-white/10 text-gray-300 hover:bg-white/5 hover:border-white/20' : 'border-slate-200 text-slate-600 hover:bg-white hover:border-slate-300 hover:shadow-sm'}`}
-              onClick={() => navigate("about")}
+              onClick={() => navigate("/about")}
             >
               Learn More
             </button>

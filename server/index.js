@@ -21,8 +21,18 @@ const app = express();
 app.use(helmet());
 
 // Data Sanitization (Prevent NoSQL Injection)
-import mongoSanitize from "express-mongo-sanitize";
-app.use(mongoSanitize());
+// Custom Data Sanitization (Prevent NoSQL Injection)
+const sanitize = (obj) => {
+  if (obj instanceof Object) {
+    for (const key in obj) {
+      if (/^\$/.test(key) || /\./.test(key)) {
+        delete obj[key];
+      } else {
+        sanitize(obj[key]);
+      }
+    }
+  }
+};
 
 // Rate Limiting
 const limiter = rateLimit({
@@ -45,6 +55,14 @@ mongoose.connect(MONGO_URI)
 // middlewares
 app.use(cors());
 app.use(express.json());
+
+// Apply Sanitization
+app.use((req, res, next) => {
+  sanitize(req.body);
+  sanitize(req.query);
+  sanitize(req.params);
+  next();
+});
 
 // health check
 app.get("/", (req, res) => {

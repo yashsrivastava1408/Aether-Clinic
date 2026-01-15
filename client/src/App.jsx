@@ -1,13 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, Suspense, lazy } from "react";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import SplashScreen from "./components/SplashScreen";
-import Dashboard from "./pages/Dashboard";
-import Consultation from "./pages/Consultation";
-import About from "./pages/About";
-import Chatbot from "./pages/Chatbot";
-import ReportAnalyzer from "./pages/ReportAnalyzer";
-import HeartRisk from "./pages/HeartRisk";
-import ClinicLocations from "./pages/ClinicLocations";
 import HolographicCursor from "./components/HolographicCursor";
 import PageTransition from "./components/PageTransition";
 import SystemFooter from "./components/SystemFooter";
@@ -17,54 +11,36 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import { ThemeProvider } from "./context/ThemeContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
-// Main Layout Component to access Auth Context
-const MainLayout = () => {
-  const [currentPage, setCurrentPage] = useState("dashboard");
-  const [selectedDoctor, setSelectedDoctor] = useState(null);
+// Lazy Load Pages for Performance
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Consultation = lazy(() => import("./pages/Consultation"));
+const About = lazy(() => import("./pages/About"));
+const Chatbot = lazy(() => import("./pages/Chatbot"));
+const ReportAnalyzer = lazy(() => import("./pages/ReportAnalyzer"));
+const HeartRisk = lazy(() => import("./pages/HeartRisk"));
+const ClinicLocations = lazy(() => import("./pages/ClinicLocations"));
+
+// Loading Component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-[#030303]">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
+      <div className="text-emerald-500 font-mono text-sm animate-pulse">LOADING_MODULE...</div>
+    </div>
+  </div>
+);
+
+// Main Content Wrapper to handle Routing
+const MainContent = () => {
   const [showSplash, setShowSplash] = useState(true);
   const { hasOnboarded } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Hide splash screen callback
   const handleSplashComplete = React.useCallback(() => {
     setShowSplash(false);
   }, []);
-
-  const handleSelectDoctor = (doctor) => {
-    setSelectedDoctor(doctor);
-    setCurrentPage("chatbot");
-  };
-
-  const handleBackToConsultation = () => {
-    setSelectedDoctor(null);
-    setCurrentPage("consultation");
-  };
-
-  const renderContent = () => {
-    if (currentPage === "dashboard")
-      return <Dashboard navigate={setCurrentPage} />;
-
-    if (currentPage === "consultation")
-      return <Consultation onSelectDoctor={handleSelectDoctor} />;
-
-    if (currentPage === "chatbot")
-      return (
-        <Chatbot
-          doctor={selectedDoctor}
-          onBack={handleBackToConsultation}
-        />
-      );
-
-    if (currentPage === "about")
-      return <About />;
-
-    // ✅ ONLY ADDITION — Report Analyzer
-    if (currentPage === "report")
-      return <ReportAnalyzer />;
-    if (currentPage === "heart")
-      return <HeartRisk />;
-    if (currentPage === "locations")
-      return <ClinicLocations />;
-  };
 
   return (
     <div className="bg-slate-50 dark:bg-[#030303] min-h-screen text-slate-900 dark:text-gray-100 font-sans transition-colors duration-500 app-container">
@@ -79,16 +55,24 @@ const MainLayout = () => {
       {/* Hide Navbar during splash or welcome screen */}
       {!showSplash && hasOnboarded && (
         <>
-          <Navbar
-            navigate={setCurrentPage}
-            currentPage={currentPage}
-          />
+          <Navbar currentPath={location.pathname} />
           {/* Global Sci-Fi Cursor */}
           <HolographicCursor />
 
           <main className="pt-20">
-            <PageTransition key={currentPage}>
-              {renderContent()}
+            <PageTransition key={location.pathname}>
+              <Suspense fallback={<PageLoader />}>
+                <Routes location={location}>
+                  <Route path="/" element={<Dashboard navigate={navigate} />} />
+                  <Route path="/dashboard" element={<Dashboard navigate={navigate} />} />
+                  <Route path="/consultation" element={<Consultation />} />
+                  <Route path="/chatbot" element={<Chatbot />} />
+                  <Route path="/report" element={<ReportAnalyzer />} />
+                  <Route path="/heart" element={<HeartRisk />} />
+                  <Route path="/locations" element={<ClinicLocations />} />
+                  <Route path="/about" element={<About />} />
+                </Routes>
+              </Suspense>
             </PageTransition>
           </main>
 
@@ -101,10 +85,12 @@ const MainLayout = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <MainLayout />
-      </ThemeProvider>
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <ThemeProvider>
+          <MainContent />
+        </ThemeProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }

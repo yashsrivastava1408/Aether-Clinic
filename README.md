@@ -35,6 +35,76 @@ graph TD
 
 ---
 
+## 🔄 Detailed System Workflows
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant App as Mobile/Web Client
+    participant Server as Node.js Backend
+    participant Auth as Auth/Security Layer
+    participant MLService as Python ML Service
+    participant Gemini as Gemini Vision (Cloud)
+    participant Ollama as Ollama (Local LLM)
+    participant DB as MongoDB
+    
+    Note over User,DB: 🔐 Chat & AI Consultation (Zero-Knowledge Privacy)
+    User->>App: Send Message / Image
+    App->>Server: POST /api/chat (userId, message, image)
+    
+    rect rgb(240, 240, 240)
+        Note left of Server: Rate Limiting & Security
+        Server->>Server: Express-Rate-Limit (Check quota)
+        Server->>Server: Helmet & Sanitization (Clean Input)
+    end
+
+    Server->>DB: Fetch Chat History (userId)
+    DB-->>Server: Return encrypted history
+    Server->>Server: Decrypt history for Context
+
+    alt Image provided
+        Server->>Gemini: Analyze Image + Context
+        Gemini-->>Server: Return visual analysis
+    else Text only
+        Server->>Ollama: Generate Response (Local Privacy)
+        Ollama-->>Server: Return medical advice
+    end
+
+    Server->>Server: Encrypt Response & User Message
+    Server->>DB: Save updated Chat Logic
+    Server-->>App: Return AI Response
+    App-->>User: Display Reply
+
+    Note over User,DB: 📋 Report Analysis (OCR + Medical Intelligence)
+    User->>App: Upload Medical Report (Image)
+    App->>Server: POST /api/report/analyze (multipart/form-data)
+    
+    Server->>Server: Multer (Temp Storage)
+    Server->>Server: Tesseract.js (Perform OCR)
+    
+    Server->>Gemini: Send OCR Text + Image Base64
+    Gemini-->>Server: Return Structured Analysis (JSON)
+    
+    Server->>Server: Encrypt Sensitive Findings
+    Server->>DB: Save Report (Encrypted)
+    Server-->>App: Return Structured JSON
+    App-->>User: Show visualize report data
+
+    Note over User,DB: 💓 ML Disease Prediction (Heart/Diabetes)
+    User->>App: Enter Health Metrics (Form)
+    App->>Server: POST /api/ml/heart (or /diabetes)
+    
+    Server->>MLService: POST http://localhost:5001/predict/...
+    Note right of MLService: Flask + Scikit-Learn
+    MLService->>MLService: Run .pkl Model Inference
+    MLService-->>Server: Return Probability & Risk
+    
+    Server-->>App: Return Risk Score
+    App-->>User: Display Risk Assessment
+```
+
+---
+
 ## 🚀 Key System Components
 
 | Component | Tech Stack | Role & Functionality |

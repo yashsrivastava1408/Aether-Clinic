@@ -1,13 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate, useLocation } from "react-router-dom";
 
-export default function Navbar({ navigate, currentPage }) {
+export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { user, login, logout } = useAuth();
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Helper to determine active state
+  // Handles root path "/" as "dashboard"
+  const isActive = (path) => {
+    if (path === "/dashboard" && location.pathname === "/") return true;
+    return location.pathname === path;
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,8 +52,8 @@ export default function Navbar({ navigate, currentPage }) {
     );
   };
 
-  const linkClasses = (page) =>
-    `relative px-4 py-2 text-sm font-medium transition-all duration-300 group ${currentPage === page
+  const linkClasses = (path) =>
+    `relative px-4 py-2 text-sm font-medium transition-all duration-300 group ${isActive(path)
       ? "text-emerald-500 font-semibold"
       : theme === 'dark'
         ? "text-gray-400 hover:text-white"
@@ -50,13 +61,18 @@ export default function Navbar({ navigate, currentPage }) {
     }`;
 
   const navLinks = [
-    { page: "dashboard", label: "Home" },
-    { page: "consultation", label: "Consultation" },
-    { page: "report", label: "Report Analyzer" },
-    { page: "heart", label: "Heart Risk" },
-    { page: "locations", label: "Locations" },
-    { page: "about", label: "About" },
+    { path: "/dashboard", label: "Home" },
+    { path: "/consultation", label: "Consultation" },
+    { path: "/report", label: "Report Analyzer" },
+    { path: "/heart", label: "Heart Risk" },
+    { path: "/locations", label: "Locations" },
+    { path: "/about", label: "About" },
   ];
+
+  const handleNavigation = (path) => {
+    navigate(path);
+    setMobileMenuOpen(false);
+  };
 
   return (
     <header
@@ -72,7 +88,7 @@ export default function Navbar({ navigate, currentPage }) {
         <div className="flex items-center gap-6">
           <div
             className="cursor-pointer group flex items-center gap-3"
-            onClick={() => navigate("dashboard")}
+            onClick={() => handleNavigation("/dashboard")}
           >
             <div className={`w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-900 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-[0_0_15px_rgba(16,185,129,0.3)]`}>
               <span className="text-xl">🧠</span>
@@ -100,16 +116,16 @@ export default function Navbar({ navigate, currentPage }) {
         <div className="hidden lg:flex items-center space-x-1">
           {navLinks.map((link) => (
             <button
-              key={link.page}
-              onClick={() => navigate(link.page)}
-              className={linkClasses(link.page)}
+              key={link.path}
+              onClick={() => handleNavigation(link.path)}
+              className={linkClasses(link.path)}
             >
-              {link.page === "heart" ? (
+              {link.path === "/heart" ? (
                 <span className="flex items-center gap-2 tracking-wide">
                   <span className="animate-heartbeat inline-block drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]">
                     ❤️
                   </span>
-                  <span className={currentPage === "heart" ? "text-red-500 font-semibold" : "group-hover:text-red-500 transition-colors"}>
+                  <span className={isActive(link.path) ? "text-red-500 font-semibold" : "group-hover:text-red-500 transition-colors"}>
                     {link.label}
                   </span>
                 </span>
@@ -117,7 +133,7 @@ export default function Navbar({ navigate, currentPage }) {
                 link.label
               )}
               {/* Active Indicator Line */}
-              <span className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-emerald-500 transition-all duration-300 group-hover:w-full ${currentPage === link.page ? 'w-full' : ''}`} />
+              <span className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-emerald-500 transition-all duration-300 group-hover:w-full ${isActive(link.path) ? 'w-full' : ''}`} />
             </button>
           ))}
         </div>
@@ -258,24 +274,21 @@ export default function Navbar({ navigate, currentPage }) {
 
           {navLinks.map((link) => (
             <button
-              key={link.page}
-              onClick={() => {
-                navigate(link.page);
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full text-left py-3 px-4 rounded-lg transition-colors ${currentPage === link.page
+              key={link.path}
+              onClick={() => handleNavigation(link.path)}
+              className={`w-full text-left py-3 px-4 rounded-lg transition-colors ${isActive(link.path)
                 ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-semibold"
                 : theme === 'dark'
                   ? "text-gray-400 hover:bg-white/5 hover:text-white"
                   : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
                 }`}
             >
-              {link.page === "heart" ? (
+              {link.path === "/heart" ? (
                 <span className="flex items-center gap-2">
                   <span className="animate-heartbeat inline-block drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]">
                     ❤️
                   </span>
-                  <span className={currentPage === "heart" ? "text-red-500" : "group-hover:text-red-500"}>
+                  <span className={isActive(link.path) ? "text-red-500" : "group-hover:text-red-500"}>
                     {link.label}
                   </span>
                 </span>
