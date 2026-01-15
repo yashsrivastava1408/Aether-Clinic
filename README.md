@@ -2,40 +2,7 @@
 
 **A comprehensive, privacy-first healthcare platform integrating React Native Mobile, Modern Web Clients, Node.js Backend, and Python ML Services.**
 
----
-
-## 🏗️ High-Level Architecture
-
-The system operates on a microservices-inspired architecture where the backend orchestrates communication between the user interfaces (Mobile/Web) and the specialized Intelligence Layer (Machine Learning & LLMs).
-
-```mermaid
-graph TD
-    subgraph "Frontend Layer"
-        M["📱 Mobile App (React Native)"] -->|REST API| G["Gateway (Server)"]
-        W["💻 Web Dashboard (React)"] -->|REST API| G
-    end
-
-    subgraph "Core Backend (Node.js)"
-        G -->|Store/Retrieve| DB[("Dictionary: MongoDB")]
-        G -->|OCR & Analysis| S["Report Service"]
-        G -->|Secure Chat| C["Chat Controller"]
-    end
-
-    subgraph "Intelligence Layer"
-        S -->|Forward Image| V["Gemini Vision (Cloud)"]
-        C -->|Text Prompt| L["Ollama (Local LLM)"]
-        G -->|Risk Data| ML["Python ML Service (Flask)"]
-    end
-
-    subgraph "ML Service (Python)"
-        ML -->|Predict| H["Heart Disease Model"]
-        ML -->|Predict| D["Diabetes Model"]
-    end
-```
-
----
-
-## 🔄 Detailed System Workflows
+##  Detailed System Workflows
 
 ```mermaid
 sequenceDiagram
@@ -75,7 +42,7 @@ sequenceDiagram
     Server-->>App: Return AI Response
     App-->>User: Display Reply
 
-    Note over User,DB: 📋 Report Analysis (OCR + Medical Intelligence)
+    Note over User,DB:  Report Analysis (OCR + Medical Intelligence)
     User->>App: Upload Medical Report (Image)
     App->>Server: POST /api/report/analyze (multipart/form-data)
     
@@ -90,7 +57,7 @@ sequenceDiagram
     Server-->>App: Return Structured JSON
     App-->>User: Show visualize report data
 
-    Note over User,DB: 💓 ML Disease Prediction (Heart/Diabetes)
+    Note over User,DB:  ML Disease Prediction (Heart/Diabetes)
     User->>App: Enter Health Metrics (Form)
     App->>Server: POST /api/ml/heart (or /diabetes)
     
@@ -103,22 +70,70 @@ sequenceDiagram
     App-->>User: Display Risk Assessment
 ```
 
----
-
-## 🚀 Key System Components
-
-| Component | Tech Stack | Role & Functionality |
-| :--- | :--- | :--- |
-| **Mobile App** | React Native, Expo, Reanimated | Patient-facing app. Features "Aether" UI, biometric security, real-time chat, and report scanning. |
-| **Web Client** | React, Vite, TailwindCSS | Doctor/Admin dashboard. Visualizes patient trends, displays aggregated risk profiles, and manages clinics. |
-| **Backend API** | Node.js, Express, MongoDB | The central nervous system. Handles auth, data persistence, and orchestrates AI requests. |
-| **ML Engine** | Python, Flask, Scikit-Learn | Specialized service for numerical health predictions (Heart Disease, Diabetes). |
-| **LLM Service** | Google Gemini + Ollama | Hybrid Intelligence. Uses Cloud Gemini for complex vision tasks and Local Ollama for privacy-focused chat. |
-| **Infrastructure** | Kubernetes, Docker | Containerized deployment strategies for scalability and resilience. |
 
 ---
 
-## 🔐 Security & Privacy Architecture
+## High-Level Architecture
+
+The system operates on a microservices-inspired architecture where the backend orchestrates communication between the user interfaces (Mobile/Web) and the specialized Intelligence Layer (Machine Learning & LLMs).
+
+```mermaid
+graph TD
+    subgraph "Frontend Layer"
+        M["📱 Mobile App (React Native)"] -->|REST API| G["Gateway (Server)"]
+        W["💻 Web Dashboard (React)"] -->|REST API| G
+    end
+
+    subgraph "Core Backend (Node.js)"
+        G -->|Store/Retrieve| DB[("Dictionary: MongoDB")]
+        G -->|OCR & Analysis| S["Report Service"]
+        G -->|Secure Chat| C["Chat Controller"]
+    end
+
+    subgraph "Intelligence Layer"
+        S -->|Forward Image| V["Gemini Vision (Cloud)"]
+        C -->|Text Prompt| L["Ollama (Local LLM)"]
+        G -->|Risk Data| ML["Python ML Service (Flask)"]
+    end
+
+    subgraph "ML Service (Python)"
+        ML -->|Predict| H["Heart Disease Model"]
+        ML -->|Predict| D["Diabetes Model"]
+    end
+```
+
+---
+
+
+##  Key System Components
+
+###  **Mobile App**
+- **Tech**: `React Native` `Expo` `Reanimated`
+- **Role**: Patient-facing app. Features "Aether" UI, biometric security, real-time chat, and report scanning.
+
+###  **Web Client**
+- **Tech**: `React` `Vite` `TailwindCSS`
+- **Role**: Doctor/Admin dashboard. Visualizes patient trends, displays aggregated risk profiles, and manages clinics.
+
+###  **Backend API**
+- **Tech**: `Node.js` `Express` `MongoDB`
+- **Role**: The central nervous system. Handles auth, data persistence, and orchestrates AI requests.
+
+### **ML Engine**
+- **Tech**: `Python` `Flask` `Scikit-Learn`
+- **Role**: Specialized service for numerical health predictions (Heart Disease, Diabetes).
+
+###  **LLM Service**
+- **Tech**: `Google Gemini` + `Ollama`
+- **Role**: Hybrid Intelligence. Uses Cloud Gemini for complex vision tasks and Local Ollama for privacy-focused chat.
+
+###  **Infrastructure**
+- **Tech**: `Kubernetes` `Docker`
+- **Role**: Containerized deployment strategies for scalability and resilience.
+
+---
+
+##  Security & Privacy Architecture
 
 The system prioritizes user data privacy through a "Local-First" intelligence approach and rigorous encryption standards.
 
@@ -128,7 +143,7 @@ The system prioritizes user data privacy through a "Local-First" intelligence ap
 
 ---
 
-## 📂 Repository Structure
+##  Repository Structure
 
 *   **/mobile**: The React Native application source code.
 *   **/client**: The Web Dashboard source code.
@@ -137,4 +152,4 @@ The system prioritizes user data privacy through a "Local-First" intelligence ap
 *   **/k8s**: Kubernetes manifests for deployment.
 
 ---
-*Built with ❤️ for the Future of Healthcare.*
+*Built for the Future of Healthcare.*
