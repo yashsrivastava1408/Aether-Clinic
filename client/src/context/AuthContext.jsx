@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
 const AuthContext = createContext({
     user: null,
@@ -136,23 +137,42 @@ export const AuthProvider = ({ children }) => {
         setHasOnboarded(true);
     };
 
-    const login = async (email) => {
-        // MOCK LOGIN
+    const login = async (email, userData = null) => {
+        // MOCK LOGIN -> REAL DB SYNC
         const mockUser = {
-            id: 'u-' + Date.now().toString(36),
+            id: 'u-' + Date.now().toString(36), // ID will be updated by DB response ideally, but keep for simpler frontend state
             isGuest: false,
-            name: email.split('@')[0],
+            name: userData?.name || email.split('@')[0],
             email: email,
-            avatar: 'https://ui-avatars.com/api/?name=' + email.split('@')[0] + '&background=10b981&color=fff'
+            avatar: userData?.picture || 'https://ui-avatars.com/api/?name=' + email.split('@')[0] + '&background=10b981&color=fff'
         };
+
+        // Sync with Backend
+        try {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/api/auth/login`, {
+                email: mockUser.email,
+                name: mockUser.name,
+                picture: mockUser.avatar,
+                isGuest: false
+            });
+            console.log("✅ User synced with DB:", res.data.user);
+
+            // Use DB ID if available
+            if (res.data.user?._id) {
+                mockUser.dbId = res.data.user._id;
+            }
+        } catch (error) {
+            console.error("❌ Failed to sync user with DB:", error);
+        }
 
         localStorage.setItem('user_session', JSON.stringify(mockUser));
         localStorage.setItem('has_onboarded', 'true');
         setUser(mockUser);
         setHasOnboarded(true);
-        // Reset token usage on login? Or keep it? 
-        // Usually login grants fresh high limits, so the guest usage doesn't matter as much 
-        // unless we want to carry it over. Let's just rely on the limit check switching to USER_LIMIT.
+
+        // We don't need manual welcome email call anymore, login endpoint handles it for new users
+        // But keeping the log for debug
+        console.log("Login flow complete.");
     };
 
     const logout = async () => {

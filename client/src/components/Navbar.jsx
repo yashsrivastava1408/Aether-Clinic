@@ -62,11 +62,10 @@ export default function Navbar() {
 
   const navLinks = [
     { path: "/dashboard", label: "Home" },
-    { path: "/consultation", label: "Consultation" },
-    { path: "/report", label: "Report Analyzer" },
-    { path: "/heart", label: "Heart Risk" },
-    { path: "/locations", label: "Locations" },
-    { path: "/about", label: "About" },
+    { path: "/consultation", label: "Talk to Doctor" },
+    { path: "/report", label: "Check Report" },
+    { path: "/heart", label: "Heart Health" },
+    { path: "/about", label: "About Us" },
   ];
 
   const handleNavigation = (path) => {
@@ -123,7 +122,7 @@ export default function Navbar() {
               {link.path === "/heart" ? (
                 <span className="flex items-center gap-2 tracking-wide">
                   <span className="animate-heartbeat inline-block drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]">
-                    ❤️
+
                   </span>
                   <span className={isActive(link.path) ? "text-red-500 font-semibold" : "group-hover:text-red-500 transition-colors"}>
                     {link.label}
@@ -173,13 +172,19 @@ export default function Navbar() {
           {!user || user.isGuest ? (
             <div className="flex items-center gap-3">
               <button
-                onClick={() => login('user@example.com')} // Simulated Login
+                onClick={async () => {
+                  await login('user@example.com'); // Simulated Login
+                  handleNavigation('/dashboard');
+                }}
                 className={`text-sm font-medium transition-colors ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'}`}
               >
                 Log In
               </button>
               <button
-                onClick={() => login('user@example.com')} // Simulated Sign Up
+                onClick={async () => {
+                  await login('user@example.com'); // Simulated Sign Up
+                  handleNavigation('/dashboard');
+                }}
                 className="relative overflow-hidden group px-6 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold transition-all hover:bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)]"
               >
                 <span className="relative z-10">Sign Up</span>
@@ -208,6 +213,15 @@ export default function Navbar() {
                     <p className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{user.name}</p>
                     <p className="text-[10px] text-emerald-500 font-mono">{user.id.split('-').pop().toUpperCase()}</p>
                   </div>
+                  <button
+                    onClick={() => {
+                      handleNavigation('/settings');
+                      setProfileOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2 ${theme === 'dark' ? 'text-gray-300 hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    <span>⚙️ Settings</span>
+                  </button>
                   <button
                     onClick={() => {
                       logout();
@@ -301,18 +315,20 @@ export default function Navbar() {
           {!user || user.isGuest ? (
             <div className="flex flex-col gap-3 mt-4">
               <button
-                onClick={() => {
-                  login('user@example.com');
+                onClick={async () => {
+                  await login('user@example.com');
                   setMobileMenuOpen(false);
+                  handleNavigation('/dashboard');
                 }}
                 className={`w-full py-3 rounded-lg border font-medium ${theme === 'dark' ? 'border-white/10 text-white hover:bg-white/5' : 'border-gray-200 text-gray-900 hover:bg-gray-50'}`}
               >
                 Log In
               </button>
               <button
-                onClick={() => {
-                  login('user@example.com');
+                onClick={async () => {
+                  await login('user@example.com');
                   setMobileMenuOpen(false);
+                  handleNavigation('/dashboard');
                 }}
                 className="w-full py-3 bg-emerald-600 text-white font-medium rounded-lg shadow-lg shadow-emerald-900/20"
               >

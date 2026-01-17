@@ -122,7 +122,6 @@ export default function SplashScreen({ onComplete }) {
                 }}
                 src="/assets/Icon_Design_Feedback_and_Video.mp4"
                 muted={true}
-                defaultMuted={true}
                 playsInline
                 onError={(e) => {
                     console.error("Video Error:", e);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import TiltCard from "../components/TiltCard";
 import VoiceVisualizer from "../components/VoiceVisualizer";
@@ -19,21 +20,45 @@ export default function Chatbot({ doctor, onBack }) {
   const { theme } = useTheme();
   const { user, checkTokenLimit, consumeTokens, tokenUsage } = useAuth();
   const isDark = theme === 'dark';
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { specialization } = useParams();
+
+  // Reconstruct doctor object from serializable navigation state
+  const stateDoctor = location.state?.specializationName ? {
+    name: location.state.specializationName,
+    role: location.state.specializationRole || "Specialist"
+  } : null;
+
+  // Prefer prop -> then state -> then URL param -> then fallback
+  const activeDoctor = doctor || stateDoctor || (specialization ? { name: specialization, role: "Specialist" } : { name: "General", role: "Medical Assistant" });
+
+  useEffect(() => {
+    console.log("Chatbot Mounted. Active Doctor (Resolved):", activeDoctor);
+    console.log("Location State:", location.state);
+    console.log("URL Param:", specialization);
+  }, [activeDoctor, location.state, specialization]);
+
+  const handleBack = () => {
+    if (onBack) onBack();
+    else navigate(-1); // Go back if no prop handler
+  };
 
   // Fake "System Init" state
   const [isInitializing, setIsInitializing] = useState(true);
 
   // Scroll to bottom when messages or typing state changes
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
   }, [messages, isTyping]);
+
 
   // Initial greeting when doctor selected
   useEffect(() => {
-    if (doctor) {
+    if (activeDoctor) {
       // Fetch history logic
       const userId = getUserId();
-      axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/api/chat/history/${userId}/${doctor.name}`)
+      axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/api/chat/history/${userId}/${encodeURIComponent(activeDoctor.name)}`)
         .then(res => {
           if (res.data.messages && res.data.messages.length > 0) {
             setMessages(res.data.messages);
@@ -44,12 +69,12 @@ export default function Chatbot({ doctor, onBack }) {
             setMessages([
               {
                 sender: "ai",
-                text: `// INITIATING SECURE SESSION WITH SPECIALIST ${doctor.name.toUpperCase()}...`,
+                text: `// INITIATING SECURE SESSION WITH SPECIALIST ${activeDoctor.name.toUpperCase()}...`,
                 isSystem: true
               },
               {
                 sender: "ai",
-                text: `Neural Link Active. I am the ${doctor.role || "Specialist"} Interface.
+                text: `Neural Link Active. I am the ${activeDoctor.role || "Specialist"} Interface.
 State your symptoms or upload a photo for analysis.`,
               },
             ]);
@@ -60,7 +85,7 @@ State your symptoms or upload a photo for analysis.`,
           setIsInitializing(false);
         });
     }
-  }, [doctor]);
+  }, [activeDoctor?.name]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -98,7 +123,7 @@ State your symptoms or upload a photo for analysis.`,
 
     const formData = new FormData();
     formData.append("message", input);
-    formData.append("specialization", doctor?.name || "General");
+    formData.append("specialization", activeDoctor?.name || "General");
     formData.append("userId", getUserId());
     if (image) {
       formData.append("image", image);
@@ -139,7 +164,7 @@ State your symptoms or upload a photo for analysis.`,
   };
 
   return (
-    <div className={`h-[85vh] w-full max-w-5xl mx-auto flex flex-col relative overflow-hidden rounded-3xl border shadow-2xl transition-colors duration-500 ${isDark ? 'bg-[#030303] border-white/10' : 'bg-white border-slate-200'}`}>
+    <div className={`md:h-[85vh] h-[80vh] w-full max-w-5xl mx-auto flex flex-col relative overflow-hidden rounded-3xl border shadow-2xl transition-colors duration-500 ${isDark ? 'bg-[#030303] border-white/10' : 'bg-white border-slate-200'}`}>
 
       {/* Background Grid & Ambience */}
       <div className="absolute inset-0 opacity-[0.05] pointer-events-none"
@@ -155,7 +180,7 @@ State your symptoms or upload a photo for analysis.`,
       <div className={`relative z-10 p-6 border-b flex items-center justify-between backdrop-blur-md ${isDark ? 'border-white/5 bg-[#0a0a0a]/80' : 'border-slate-100 bg-white/80'}`}>
         <div className="flex items-center gap-4">
           <button
-            onClick={onBack}
+            onClick={handleBack}
             className={`p-2 rounded-lg border transition-all group ${isDark ? 'border-white/10 hover:bg-white/5 text-gray-400 hover:text-white' : 'border-slate-200 hover:bg-slate-100 text-slate-500 hover:text-slate-900'}`}
           >
             <svg className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -163,7 +188,7 @@ State your symptoms or upload a photo for analysis.`,
             </svg>
           </button>
           <div>
-            <h2 className={`text-xl font-bold tracking-wide ${isDark ? 'text-white' : 'text-slate-900'}`}>{doctor?.name}</h2>
+            <h2 className={`text-xl font-bold tracking-wide ${isDark ? 'text-white' : 'text-slate-900'}`}>{activeDoctor?.name}</h2>
             <div className="flex items-center gap-2 text-[10px] font-mono text-emerald-500 uppercase tracking-widest">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Secure Link Established

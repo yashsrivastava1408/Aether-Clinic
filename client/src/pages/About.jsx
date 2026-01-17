@@ -156,69 +156,7 @@ export default function About() {
               ))}
             </section>
 
-            {/* Developer Dossier */}
-            <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
 
-              {/* Profile Card */}
-              <div className="lg:col-span-12 lg:flex gap-12 items-center">
-                <div className="lg:w-1/3">
-                  <TiltCard className={`relative border rounded-3xl overflow-hidden p-1 transition-all duration-500 shadow-2xl ${isDark ? 'bg-[#0a0a0a] border-white/10 hover:border-emerald-500/50' : 'bg-white border-slate-200 hover:border-emerald-300'}`}>
-                    <div className={`relative h-[500px] w-full rounded-2xl overflow-hidden ${isDark ? 'bg-gray-900' : 'bg-slate-100'}`}>
-                      <img
-                        src="/assets/yash.jpg"
-                        alt="Yash Srivastava"
-                        className="w-full h-full object-cover grayscale"
-                      />
-                      <div className={`absolute inset-0 bg-gradient-to-t opacity-90 ${isDark ? 'from-[#0a0a0a] via-transparent to-transparent' : 'from-white via-transparent to-transparent'}`} />
-                      <div className="absolute bottom-6 left-6 right-6">
-                        <h2 className={`text-4xl font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>Yash Srivastava</h2>
-                        <div className="text-emerald-500 font-mono text-sm tracking-widest uppercase">Full Stack Developer & DevOps Enthusiast</div>
-                      </div>
-                    </div>
-                  </TiltCard>
-                </div>
-
-                <div className="lg:w-2/3 space-y-12">
-                  {/* Continuous Laser Line Timeline */}
-                  <div className="space-y-8 relative">
-                    <h3 className={`text-2xl font-bold flex items-center gap-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      <span className="w-8 h-[1px] bg-emerald-500" /> Professional Trajectory
-                    </h3>
-
-                    {[
-                      { company: "XenKrypt Technologies", role: "DevOps Intern", date: "Present", desc: "Optimizing high-performance CI/CD pipelines and infrastructure reliability." },
-                      { company: "SheSafe", role: "R&D Lead", date: "2025", desc: "Developing safety-critical hardware interfaces for women's security." },
-                      { company: "CodeTech It Solutions", role: "Full Stack Developer", date: "2024", desc: "Building a cloud-native AI-powered medical report analysis system." }
-                    ].map((job, i) => (
-                      <div key={i} className={`group pl-6 border-l relative ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
-                        <div className="absolute -left-1.5 top-2 w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-500/50 group-hover:bg-emerald-500 transition-all" />
-                        <div className="flex justify-between items-baseline mb-1">
-                          <h4 className={`text-lg font-semibold transition-colors uppercase ${isDark ? 'text-white group-hover:text-emerald-400' : 'text-slate-900 group-hover:text-emerald-600'}`}>{job.role}</h4>
-                          <span className={`${isDark ? 'text-gray-600' : 'text-slate-400'} text-[10px] font-mono`}>{job.date}</span>
-                        </div>
-                        <div className="text-emerald-500/70 text-[10px] uppercase tracking-widest mb-2">{job.company}</div>
-                        <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-slate-600'}`}>{job.desc}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Skills Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    {[
-                      { label: "CORE", value: "React, Node, Py" },
-                      { label: "CLOUD", value: "K8s, Docker, EC2" },
-                      { label: "AI", value: "LLama, OpenCV" },
-                      { label: "OPS", value: "GitHub, CI/CD" }
-                    ].map(skill => (
-                      <div key={skill.label} className={`p-4 rounded-xl border ${isDark ? 'border-white/5 bg-white/[0.02]' : 'border-slate-200 bg-white shadow-sm'}`}>
-                        <span className="block text-[10px] text-emerald-500 mb-1 font-mono tracking-widest uppercase">{skill.label}</span>
-                        <span className={`text-xs whitespace-nowrap ${isDark ? 'text-white' : 'text-slate-900'}`}>{skill.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </section>
 
             {/* Neural Core Schematic (System Architecture) */}
             <section className="space-y-12">

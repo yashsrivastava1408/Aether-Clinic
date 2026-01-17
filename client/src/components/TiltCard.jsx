@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback } from "react";
 
 // 🧊 3D Tilt Card Wrapper (Reusable)
-const TiltCard = ({ children, className = "" }) => {
+const TiltCard = ({ children, className = "", onClick }) => {
     const cardRef = useRef(null);
     const [rotateX, setRotateX] = useState(0);
     const [rotateY, setRotateY] = useState(0);
@@ -38,6 +38,7 @@ const TiltCard = ({ children, className = "" }) => {
             onMouseMove={handleMouseMove}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            onClick={onClick} // Pass through click events
             style={{
                 transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`,
             }}

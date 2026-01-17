@@ -61,7 +61,7 @@ export default function ReportAnalyzer() {
       setResult(res.data);
     } catch (err) {
       console.error(err);
-      setError("SCANNING FAILED. SYSTEM ERROR.");
+      setError(err.response?.data?.error || err.response?.data?.details || "SCANNING FAILED. SYSTEM ERROR.");
     } finally {
       setLoading(false);
     }
@@ -135,7 +135,13 @@ export default function ReportAnalyzer() {
 
               {/* Scanner Window */}
               <div className={`relative h-[500px] border-b p-6 ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
-                <ScanningHUD active={loading}>
+                {/* <ScanningHUD active={loading}> */}
+                <div className="relative w-full h-full">
+                  {loading && (
+                    <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+                      <div className="w-full h-1 bg-emerald-500 shadow-[0_0_15px_#10b981] animate-[scan_2s_ease-in-out_infinite]" />
+                    </div>
+                  )}
                   {preview ? (
                     <div className={`relative w-full h-full rounded-lg overflow-hidden border ${isDark ? 'border-emerald-500/30 bg-black/20' : 'border-emerald-200 bg-slate-50'}`}>
                       <img src={preview} alt="Scan Target" className="w-full h-full object-contain opacity-80" />
@@ -152,7 +158,8 @@ export default function ReportAnalyzer() {
                       <input type="file" className="hidden" onChange={handleFileChange} />
                     </label>
                   )}
-                </ScanningHUD>
+                </div>
+                {/* </ScanningHUD> */}
               </div>
             </div>
           </div>
@@ -163,17 +170,9 @@ export default function ReportAnalyzer() {
             {/* DNA Helix Background */}
             {loading && (
               <div className="absolute inset-0 z-0 pointer-events-none opacity-20 overflow-hidden flex flex-col items-center">
-                <div className="flex gap-4 animate-[marquee_20s_linear_infinite] opacity-50">
-                  {Array.from({ length: 10 }).map((_, i) => (
-                    <div key={i} className="flex flex-col gap-10">
-                      {Array.from({ length: 20 }).map((_, j) => (
-                        <div key={j} className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981] animate-pulse" />
-                      ))}
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-20 scale-150">
-                  <BiometricPulse color={isDark ? "#10b981" : "#059669"} speed="1s" />
+                {/* Simplified Loader Background to reduce crash risk */}
+                <div className="mt-20 scale-150 animate-pulse text-emerald-500 font-mono">
+                  PROCESSING NEURAL NETWORKS...
                 </div>
               </div>
             )}
@@ -200,21 +199,21 @@ export default function ReportAnalyzer() {
                 {/* Summary Card */}
                 <div className={`p-6 rounded-2xl border backdrop-blur-md ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                   <h3 className="text-emerald-500 text-xs font-bold uppercase tracking-widest mb-3">Diagnostic Summary</h3>
-                  <p className={`leading-relaxed font-light ${isDark ? 'text-gray-200' : 'text-slate-700'}`}>{result.summary}</p>
+                  <p className={`leading-relaxed font-light ${isDark ? 'text-gray-200' : 'text-slate-700'}`}>{result?.summary || "Analysis Complete"}</p>
                 </div>
 
                 {/* Grid for Lists */}
                 <div className="grid gap-4">
 
                   {/* Alerts */}
-                  {result.alerts?.length > 0 && (
+                  {result?.alerts?.length > 0 && (
                     <div className="p-5 rounded-xl bg-red-500/10 border border-red-500/20">
                       <h4 className="flex items-center gap-2 text-red-500 font-bold text-sm uppercase mb-3">
                         <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                         Critical Alerts
                       </h4>
                       <ul className="space-y-2">
-                        {result.alerts.map((alert, i) => (
+                        {result.alerts?.map((alert, i) => (
                           <li key={i} className={`flex items-start gap-2 text-sm ${isDark ? 'text-red-200' : 'text-red-700'}`}>
                             <span className="mt-1.5 w-1 h-1 rounded-full bg-red-400" />
                             {alert}
@@ -228,7 +227,7 @@ export default function ReportAnalyzer() {
                   <div className={`p-5 rounded-xl border ${isDark ? 'bg-blue-500/5 border-blue-500/10' : 'bg-blue-50 border-blue-100'}`}>
                     <h4 className="text-blue-500 font-bold text-sm uppercase mb-3">Key Findings</h4>
                     <ul className="space-y-2">
-                      {result.findings?.map((item, i) => (
+                      {result?.findings?.map((item, i) => (
                         <li key={i} className={`text-sm border-l-2 pl-3 ${isDark ? 'text-gray-300 border-blue-500/30' : 'text-slate-700 border-blue-300'}`}>
                           {item}
                         </li>
@@ -240,7 +239,7 @@ export default function ReportAnalyzer() {
                   <div className={`p-5 rounded-xl border ${isDark ? 'bg-emerald-500/5 border-emerald-500/10' : 'bg-emerald-50 border-emerald-100'}`}>
                     <h4 className="text-emerald-500 font-bold text-sm uppercase mb-3">Recommended Actions</h4>
                     <ul className="space-y-3">
-                      {result.suggestions?.map((sug, i) => (
+                      {result?.suggestions?.map((sug, i) => (
                         <li key={i} className={`flex items-start gap-3 text-sm ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>
                           <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-700'}`}>
                             {i + 1}

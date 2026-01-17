@@ -335,10 +335,10 @@ const SynapseSection = ({ isDark }) => {
             Live Demo
           </div>
           <h2 className={`text-4xl md:text-5xl font-bold leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            The <span className="text-emerald-500">Synapse</span> Interface.
+            <span className="text-emerald-500">Talk to AI Doctor</span>
           </h2>
           <p className={`text-lg leading-relaxed ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>
-            Experience real-time medical deduction. Our AI parses natural language, cross-references millions of case files, and delivers precision guidance in milliseconds.
+            Chat with our smart assistant to understand your symptoms and get instant health advice.
           </p>
           <div className="flex items-center gap-4 pt-4">
             <div className={`h-12 w-12 rounded-full border flex items-center justify-center text-xl ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>⚡</div>
@@ -359,7 +359,7 @@ const SynapseSection = ({ isDark }) => {
               <div className={`backdrop-blur p-4 border-b flex items-center gap-3 z-10 ${isDark ? 'bg-[#0a0a0a]/90 border-white/5' : 'bg-white/90 border-slate-100'}`}>
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-[10px] font-bold text-black border border-white/20">AI</div>
                 <div>
-                  <div className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Aether Assistant</div>
+                  <div className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Health Assistant</div>
                   <div className="text-[10px] text-emerald-500 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> Online
                   </div>
@@ -563,14 +563,14 @@ export default function Dashboard({ navigate }) {
             onMouseLeave={() => setIsHeaderHovered(false)}
           >
             <GlitchMetaText
-              initialText="Intelligent"
+              initialText="Smart"
               hoverText="Aether"
               isHovered={isHeaderHovered}
               className={`${isDark ? 'text-white' : 'text-slate-900'} hover:text-emerald-400 transition-colors`}
             />
             <br />
             <GlitchMetaText
-              initialText="Healthcare"
+              initialText="Health"
               hoverText="Clinic"
               isHovered={isHeaderHovered}
               className={`text-emerald-500 ${isDark ? 'hover:text-white' : 'hover:text-slate-900'} transition-colors`}
@@ -580,7 +580,7 @@ export default function Dashboard({ navigate }) {
           {/* Typewriter Subheading */}
           <div className={`text-lg md:text-xl max-w-2xl mx-auto mb-14 h-14 animate-fade-in-up stagger-2 ${isDark ? 'text-gray-500' : 'text-slate-500'}`}>
             <TypewriterText
-              text="Advanced AI providing instant medical consultations and personalized health guidance."
+              text="Instant medical advice and personal health guidance."
               delay={500}
             />
           </div>
@@ -592,7 +592,7 @@ export default function Dashboard({ navigate }) {
               onClick={() => navigate("/consultation")}
             >
               <span className="flex items-center justify-center gap-3">
-                Start Consultation
+                Start Checkup
                 <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
@@ -698,10 +698,10 @@ export default function Dashboard({ navigate }) {
         <div className="container mx-auto px-6">
           <div className="text-center mb-20">
             <h2 className={`text-4xl md:text-5xl font-bold mb-6 reveal ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              System Capabilities
+              Our Features
             </h2>
             <p className="text-lg text-gray-500 max-w-xl mx-auto reveal">
-              Advanced modules for comprehensive analysis
+              Everything you need for better health
             </p>
           </div>
 
@@ -716,14 +716,14 @@ export default function Dashboard({ navigate }) {
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-4 backdrop-blur-md border ${isDark ? 'bg-emerald-500/20 border-emerald-500/30' : 'bg-white/80 border-slate-200'}`}>
                   <span className="text-xl">🧠</span>
                 </div>
-                <h3 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Neural Engine v9</h3>
-                <p className={`text-sm max-w-xs ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>Processing millions of medical data points in real-time for precise diagnosis.</p>
+                <h3 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Smart Analysis</h3>
+                <p className={`text-sm max-w-xs ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>Understanding your health data instantly for better advice.</p>
               </div>
             </TiltCard>
 
             {/* Card 2: Real-time Analytics (Tall 1x2) */}
             <TiltCard className={`md:col-span-1 md:row-span-2 relative group rounded-3xl overflow-hidden border p-6 flex flex-col reveal delay-100 scan-overlay ${isDark ? 'border-white/10 bg-[#0a0a0a]' : 'border-slate-200 bg-white shadow-sm'}`}>
-              <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Live Vitals</h3>
+              <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Health Vitals</h3>
               <div className="mb-4">
                 <BiometricPulse color={isDark ? "#10b981" : "#059669"} speed="1.5s" />
               </div>
@@ -758,8 +758,8 @@ export default function Dashboard({ navigate }) {
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
               </div>
               <div className="mt-auto">
-                <h3 className={`text-xl font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>HIPAA</h3>
-                <p className="text-sm text-gray-500">Enterprise-grade security</p>
+                <h3 className={`text-xl font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>Secure & Private</h3>
+                <p className="text-sm text-gray-500">Your health data is safe</p>
               </div>
             </TiltCard>
 

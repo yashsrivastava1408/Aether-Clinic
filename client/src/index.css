@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* 🛑 GLOBAL CURSOR OVERRIDE: Hide system cursor so only the custom one shows */
+* {
+    cursor: none !important;
+}
+
 /* 👇 Required in Tailwind v4 to tell it where to scan */
 @source "./index.html";
 @source "./src/**/*.{js,jsx,ts,tsx}";
