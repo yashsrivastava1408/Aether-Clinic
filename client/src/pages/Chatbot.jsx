@@ -343,6 +343,35 @@ State your symptoms or upload a photo for analysis.`,
         {/* Decorative Footer */}
         <div className="flex justify-between mt-2 px-2 text-[10px] text-gray-500 font-mono uppercase">
           <span>TOKENS: {tokenUsage.toLocaleString()} / {user?.isGuest ? '10,000' : '100,000'}</span>
+
+          {/* SUMMARIZE SYMPTOMS BUTTON */}
+          {messages.length > 2 && !messages[messages.length - 1]?.text?.includes("FINAL MEDICAL ASSESSMENT") && (
+            <button
+              onClick={async () => {
+                if (window.confirm("End consultation and generate summary?")) {
+                  setIsTyping(true);
+                  try {
+                    const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/api/chat/force-final`, {
+                      userId: getUserId(),
+                      specialization: activeDoctor.name
+                    });
+                    if (res.data.reply) {
+                      setMessages((prev) => [...prev, { sender: "ai", text: res.data.reply }]);
+                      consumeTokens(500); // Fixed cost for report
+                    }
+                  } catch (err) {
+                    console.error("Force final error", err);
+                    setError("FAILED TO GENERATE REPORT");
+                  }
+                  setIsTyping(false);
+                }
+              }}
+              className="text-amber-500 hover:text-amber-400 transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <span className="animate-pulse">⚠️</span> SUMMARIZE SYMPTOMS
+            </button>
+          )}
+
           <span>{user?.isGuest ? 'IDENTITY: GUEST' : 'IDENTITY: VERIFIED'}</span>
         </div>
       </div>
