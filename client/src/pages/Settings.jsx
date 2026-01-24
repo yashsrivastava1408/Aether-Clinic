@@ -6,7 +6,7 @@ import LegalModal from "../components/LegalModal";
 export default function Settings() {
     const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
-    const [notifications, setNotifications] = useState(true);
+    const [_notifications, _setNotifications] = useState(true); // Reserved for future use
     const [showLegal, setShowLegal] = useState(false);
 
     return (

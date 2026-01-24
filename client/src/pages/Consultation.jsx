@@ -49,7 +49,7 @@ const specialists = [
   { id: 5, name: "Bone Specialist", role: "Orthopedist", description: "Check your bones and joints.", accuracy: "99.6%", cases: "11,203", icon: <BoneIcon />, color: "amber" },
 ];
 
-export default function Consultation({ onSelectDoctor }) {
+export default function Consultation() {
   // Use Ref for rotation to avoid re-renders on every scroll event
   const rotationRef = useRef(0);
   const carouselRef = useRef(null);

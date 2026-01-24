@@ -1,6 +1,5 @@
 import React, { useState, Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
 import Navbar from "./components/Navbar";
 import SplashScreen from "./components/SplashScreen";
 import HolographicCursor from "./components/HolographicCursor";
@@ -51,6 +50,7 @@ const MainContent = () => {
       console.log("🔄 Detected deep link/refresh on restricted route. Redirecting to Dashboard.");
       navigate("/dashboard", { replace: true });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array = Runs ONLY on Mount (Initial Load/Refresh)
 
   return (
