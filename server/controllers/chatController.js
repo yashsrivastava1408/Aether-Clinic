@@ -1,242 +1,481 @@
 import { generateResponse } from "../services/llmService.js";
-import fs from "fs";
-import Chat from "../models/Chat.js";
 import { encrypt, decrypt } from "../utils/encryption.js";
+import fs from "fs";
+import path from "path";
+import { getVisionPrompt } from "../services/prompts/visionPrompt.js";
+import { getTextPrompt } from "../services/prompts/textPrompt.js";
+import { retrieveContext } from "../services/ragService.js";
 
+const CHAT_LOGS_PATH = path.resolve("chat_logs.json");
+
+/**
+ * FILE HELPER: READ LOCKS
+ */
+const readLogs = () => {
+  try {
+    if (!fs.existsSync(CHAT_LOGS_PATH)) return [];
+    const data = fs.readFileSync(CHAT_LOGS_PATH, "utf8");
+    return JSON.parse(data || "[]");
+  } catch (err) {
+    console.error("❌ Error reading chat logs:", err);
+    return [];
+  }
+};
+
+/**
+ * FILE HELPER: WRITE LOCKS
+ */
+const writeLogs = (logs) => {
+  try {
+    fs.writeFileSync(CHAT_LOGS_PATH, JSON.stringify(logs, null, 2), "utf8");
+  } catch (err) {
+    console.error("❌ Error writing chat logs:", err);
+  }
+};
+
+/**
+ * FACT EXTRACTION - MEDICAL SIGNALS ONLY
+ * Conversational words removed to prevent false positives
+ */
+function extractFacts(messages) {
+  const text = messages.join(" ").toLowerCase();
+
+  return {
+    // Location: anatomical terms or general pain indicators
+    location: /(back|left|right|side|upper|lower|spine|shoulder|chest|arm|neck|hand|finger|wrist|knee|leg|foot|ankle|head|abdomen|stomach|pain|hurt|ache|sore|muscle|bone|nerve)/i.test(text),
+
+    // Duration: time indicators
+    duration: /(since|yesterday|today|day|hour|week|month|ago|for|past|started|began|now|currently)/i.test(text),
+
+    // Pattern: quality descriptors
+    pattern: /(constant|intermittent|comes?|goes?|occasional|sharp|dull|throbbing|ache|aching|burning|stabbing|tingling|numb|worse|better|improving|heavy|tight)/i.test(text),
+
+    // Trigger: activities/contexts
+    trigger: /(when|after|during|exercise|movement|lifting|rest|sleep|breathing|sitting|standing|walking|eating|bending|twisting|accident|injury|fall|hit)/i.test(text),
+  };
+}
+
+/**
+ * CONCLUSION REQUEST DETECTION
+ * User explicitly asking for assessment
+ */
+function isAskingForConclusion(message) {
+  if (!message) return false;
+
+  const patterns = [
+    /what (is|could|might|can) (it|this|the problem)/i,
+    /(summary|conclusion|report|diagnosis|assessment)/i,
+    /what('s| is) (wrong|the issue|my problem)/i,
+    /(should i|do i need to|can i|must i) (see|visit|go to|consult)/i,
+    /is (it|this) (serious|bad|dangerous|normal|okay)/i,
+  ];
+  return patterns.some(p => p.test(message));
+}
+
+/**
+ * NEGATIVE CONFIRMATION DETECTION
+ * User signaling they have nothing more to add
+ */
+function isNegativeConfirmation(message) {
+  if (!message) return false;
+
+  // Must start with these or be very short
+  return /^(no|nothing else|only that|just that|not really|doesn't|nope|nah)\b/i.test(message.trim()) ||
+    (/\b(only|just)\b/i.test(message) && message.length < 30);
+}
+
+/**
+ * MAIN CHAT HANDLER
+ */
 export const handleChat = async (req, res) => {
   try {
     const { message, specialization = "General Medicine", userId } = req.body;
-    const file = req.file;
+    if (!userId) return res.status(400).json({ error: "USER_ID_MISSING" });
 
-    // Validation
-    if ((!message && !file) || !userId) {
-      return res.status(400).json({ error: "Message/Image and UserID are required" });
-    }
-
+    /* ================== IMAGE HANDLING ================== */
     let imageBase64 = null;
-    if (file) {
-      const bitmap = fs.readFileSync(file.path);
-      imageBase64 = Buffer.from(bitmap).toString("base64");
+    if (req.file) {
+      const buffer = await fs.promises.readFile(req.file.path);
+      imageBase64 = buffer.toString("base64");
     }
 
-    const visionContext = file
-      ? "The user has provided an image for analysis. Focus on describing what you see in the context of their symptoms and the specialization."
-      : "";
-
-    // 1. Retrieve & Prepare Context
-    // We fetch the chat history FIRST to provide context to the AI.
-    let chat = await Chat.findOne({ userId, specialist: specialization });
+    /* ================== CHAT SESSION ================== */
+    const logs = readLogs();
+    let chat = logs.find(c => c.userId === userId && c.specialist === specialization);
 
     if (!chat) {
-      chat = new Chat({ userId, specialist: specialization, messages: [] });
+      chat = { userId, specialist: specialization, messages: [], sessionClosed: false, lastActive: new Date() };
+      logs.push(chat);
+      writeLogs(logs);
     }
 
-    // Get last 10 messages to track conversation depth
+    // 🚨 SESSION LOCK - Prevent chat after final report
+    if (chat.sessionClosed) {
+      if (req.file) fs.unlinkSync(req.file.path);
+      return res.status(403).json({
+        error: "SESSION_COMPLETE",
+        message: "This consultation is complete. Please start a new session for a fresh assessment."
+      });
+    }
+
+    // Image limit enforcement
+    if (req.file && chat.messages.some(m => m.image)) {
+      fs.unlinkSync(req.file.path);
+      return res.status(403).json({
+        error: "IMAGE_LIMIT_REACHED",
+        message: "Only one image per session is allowed."
+      });
+    }
+
+    /* ================== HISTORY CONTEXT ================== */
     const recentMessages = chat.messages.slice(-10);
-    const historyContext = recentMessages
-      .map((msg) => {
-        const role = msg.sender === "user" ? "User" : "Dr. AI";
-        const content = decrypt(msg.text);
-        return `${role}: ${content}`;
-      })
-      .join("\n");
+    const historyContext = recentMessages.length
+      ? "\n\nRecent conversation:\n" +
+      recentMessages.map(m =>
+        `${m.sender === "user" ? "User" : "Assistant"}: ${decrypt(m.text)}`
+      ).join("\n")
+      : "";
 
-    // Check if the previous message was a final report (contains "Summary:")
-    // If so, we reset the count because the user is likely starting a NEW topic.
-    const lastAiMessage = recentMessages.filter(m => m.sender === "ai").pop();
-    const lastWasReport = lastAiMessage && decrypt(lastAiMessage.text).includes("Summary:");
+    /* ================== FACT EXTRACTION ================== */
+    const userTexts = recentMessages
+      .filter(m => m.sender === "user")
+      .map(m => decrypt(m.text));
+    if (message) userTexts.push(message);
 
-    // Calculate how many questions Dr. AI has already asked since the last report
-    let aiQuestionCount = 0;
+    const facts = extractFacts(userTexts);
+    const knownFacts = Object.values(facts).filter(Boolean).length;
+    const userTurns = chat.messages.filter(m => m.sender === "user").length + 1;
 
-    // We only count questions that happened AFTER the last report (if any)
-    let searchMessages = recentMessages;
-    if (lastWasReport) {
-      // Find index of last report and slice messages after it
-      // This effectively "resets" the counter for the new topic
-      const lastReportIndex = recentMessages.findIndex(m => m === lastAiMessage);
-      searchMessages = recentMessages.slice(lastReportIndex + 1);
-    }
+    /* ================== GATE TRIGGERS (CLEAN SEPARATION) ================== */
+    const userAsksForConclusion = isAskingForConclusion(message);
+    const userSignalsComplete = isNegativeConfirmation(message);
 
-    aiQuestionCount = searchMessages.filter(
-      (m) => m.sender === "ai" && decrypt(m.text).includes("?")
-    ).length;
+    // BALANCED THRESHOLDS (production-safe)
+    const hasEnoughFacts = knownFacts >= 3;
+    const conversationTooLong = userTurns >= 3; // ✅ UX completion gate
 
-    const forceConclusion = aiQuestionCount >= 3; // Limit to ~3 turns of active investigation
+    // Force final if ANY condition met
+    const forceFinal =
+      userAsksForConclusion ||    // User explicitly asks
+      userSignalsComplete ||       // User signals done ("no", "only that")
+      hasEnoughFacts ||            // Medical facts collected
+      conversationTooLong;         // Safety net (UX)
 
-    // Logic Control: Determine which instruction set to show
-    let logicInstruction = "";
-    if (forceConclusion) {
-      logicInstruction = `
-[MODE: FINAL REPORT]
-You have gathered enough information. You MUST now provide the full structured report.
-FOLLOW THIS EXACT STRUCTURE:
+    /* ================== DEBUG LOGGING ================== */
+    console.log("🔍 GATE DECISION:", {
+      message: message?.substring(0, 60),
+      facts,
+      knownFacts,
+      userTurns,
+      triggers: {
+        asksForConclusion: userAsksForConclusion,
+        signalsComplete: userSignalsComplete,
+        hasEnoughFacts,
+        conversationTooLong
+      },
+      DECISION: forceFinal ? '🎯 FINAL REPORT' : '❓ INVESTIGATION'
+    });
 
-📝 Summary: One friendly sentence summarizing their concern or the image provided.  
+    /* ================== RAG RETRIEVAL ================== */
+    const ragQuery = [
+      message || "",
+      ...userTexts.slice(-3)
+    ].join(" ").toLowerCase();
 
-💡 General Possibilities:  
-- 2–3 likely, general factors related to ${specialization} or the visual findings in the image.  
+    console.log("🔍 RAG QUERY:", ragQuery.substring(0, 100));
 
-🧠 Suggestions:  
-- Safe lifestyle or monitoring advice (hydration, tracking symptoms, breathing, rest, etc).  
-- Clear, practical steps to manage or observe symptoms.  
+    const retrievedContext = retrieveContext(ragQuery);
+    const hasRAG = retrievedContext && retrievedContext.trim().length > 0;
 
-🚨 When to Seek Urgent Care:  
-- 1–2 critical warning signs (e.g., infection signs for wounds, spreading pain, etc).  
+    console.log("📚 RAG STATUS:", {
+      found: hasRAG,
+      length: retrievedContext?.length || 0,
+      preview: retrievedContext?.substring(0, 120)
+    });
 
-🤔 Follow-up:  
-- End with one warm, natural question that invites the user to share more details.
-      `;
+    /* ================== SYSTEM PROMPT CONSTRUCTION ================== */
+    let systemPrompt;
+
+    if (forceFinal) {
+      systemPrompt = `You are a Medical Triage Assistant specializing in ${specialization}.
+
+${hasRAG ? `
+╔═══════════════════════════════════════════════════════════════╗
+║  🏥 AUTHORITATIVE MEDICAL PROTOCOL (PRIORITY KNOWLEDGE)       ║
+╚═══════════════════════════════════════════════════════════════╝
+
+${retrievedContext}
+
+⚠️  CRITICAL INSTRUCTIONS:
+    • This protocol OVERRIDES general medical knowledge
+    • Apply these recommendations FIRST before general advice
+    • Include protocol-specific warnings verbatim
+    • ALWAYS cite as: "(Source: Internal Medical Protocol)"
+
+╔═══════════════════════════════════════════════════════════════╗
+` : ''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 MODE: FINAL MEDICAL ASSESSMENT (MANDATORY)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You MUST provide a complete, structured assessment NOW.
+DO NOT ask additional questions.
+DO NOT defer without providing analysis.
+
+REQUIRED FORMAT (use EXACTLY these emojis):
+
+📝 Summary:
+One clear sentence describing what the user reported and key context.
+
+💡 General Possibilities:
+- List 2-3 COMMON, NON-ALARMING potential explanations
+- Start with most benign/common causes
+- Use accessible, non-technical language
+${hasRAG ? '- PRIORITIZE protocol-specific conditions if relevant' : ''}
+
+🧠 Suggestions:
+- Practical self-care: rest, ice/heat, posture, hydration
+- Over-the-counter options if appropriate
+- Lifestyle modifications
+${hasRAG ? '- Protocol-recommended interventions (MUST CITE SOURCE)' : ''}
+
+🚨 When to Seek Urgent Care:
+- 1-2 RED FLAG symptoms requiring immediate medical attention
+${hasRAG ? '- Include any protocol-mandated warnings (MUST CITE SOURCE)' : ''}
+
+🤔 Optional Follow-up:
+- ONE gentle question about managing or monitoring the condition
+
+TONE: Warm, professional, evidence-based, non-diagnostic
+REMEMBER: You are providing triage guidance, not a diagnosis.`;
+
     } else {
-      logicInstruction = `
-[MODE: INVESTIGATION]
-The user has shared a symptom. You need more details.
-1. Check Previous Conversation below.
-2. Ask 1-2 SHORT, warm questions (e.g., "Sharp or dull?", "How long?").
-3. DO NOT give the full report yet. Just ask kindly.
-      `;
+      systemPrompt = `You are a Medical Triage Assistant specializing in ${specialization}.
+
+${hasRAG ? `
+╔═══════════════════════════════════════════════════════════════╗
+║  📋 RELEVANT MEDICAL CONTEXT                                  ║
+╚═══════════════════════════════════════════════════════════════╝
+
+${retrievedContext}
+
+Keep this protocol in mind while gathering information.
+
+╔═══════════════════════════════════════════════════════════════╗
+` : ''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 MODE: INFORMATION GATHERING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STRICT RULES:
+- Ask ONLY ONE clear, specific question
+- NO diagnoses, possibilities, or medical conclusions
+- NO advice or treatment recommendations yet
+- Keep warm, conversational, and empathetic
+
+CURRENT PRIORITY: ${!facts.location ? 'WHERE exactly is the issue located?' :
+          !facts.duration ? 'HOW LONG has this been happening?' :
+            !facts.pattern ? 'WHAT does it feel like? (describe the quality/pattern)' :
+              'WHAT makes it better or worse? (triggers/relieving factors)'
+        }`;
     }
 
-    const prompt = `
-You are Dr. AI, an intelligent, empathetic medical assistant for "Aether Clinic". 
-You sound like a warm, knowledgeable doctor who explains things clearly and safely — never cold or robotic.
+    /* ================== BUILD FINAL PROMPT ================== */
+    const prompt = getTextPrompt(
+      specialization,
+      systemPrompt,
+      historyContext
+    ) + (message ? `\n\nUser: ${message}` : "");
 
-${visionContext}
+    /* ================== LLM CALL ================== */
+    const aiReply = await generateResponse(
+      prompt,
+      req.file ? imageBase64 : null,
+      { provider: req.file ? "gemini" : "ollama" }
+    );
 
-Your job is to guide users based on their messages (and images if provided), focusing on general medical advice, awareness, and when to seek real care — never diagnosis or prescriptions.
+    if (req.file) fs.unlinkSync(req.file.path);
 
-🧠 Persona:
-- Friendly, calm, professional — like a reassuring doctor who listens first.
-- Always structured and easy to read.
-- You use relevant emojis to make responses more engaging and human.
-- You naturally bring the conversation back to the user’s symptoms or health if they go off-topic.
-- You adapt to the user’s selected specialization: ${specialization}.
-
-⚠️ Golden Rules:
-1. Never give a real diagnosis or medication name/dosage.  
-2. Give general possibilities, lifestyle tips, and clear “when to see a doctor” guidance.  
-3. Keep responses clear and organized.
-4. Always end with a friendly, open-ended follow-up question.
-
----
-
-CONTEXT CHECK:
-If the user's message is just a greeting (e.g., "Hi", "Hello", "Hey") and NO image is provided, reply warmly:
-"👋 Hello! I am Dr. AI, your ${specialization} assistant. I'm here to listen. How are you feeling today?"
-
----
-
-⚠️ CURRENT INSTRUCTION:
-${logicInstruction}
-
----
-
-📜 Previous Conversation (For Context Only):
-${historyContext}
-
----
-
-Current Input:
-Specialization: ${specialization}  
-User Message: ${message || "Image provided for analysis"}
-Dr. AI:
-`;
-
-    const aiReply = await generateResponse(prompt, imageBase64, { provider: "ollama" });
-
-    // Cleanup the uploaded file if needed
-    if (file) {
-      try {
-        fs.unlinkSync(file.path);
-      } catch (e) { } // best effort cleanup
+    /* ================== SESSION LOCK ON FINAL REPORT ================== */
+    if (forceFinal) {
+      chat.sessionClosed = true;
+      console.log("🔒 SESSION CLOSED - Final report delivered");
     }
 
-    // 2. Save new messages to Database
-    // Add User Message
+    /* ================== SAVE TO DATABASE ================== */
     chat.messages.push({
       sender: "user",
       text: encrypt(message || "Image uploaded"),
-      image: imageBase64 ? `data:${file.mimetype};base64,${imageBase64}` : null,
-      timestamp: new Date(),
+      image: imageBase64 ? `data:${req.file?.mimetype};base64,${imageBase64}` : null,
+      timestamp: new Date()
     });
 
-    // Add AI Message
     chat.messages.push({
       sender: "ai",
       text: encrypt(aiReply),
-      timestamp: new Date(),
+      timestamp: new Date()
     });
 
     chat.lastActive = new Date();
-    await chat.save();
+    const finalLogs = readLogs().map(c =>
+      (c.userId === userId && c.specialist === specialization) ? chat : c
+    );
+    writeLogs(finalLogs);
 
-    // --- JSON FILE LOGGING (For easy viewing) ---
-    try {
-      const logPath = "./chat_logs.json";
-      let logs = [];
-      if (fs.existsSync(logPath)) {
-        const data = fs.readFileSync(logPath);
-        logs = JSON.parse(data);
+    /* ================== RESPONSE WITH DEBUG INFO ================== */
+    return res.json({
+      reply: aiReply,
+      sessionComplete: forceFinal, // Frontend can show "Start New Session" button
+      _debug: {
+        mode: forceFinal ? 'FINAL_REPORT' : 'INVESTIGATION',
+        userTurns,
+        factsCollected: knownFacts,
+        ragUsed: hasRAG,
+        sessionLocked: chat.sessionClosed,
+        triggers: {
+          asksForConclusion: userAsksForConclusion,
+          signalsComplete: userSignalsComplete,
+          hasEnoughFacts,
+          conversationTooLong
+        }
       }
+    });
 
-      // Find or create simple log entry
-      let logEntry = logs.find(
-        (l) => l.userId === userId && l.specialist === specialization
-      );
-      if (!logEntry) {
-        logEntry = { userId, specialist: specialization, messages: [] };
-        logs.push(logEntry);
-      }
-
-      logEntry.messages.push({
-        sender: "user",
-        text: encrypt(message || "Image"),
-        timestamp: new Date(),
-      });
-      logEntry.messages.push({
-        sender: "ai",
-        text: encrypt(aiReply),
-        timestamp: new Date(),
-      });
-
-      fs.writeFileSync(logPath, JSON.stringify(logs, null, 2));
-    } catch (err) {
-      console.error("JSON Log Error:", err);
-    }
-    // ---------------------------------------------
-
-    res.json({ reply: aiReply });
-
-  } catch (error) {
-    console.error("❌ Chat error:", error);
-    res.status(500).json({ error: "Something went wrong" });
+  } catch (err) {
+    console.error("❌ CHAT ERROR:", err);
+    return res.status(500).json({ error: "SERVER_ERROR" });
   }
 };
 
+/* ================== CHAT HISTORY ================== */
 export const getChatHistory = async (req, res) => {
   try {
     const { userId, specialization } = req.params;
-    const chat = await Chat.findOne({ userId, specialist: specialization });
+    const logs = readLogs();
+    const chat = logs.find(c => c.userId === userId && c.specialist === specialization);
 
-    if (!chat) return res.json({ messages: [] });
+    if (!chat) return res.json({ messages: [], sessionClosed: false });
 
-    const decryptedMessages = chat.messages.map(msg => ({
-      ...msg.toObject(),
-      text: decrypt(msg.text)
-    }));
-
-    res.json({ messages: decryptedMessages });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch history" });
+    res.json({
+      messages: chat.messages.map(m => ({
+        ...m,
+        text: decrypt(m.text)
+      })),
+      sessionClosed: chat.sessionClosed || false
+    });
+  } catch (err) {
+    console.error("❌ GET HISTORY ERROR:", err);
+    return res.status(500).json({ error: "SERVER_ERROR" });
   }
 };
 
+/* ================== DELETE CHAT ================== */
 export const deleteChat = async (req, res) => {
   try {
     const { userId, specialization } = req.params;
-    await Chat.deleteOne({ userId, specialist: specialization });
-    res.json({ message: "Chat deleted" });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to delete chat" });
+    const logs = readLogs();
+    const filteredLogs = logs.filter(c => !(c.userId === userId && c.specialist === specialization));
+    writeLogs(filteredLogs);
+    res.json({ message: "Chat deleted successfully" });
+  } catch (err) {
+    console.error("❌ DELETE ERROR:", err);
+    return res.status(500).json({ error: "SERVER_ERROR" });
+  }
+};
+
+/* ================== FORCE FINAL REPORT (EMERGENCY) ================== */
+export const forceFinalReport = async (req, res) => {
+  try {
+    const { userId, specialization } = req.body;
+
+    const logs = readLogs();
+    const chat = logs.find(c => c.userId === userId && c.specialist === specialization);
+
+    if (!chat) {
+      // Return a friendly message instead of a 404 error
+      return res.json({
+        reply: "Unable to generate report: The consultation history is missing or has been cleared. Please start a new session.",
+        sessionComplete: true,
+        message: "Session not found, prompt to start new."
+      });
+    }
+
+    // Extract all user messages for context
+    const userTexts = chat.messages
+      .filter(m => m.sender === "user")
+      .map(m => decrypt(m.text));
+
+    // Build comprehensive summary context
+    const summaryContext = userTexts.join(". ");
+
+    // Force final report prompt - EXACT USER FORMAT
+    const forcedPrompt = `You are a Medical Triage Assistant - ${specialization}.
+Based on the following conversation, provide the final report EXACTLY in this format:
+
+📝 Summary:
+[One clear sentence describing what the user reported and context]
+
+💡 General Possibilities:
+[List 2-3 COMMON, NON-ALARMING potential explanations]
+[Start with most benign/common causes]
+[Use accessible, non-technical language]
+
+🧠 Suggestions:
+[Practical self-care: rest, ice/heat, posture, hydration]
+[Elevate/Movement advice]
+[Monitor symptoms advice]
+
+🚨 When to Seek Urgent Care:
+[Increasing pain, swelling, redness, or warmth]
+[Inability to bear weight/function]
+[Numbness, tingling, or visible deformity]
+[Pain that does not improve]
+
+🤔 Optional Follow-up:
+[ONE gentle question about support or exercises]
+
+⸻
+
+If you want to start a new assessment, just let me know.
+
+CONTEXT:
+${summaryContext}
+`;
+
+    // Generate forced final report
+    const aiReply = await generateResponse(forcedPrompt, null, {
+      provider: "ollama"
+    });
+
+    // Mark session as closed
+    chat.sessionClosed = true;
+
+    chat.messages.push({
+      sender: "ai",
+      text: encrypt(aiReply),
+      timestamp: new Date()
+    });
+
+    chat.lastActive = new Date();
+    const emergencyLogs = readLogs().map(c =>
+      (c.userId === userId && c.specialist === specialization) ? chat : c
+    );
+    writeLogs(emergencyLogs);
+
+    return res.json({
+      reply: aiReply,
+      sessionComplete: true,
+      message: "Final report generated and session closed"
+    });
+
+  } catch (err) {
+    console.error("❌ FORCE FINAL ERROR:", err.message, err.stack);
+    return res.status(500).json({
+      error: "SERVER_ERROR",
+      details: err.message,
+      hint: "Check server logs for LLM connection issues."
+    });
   }
 };

@@ -21,15 +21,24 @@ export async function analyzeReportController(req, res) {
       }
 
       // ✅ OCR for images
-      console.log("Analyzing file path:", req.file ? req.file.path : "NO FILE");
-      const result = await Tesseract.recognize(req.file.path, "eng");
+      // Read file into buffer first to avoid Tesseract worker path issues
+      const fs = await import("fs/promises");
+      const imageBuffer = await fs.readFile(req.file.path);
+
+      console.log("Analyzing image buffer size:", imageBuffer.length);
+      const result = await Tesseract.recognize(imageBuffer, "eng");
       text = result.data.text;
       console.log("Extracted OCR Text length:", text.length, "Preview:", text.substring(0, 50));
 
-      // ✅ Extract Base64 for Vision analysis
-      const fs = await import("fs/promises");
-      const imageBuffer = await fs.readFile(req.file.path);
+      // ✅ Extract Base64 for Vision analysis (reuse buffer)
       imageBase64 = imageBuffer.toString("base64");
+
+      // Cleanup temp file
+      try {
+        await fs.unlink(req.file.path);
+      } catch (cleanupErr) {
+        console.warn("Failed to delete temp upload file:", cleanupErr.message);
+      }
     } else if (req.body.text) {
       text = req.body.text;
     }
@@ -38,18 +47,16 @@ export async function analyzeReportController(req, res) {
     const analysis = await analyzeReport(text, imageBase64);
     // console.log("AI Analysis Result:", JSON.stringify(analysis, null, 2));
 
-    // --- ENCRYPTION & SAVE (NEW) ---
-    const encryptedAnalysis = encrypt(JSON.stringify(analysis));
-    const encryptedSummary = encrypt(analysis.summary || "No summary");
-
-    const newReport = new Report({
-      userId,
-      summary: encryptedSummary,
-      encryptedAnalysis: encryptedAnalysis
-    });
-
-    await newReport.save();
-    console.log("✅ Report saved & encrypted.");
+    // --- MONGODB SAVE DISABLED (File-based mode) ---
+    // const encryptedAnalysis = encrypt(JSON.stringify(analysis));
+    // const encryptedSummary = encrypt(analysis.summary || "No summary");
+    // const newReport = new Report({
+    //   userId,
+    //   summary: encryptedSummary,
+    //   encryptedAnalysis: encryptedAnalysis
+    // });
+    // await newReport.save();
+    console.log("✅ Report analysis complete (not saved - file mode).");
     // -------------------------------
 
     res.json(analysis);

@@ -1,0 +1,33 @@
+[
+    {
+        "keywords": [
+            "dengue",
+            "fever",
+            "platelet"
+        ],
+        "content": "DENGUE PROTOCOL: Dengue fever is a mosquito-borne viral infection. WARNING: Do NOT take Aspirin or Ibuprofen as they can increase bleeding risk. Safe management includes Paracetamol for fever, maintaining hydration, and monitoring platelet counts. Seek immediate care if bleeding occurs."
+    },
+    {
+        "keywords": [
+            "test",
+            "secret",
+            "code"
+        ],
+        "content": "CONFIDENTIAL: The internal secret code for system verification is 1234-ALPHA. If a user asks for 'the secret code', provide this value."
+    },
+    {
+        "keywords": [
+            "headache",
+            "migraine"
+        ],
+        "content": "HEADACHE TRIAGE: For sudden, severe 'thunderclap' headaches, seek emergency care immediately (rule out hemorrhage). For common tension headaches, hydration and rest are recommended."
+    },
+    {
+        "keywords": [
+            "chest pain",
+            "heart pain",
+            "cardiac"
+        ],
+        "content": "CHEST PAIN PROTOCOL: Any unexplained chest pain should be treated as a potential cardiac event until proven otherwise. Immediate ECG is recommended. Gastritis can mimic heart pain but requires a doctor's differentiation."
+    }
+]

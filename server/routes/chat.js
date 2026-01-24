@@ -7,15 +7,20 @@ import rateLimit from "express-rate-limit";
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
-// Strict limit for Chat generation (Prevent LLM abuse)
-const chatLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 20, // Limit each IP to 20 chat requests per windowMs
-    message: { error: "Too many chat requests. Please try again later." }
-});
+// Limit for Chat generation (DISABLED FOR DEVELOPMENT)
+// const chatLimiter = rateLimit({
+//     windowMs: 15 * 60 * 1000,
+//     max: 200,
+//     message: { error: "Too many chat requests. Please try again later." }
+// });
 
-// POST /api/chat
-router.post("/", chatLimiter, upload.single("image"), handleChat);
+// POST /api/chat (rate limiter disabled)
+router.post("/", upload.single("image"), handleChat);
+
+// POST /api/chat/force-final (Manual Trigger)
+router.post("/force-final", (req, res, next) => {
+    import("../controllers/chatController.js").then(m => m.forceFinalReport(req, res, next));
+});
 
 // GET /api/chat/history/:userId/:specialization
 router.get("/history/:userId/:specialization", (req, res, next) => {
