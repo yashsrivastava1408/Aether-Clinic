@@ -15,6 +15,7 @@ router.post('/login', async (req, res) => {
 
         if (user) {
             // Update existing user
+            console.log("♻️ Existing User Logged In:", email);
             user.name = name || user.name;
             user.picture = picture || user.picture;
             user.lastLogin = new Date();
@@ -29,15 +30,20 @@ router.post('/login', async (req, res) => {
                 isGuest: !!isGuest
             });
             await user.save();
-            console.log("✨ New User Created:", user.name);
+            console.log("✨ New User Created:", user.name, `(${email})`);
 
-            // Send Welcome Email for new users
+            // Send Welcome Email for new users (Non-blocking)
             if (email && !isGuest) {
-                await sendWelcomeEmail(email, user.name);
+                console.log("📨 Triggering automated welcome email for:", email);
+                sendWelcomeEmail(email, user.name).catch(err =>
+                    console.error("📧 Background Email Error:", err)
+                );
+            } else {
+                console.log("⏭️ Skipping email (Guest or Missing Email)");
             }
         }
 
-        res.json({ message: "Login successful", user });
+        return res.json({ message: "Login successful", user });
     } catch (error) {
         console.error("Login Error:", error);
         res.status(500).json({ error: "Login failed" });

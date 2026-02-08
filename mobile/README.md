@@ -1,24 +1,24 @@
-# 📱 Aether Mobile: Patient Companion App
+# Aether Mobile: Patient Companion App
 
-**A futuristic, visually immersive React Native application designed for patient engagement and health tracking.**
+A futuristic, visually immersive React Native application designed for patient engagement and health tracking.
 
 ---
 
-## 🎨 Design Philosophy: "Aether UI"
+## Design Philosophy: Aether UI
 
-The mobile application implements a custom **"Aether" Design System**, focusing on darker modes, holographic gradients, and fluid micro-interactions.
+The mobile application implements a custom design system, focusing on dark modes, glassmorphism, and fluid micro-interactions.
 
 ### Key Visual Technologies:
-*   **React Native Reanimated**: Powering the *Fireflies*, *Aurora Backgrounds*, and *card tilt* effects.
-*   **Expo Haptics**: Providing tactile feedback for "Digital Decoder" text effects and button interactions.
-*   **Glassmorphism**: Extensive use of blur views and semi-transparent layers to create depth.
+- **React Native Reanimated**: Powering smooth transitions, background effects, and interactive UI elements.
+- **Expo Haptics**: Providing tactile feedback for enhanced user engagement.
+- **Glassmorphism**: Extensive use of blur effects and semi-transparent layers to create a premium aesthetic.
 
 ---
 
-## 🧩 Core Mobile Modules
+## Core Mobile Modules
 
-### 1. The Neural Home (Dashboard)
-The central hub for the patient. It features a "Sentient Core" that greets the user and dynamic Bento Grid cards for quick navigation.
+### 1. Neural Home (Dashboard)
+The central hub for the patient, featuring an AI-driven core and dynamic navigation cards.
 
 ```mermaid
 graph LR
@@ -29,29 +29,27 @@ graph LR
     Home -->|Tap| Risk["Risk Engine"]
 ```
 
-### 2. Aether AI Chat (`/chat`)
+### 2. AI Chat
 A secure interface for conversational health assistance.
-*   **Feature**: Real-time streaming responses.
-*   **Visuals**: Voice visualizer animations and "AI typing" indicators.
-*   **Safety**: Local red-teaming ensures no medical advice is given as absolute fact.
+- **Features**: Real-time streaming responses and AI status indicators.
+- **Visuals**: Animated voice visualizers and modern typography.
+- **Safety**: Built-in safeguards for informational health guidance.
 
-### 3. Report Vision (`/analyze`)
-Allows users to upload medical reports (PDF/Images) for instant breakdown.
-*   **Process**: Image -> Base64 -> Backend -> OCR -> Gemini 1.5 Pro -> Structured JSON Summary.
+### 3. Report Vision
+Enables users to upload and digitize medical reports for instant insights.
+- **Process**: Image recognition followed by backend processing and AI-driven summarization.
 
-### 4. Risk Engine (`/risk`)
-A form-based interface connecting directly to the Python ML Service.
-*   **Input**: Age, BP, Cholesterol, etc.
-*   **Output**: Real-time "Gauge Animation" showing probability of heart disease.
+### 4. Risk Engine
+A diagnostic interface connecting to cloud-based machine learning models for risk assessment.
 
 ---
 
-## 🛠️ Tech Stack & Configuration
+## Technology Stack
 
-*   **Framework**: Expo (React Native)
-*   **Language**: TypeScript
-*   **Network**: Axios (with centralized `Config.ts` for ease of IP switching)
-*   **Navigation**: Expo Router (File-based routing)
+- **Framework**: Expo (React Native)
+- **Language**: TypeScript
+- **Network**: Axios
+- **Navigation**: Expo Router
 
 ---
 *Designed for iOS and Android.*

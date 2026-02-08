@@ -34,7 +34,7 @@ const connectDB = async (retries = 5) => {
   }
 };
 
-// connectDB();
+connectDB();
 
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
@@ -112,7 +112,7 @@ app.use(limiter);
 
 // 5. CORS
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:5050"],
+  origin: ["http://localhost:5173", "http://localhost:5050", "http://10.9.13.47:5050", "http://10.9.13.47:8081"],
   credentials: true
 }));
 app.use(express.json());

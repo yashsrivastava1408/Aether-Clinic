@@ -23,7 +23,7 @@ export default function WelcomeScreen() {
             }
             setLoading(false);
             navigate('/dashboard');
-        }, 1500);
+        }, 500);
     };
 
     const googleLogin = useGoogleLogin({

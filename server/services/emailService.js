@@ -34,31 +34,43 @@ export const sendWelcomeEmail = async (toEmail, userName) => {
         to: toEmail,
         subject: 'Welcome to Aether Clinic 👨‍⚕️ | Your Health Companion',
         html: `
-            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-                <div style="text-align: center; margin-bottom: 20px;">
-                     <h1 style="color: #10b981; margin-bottom: 5px;">Aether Clinic</h1>
-                     <p style="color: #666; margin: 0;">Your Intelligent Health Companion</p>
-                </div>
-                
-                <h2 style="color: #333; border-bottom: 2px solid #10b981; padding-bottom: 10px;">Welcome, ${userName}! 👋</h2>
-                
-                <p>Thank you for signing in to <strong>AI Doctor</strong>. We are thrilled to have you on board!</p>
-                
-                <p>Your AI-powered health assistant is ready to help you analyze reports, assess risks, and answer your medical queries instantly.</p>
-                
-                <div style="text-align: center; margin: 30px 0;">
-                    <a href="http://localhost:5173" 
-                       style="display: inline-block; padding: 12px 24px; background-color: #10b981; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">
-                        Start Your Consultation
-                    </a>
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #f8fafc; background-color: #0f172a; max-width: 600px; margin: 0 auto; border-radius: 16px; overflow: hidden; border: 1px solid #1e293b;">
+                <!-- Header with Gradient Area -->
+                <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 20px; text-align: center;">
+                    <h1 style="margin: 0; font-size: 28px; letter-spacing: 2px; text-transform: uppercase;">Aether Clinic</h1>
+                    <p style="margin: 10px 0 0; opacity: 0.9; font-size: 14px;">Your Digital Health Sanctuary</p>
                 </div>
 
-                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-                
-                <p style="font-size: 12px; color: #888; text-align: center;">
-                    You are receiving this email because you signed in to AI Doctor.<br>
-                    This is an automated message. Please do not reply directly to this email.
-                </p>
+                <div style="padding: 32px 24px;">
+                    <h2 style="color: #ffffff; font-weight: 600; margin-bottom: 16px;">Welcome, ${userName}! 👋</h2>
+                    
+                    <p style="line-height: 1.6; color: #94a3b8; font-size: 16px;">
+                        Congratulations! You have just gained access to the next generation of healthcare. <strong>Aether Clinic</strong> is your AI-powered companion, designed to provide instant medical clarity with total privacy.
+                    </p>
+
+                    <div style="margin: 32px 0; background-color: #1e293b; border-radius: 12px; padding: 20px;">
+                        <h3 style="margin: 0 0 12px; font-size: 14px; text-transform: uppercase; color: #10b981; letter-spacing: 1px;">Core Capabilities</h3>
+                        <ul style="list-style: none; padding: 0; margin: 0; color: #cbd5e1;">
+                            <li style="margin-bottom: 8px;">🔹 <strong>Report Analysis:</strong> Upload reports for instant, human-friendly breakdowns.</li>
+                            <li style="margin-bottom: 8px;">🔹 <strong>Risk Prediction:</strong> Proactive screening for Heart and Diabetes health.</li>
+                            <li>🔹 <strong>AI Consultation:</strong> 24/7 medical query resolution at your fingertips.</li>
+                        </ul>
+                    </div>
+
+                    <div style="text-align: center; margin: 40px 0;">
+                        <a href="http://localhost:5173" 
+                           style="display: inline-block; padding: 16px 36px; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.4);">
+                            Begin Your Consultation
+                        </a>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid #334155; margin: 32px 0;">
+                    
+                    <p style="font-size: 12px; color: #64748b; text-align: center; line-height: 1.5;">
+                        This is an automated system notification from Aether Clinic.<br>
+                        Your data is encrypted and remains under your control.
+                    </p>
+                </div>
             </div>
         `
     };

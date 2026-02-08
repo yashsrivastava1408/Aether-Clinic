@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Switch, ActivityIndicator, Alert } from 'react-native';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -16,9 +15,10 @@ export default function RiskScreen() {
 
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<any | null>(null);
+    const [mode, setMode] = useState<'heart' | 'diabetes'>('heart');
 
-    // Form State
-    const [formData, setFormData] = useState({
+    // Form States
+    const [heartData, setHeartData] = useState({
         age: '',
         sex: '1', // 1 = Male, 0 = Female
         cp: '0',
@@ -34,44 +34,81 @@ export default function RiskScreen() {
         thal: '2'
     });
 
-    const updateForm = (key: string, value: string) => {
-        setFormData(prev => ({ ...prev, [key]: value }));
+    const [diabetesData, setDiabetesData] = useState({
+        pregnancies: '',
+        glucose: '',
+        bp: '',
+        skin: '',
+        insulin: '',
+        bmi: '',
+        dpf: '',
+        age: ''
+    });
+
+    const updateHeartForm = (key: string, value: string) => {
+        setHeartData(prev => ({ ...prev, [key]: value }));
+    };
+
+    const updateDiabetesForm = (key: string, value: string) => {
+        setDiabetesData(prev => ({ ...prev, [key]: value }));
     };
 
     const predictRisk = async () => {
-        // Basic Validation
-        if (!formData.age || !formData.trestbps || !formData.chol || !formData.thalach) {
-            Alert.alert("Missing Data", "Please fill in all numerical fields.");
-            return;
+        if (mode === 'heart') {
+            if (!heartData.age || !heartData.trestbps || !heartData.chol || !heartData.thalach) {
+                Alert.alert("Missing Data", "Please fill in all numerical fields.");
+                return;
+            }
+        } else {
+            if (!diabetesData.glucose || !diabetesData.bp || !diabetesData.bmi || !diabetesData.age) {
+                Alert.alert("Missing Data", "Please fill in key metabolic fields (Glucose, BP, BMI, Age).");
+                return;
+            }
         }
 
         setLoading(true);
         setResult(null);
 
         try {
-            // Convert string inputs to numbers
-            const payload = {
-                features: [
-                    parseInt(formData.age),
-                    parseInt(formData.sex),
-                    parseInt(formData.cp),
-                    parseInt(formData.trestbps),
-                    parseInt(formData.chol),
-                    parseInt(formData.fbs),
-                    parseInt(formData.restecg),
-                    parseInt(formData.thalach),
-                    parseInt(formData.exang),
-                    parseFloat(formData.oldpeak || "0"),
-                    parseInt(formData.slope),
-                    parseInt(formData.ca),
-                    parseInt(formData.thal)
-                ]
-            };
+            let payload, endpoint;
 
-            // Using the /api/ml/heart endpoint which returns structured data
-            const res = await axios.post(`${API_URL}/api/ml/heart`, payload);
+            if (mode === 'heart') {
+                endpoint = `${API_URL}/api/ml/heart`;
+                payload = {
+                    features: [
+                        parseInt(heartData.age),
+                        parseInt(heartData.sex),
+                        parseInt(heartData.cp),
+                        parseInt(heartData.trestbps),
+                        parseInt(heartData.chol),
+                        parseInt(heartData.fbs),
+                        parseInt(heartData.restecg),
+                        parseInt(heartData.thalach),
+                        parseInt(heartData.exang),
+                        parseFloat(heartData.oldpeak || "0"),
+                        parseInt(heartData.slope),
+                        parseInt(heartData.ca),
+                        parseInt(heartData.thal)
+                    ]
+                };
+            } else {
+                endpoint = `${API_URL}/api/ml/diabetes`;
+                payload = {
+                    features: [
+                        parseInt(diabetesData.pregnancies || "0"),
+                        parseInt(diabetesData.glucose),
+                        parseInt(diabetesData.bp),
+                        parseInt(diabetesData.skin || "0"),
+                        parseInt(diabetesData.insulin || "0"),
+                        parseFloat(diabetesData.bmi),
+                        parseFloat(diabetesData.dpf || "0.5"),
+                        parseInt(diabetesData.age)
+                    ]
+                };
+            }
 
-            // Trigger Haptic Feedback
+            const res = await axios.post(endpoint, payload);
+
             if (res.data.risk_level === 'High') {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             } else {
@@ -94,10 +131,28 @@ export default function RiskScreen() {
             <ScrollView contentContainerStyle={styles.scrollContent}>
 
                 <View style={styles.header}>
-                    <Text style={[styles.headerTitle, { color: isDark ? '#fff' : '#0f172a' }]}>Heart Risk AI</Text>
-                    <Text style={[styles.headerSubtitle, { color: isDark ? '#94a3b8' : '#64748b' }]}>
-                        Predictive Cardiac Analysis
+                    <Text style={[styles.headerTitle, { color: isDark ? '#fff' : '#0f172a' }]}>
+                        {mode === 'heart' ? 'Heart Health AI' : 'Diabetes Risk AI'}
                     </Text>
+                    <Text style={[styles.headerSubtitle, { color: isDark ? '#94a3b8' : '#64748b' }]}>
+                        {mode === 'heart' ? 'Predictive Cardiac Analysis' : 'Personal Metabolic Risk Assessment'}
+                    </Text>
+                </View>
+
+                {/* Mode Switcher */}
+                <View style={[styles.modeSwitcher, { backgroundColor: isDark ? '#ffffff10' : '#e2e8f0' }]}>
+                    <TouchableOpacity
+                        style={[styles.modeBtn, mode === 'heart' && styles.modeBtnActive]}
+                        onPress={() => { setMode('heart'); setResult(null); }}
+                    >
+                        <Text style={[styles.modeText, mode === 'heart' && styles.modeTextActive]}>Heart</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.modeBtn, mode === 'diabetes' && styles.modeBtnActive]}
+                        onPress={() => { setMode('diabetes'); setResult(null); }}
+                    >
+                        <Text style={[styles.modeText, mode === 'diabetes' && styles.modeTextActive]}>Diabetes</Text>
+                    </TouchableOpacity>
                 </View>
 
                 {/* Result Card */}
@@ -112,102 +167,185 @@ export default function RiskScreen() {
                         />
                         <View style={[styles.badgeContainer, { backgroundColor: result.prediction ? '#ef444420' : '#10b98120' }]}>
                             <Text style={[styles.resultText, { color: result.prediction ? '#ef4444' : '#10b981' }]}>
-                                {result.prediction ? "CARDIAC ANOMALY DETECTED" : "NO SIGNIFICANT ANOMALIES"}
+                                {result.prediction
+                                    ? (mode === 'heart' ? "CARDIAC ANOMALY DETECTED" : "DIABETIC RISK DETECTED")
+                                    : "NO SIGNIFICANT ANOMALIES"
+                                }
                             </Text>
                         </View>
                     </View>
                 )}
 
-                {/* Form Group: Personal */}
-                <Text style={[styles.sectionTitle, { color: isDark ? '#fff' : '#1e293b' }]}>Personal Metrics</Text>
-                <View style={styles.row}>
-                    <View style={styles.halfInput}>
-                        <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Age</Text>
-                        <TextInput
-                            style={[styles.input, { backgroundColor: isDark ? '#ffffff10' : '#fff', color: isDark ? '#fff' : '#000' }]}
-                            keyboardType="numeric"
-                            placeholder="e.g. 45"
-                            placeholderTextColor="#666"
-                            value={formData.age}
-                            onChangeText={v => updateForm('age', v)}
-                        />
-                    </View>
-                    <View style={styles.halfInput}>
-                        <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Sex</Text>
-                        <View style={styles.switchRow}>
-                            <TouchableOpacity
-                                style={[styles.segmentBtn, formData.sex === '1' && styles.segmentActive]}
-                                onPress={() => updateForm('sex', '1')}
-                            >
-                                <Text style={[styles.segmentText, formData.sex === '1' && styles.segmentTextActive]}>Male</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.segmentBtn, formData.sex === '0' && styles.segmentActive]}
-                                onPress={() => updateForm('sex', '0')}
-                            >
-                                <Text style={[styles.segmentText, formData.sex === '0' && styles.segmentTextActive]}>Female</Text>
-                            </TouchableOpacity>
+                {mode === 'heart' ? (
+                    <>
+                        <Text style={[styles.sectionTitle, { color: isDark ? '#fff' : '#1e293b' }]}>Personal Metrics</Text>
+                        <View style={styles.row}>
+                            <View style={styles.halfInput}>
+                                <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Age</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: isDark ? '#ffffff10' : '#fff', color: isDark ? '#fff' : '#000' }]}
+                                    keyboardType="numeric"
+                                    placeholder="e.g. 45"
+                                    placeholderTextColor="#666"
+                                    value={heartData.age}
+                                    onChangeText={v => updateHeartForm('age', v)}
+                                />
+                            </View>
+                            <View style={styles.halfInput}>
+                                <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Sex</Text>
+                                <View style={styles.switchRow}>
+                                    <TouchableOpacity
+                                        style={[styles.segmentBtn, heartData.sex === '1' && styles.segmentActive]}
+                                        onPress={() => updateHeartForm('sex', '1')}
+                                    >
+                                        <Text style={[styles.segmentText, heartData.sex === '1' && styles.segmentTextActive]}>Male</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[styles.segmentBtn, heartData.sex === '0' && styles.segmentActive]}
+                                        onPress={() => updateHeartForm('sex', '0')}
+                                    >
+                                        <Text style={[styles.segmentText, heartData.sex === '0' && styles.segmentTextActive]}>Female</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
                         </View>
-                    </View>
-                </View>
 
-                {/* Form Group: Vitals */}
-                <Text style={[styles.sectionTitle, { color: isDark ? '#fff' : '#1e293b' }]}>Vital Signs</Text>
-                <View style={styles.row}>
-                    <View style={styles.halfInput}>
-                        <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Resting BP (mm Hg)</Text>
-                        <TextInput
-                            style={[styles.input, { backgroundColor: isDark ? '#ffffff10' : '#fff', color: isDark ? '#fff' : '#000' }]}
-                            keyboardType="numeric"
-                            placeholder="120"
-                            placeholderTextColor="#666"
-                            value={formData.trestbps}
-                            onChangeText={v => updateForm('trestbps', v)}
-                        />
-                    </View>
-                    <View style={styles.halfInput}>
-                        <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Cholesterol</Text>
-                        <TextInput
-                            style={[styles.input, { backgroundColor: isDark ? '#ffffff10' : '#fff', color: isDark ? '#fff' : '#000' }]}
-                            keyboardType="numeric"
-                            placeholder="200"
-                            placeholderTextColor="#666"
-                            value={formData.chol}
-                            onChangeText={v => updateForm('chol', v)}
-                        />
-                    </View>
-                </View>
-
-                <View style={styles.row}>
-                    <View style={styles.halfInput}>
-                        <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Max Heart Rate</Text>
-                        <TextInput
-                            style={[styles.input, { backgroundColor: isDark ? '#ffffff10' : '#fff', color: isDark ? '#fff' : '#000' }]}
-                            keyboardType="numeric"
-                            placeholder="150"
-                            placeholderTextColor="#666"
-                            value={formData.thalach}
-                            onChangeText={v => updateForm('thalach', v)}
-                        />
-                    </View>
-                    <View style={styles.halfInput}>
-                        <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Fasting Blood Sugar</Text>
-                        <View style={styles.switchRow}>
-                            <TouchableOpacity
-                                style={[styles.segmentBtn, formData.fbs === '1' && styles.segmentActive]}
-                                onPress={() => updateForm('fbs', '1')}
-                            >
-                                <Text style={[styles.segmentText, formData.fbs === '1' && styles.segmentTextActive]}>{'>'}120</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.segmentBtn, formData.fbs === '0' && styles.segmentActive]}
-                                onPress={() => updateForm('fbs', '0')}
-                            >
-                                <Text style={[styles.segmentText, formData.fbs === '0' && styles.segmentTextActive]}>{'<'}120</Text>
-                            </TouchableOpacity>
+                        <Text style={[styles.sectionTitle, { color: isDark ? '#fff' : '#1e293b' }]}>Vital Signs</Text>
+                        <View style={styles.row}>
+                            <View style={styles.halfInput}>
+                                <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Resting BP (mm Hg)</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: isDark ? '#ffffff10' : '#fff', color: isDark ? '#fff' : '#000' }]}
+                                    keyboardType="numeric"
+                                    placeholder="120"
+                                    placeholderTextColor="#666"
+                                    value={heartData.trestbps}
+                                    onChangeText={v => updateHeartForm('trestbps', v)}
+                                />
+                            </View>
+                            <View style={styles.halfInput}>
+                                <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Cholesterol</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: isDark ? '#ffffff10' : '#fff', color: isDark ? '#fff' : '#000' }]}
+                                    keyboardType="numeric"
+                                    placeholder="200"
+                                    placeholderTextColor="#666"
+                                    value={heartData.chol}
+                                    onChangeText={v => updateHeartForm('chol', v)}
+                                />
+                            </View>
                         </View>
-                    </View>
-                </View>
+
+                        <View style={styles.row}>
+                            <View style={styles.halfInput}>
+                                <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Max Heart Rate</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: isDark ? '#ffffff10' : '#fff', color: isDark ? '#fff' : '#000' }]}
+                                    keyboardType="numeric"
+                                    placeholder="150"
+                                    placeholderTextColor="#666"
+                                    value={heartData.thalach}
+                                    onChangeText={v => updateHeartForm('thalach', v)}
+                                />
+                            </View>
+                            <View style={styles.halfInput}>
+                                <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Fasting Blood Sugar</Text>
+                                <View style={styles.switchRow}>
+                                    <TouchableOpacity
+                                        style={[styles.segmentBtn, heartData.fbs === '1' && styles.segmentActive]}
+                                        onPress={() => updateHeartForm('fbs', '1')}
+                                    >
+                                        <Text style={[styles.segmentText, heartData.fbs === '1' && styles.segmentTextActive]}>{'>'}120</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[styles.segmentBtn, heartData.fbs === '0' && styles.segmentActive]}
+                                        onPress={() => updateHeartForm('fbs', '0')}
+                                    >
+                                        <Text style={[styles.segmentText, heartData.fbs === '0' && styles.segmentTextActive]}>{'<'}120</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    </>
+                ) : (
+                    <>
+                        <Text style={[styles.sectionTitle, { color: isDark ? '#fff' : '#1e293b' }]}>Health Metrics</Text>
+                        <View style={styles.row}>
+                            <View style={styles.halfInput}>
+                                <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Pregnancies</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: isDark ? '#ffffff10' : '#fff', color: isDark ? '#fff' : '#000' }]}
+                                    keyboardType="numeric"
+                                    placeholder="0"
+                                    placeholderTextColor="#666"
+                                    value={diabetesData.pregnancies}
+                                    onChangeText={v => updateDiabetesForm('pregnancies', v)}
+                                />
+                            </View>
+                            <View style={styles.halfInput}>
+                                <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Blood Sugar</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: isDark ? '#ffffff10' : '#fff', color: isDark ? '#fff' : '#000' }]}
+                                    keyboardType="numeric"
+                                    placeholder="140"
+                                    placeholderTextColor="#666"
+                                    value={diabetesData.glucose}
+                                    onChangeText={v => updateDiabetesForm('glucose', v)}
+                                />
+                            </View>
+                        </View>
+
+                        <View style={styles.row}>
+                            <View style={styles.halfInput}>
+                                <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Blood Pressure</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: isDark ? '#ffffff10' : '#fff', color: isDark ? '#fff' : '#000' }]}
+                                    keyboardType="numeric"
+                                    placeholder="80"
+                                    placeholderTextColor="#666"
+                                    value={diabetesData.bp}
+                                    onChangeText={v => updateDiabetesForm('bp', v)}
+                                />
+                            </View>
+                            <View style={styles.halfInput}>
+                                <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Body Mass (BMI)</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: isDark ? '#ffffff10' : '#fff', color: isDark ? '#fff' : '#000' }]}
+                                    keyboardType="numeric"
+                                    placeholder="25.5"
+                                    placeholderTextColor="#666"
+                                    value={diabetesData.bmi}
+                                    onChangeText={v => updateDiabetesForm('bmi', v)}
+                                />
+                            </View>
+                        </View>
+
+                        <View style={styles.row}>
+                            <View style={styles.halfInput}>
+                                <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Insulin Level</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: isDark ? '#ffffff10' : '#fff', color: isDark ? '#fff' : '#000' }]}
+                                    keyboardType="numeric"
+                                    placeholder="0"
+                                    placeholderTextColor="#666"
+                                    value={diabetesData.insulin}
+                                    onChangeText={v => updateDiabetesForm('insulin', v)}
+                                />
+                            </View>
+                            <View style={styles.halfInput}>
+                                <Text style={[styles.label, { color: isDark ? '#cbd5e1' : '#475569' }]}>Age</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: isDark ? '#ffffff10' : '#fff', color: isDark ? '#fff' : '#000' }]}
+                                    keyboardType="numeric"
+                                    placeholder="30"
+                                    placeholderTextColor="#666"
+                                    value={diabetesData.age}
+                                    onChangeText={v => updateDiabetesForm('age', v)}
+                                />
+                            </View>
+                        </View>
+                    </>
+                )}
 
                 <View style={styles.spacer} />
 
@@ -216,7 +354,7 @@ export default function RiskScreen() {
                     onPress={predictRisk}
                     disabled={loading}
                 >
-                    {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.predictBtnText}>RUN ANALYSIS</Text>}
+                    {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.predictBtnText}>GENERATE HEALTH REPORT</Text>}
                 </TouchableOpacity>
 
             </ScrollView>
@@ -230,6 +368,12 @@ const styles = StyleSheet.create({
     header: { marginBottom: 24 },
     headerTitle: { fontSize: 28, fontWeight: '800' },
     headerSubtitle: { fontSize: 16, marginTop: 4 },
+
+    modeSwitcher: { flexDirection: 'row', height: 48, borderRadius: 12, padding: 4, marginBottom: 24 },
+    modeBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 10 },
+    modeBtnActive: { backgroundColor: '#10b981' },
+    modeText: { color: '#64748b', fontWeight: '700', fontSize: 13 },
+    modeTextActive: { color: '#fff' },
 
     sectionTitle: { fontSize: 16, fontWeight: '700', marginTop: 16, marginBottom: 12 },
 
@@ -250,6 +394,6 @@ const styles = StyleSheet.create({
     predictBtnText: { color: '#fff', fontSize: 18, fontWeight: '800', letterSpacing: 1 },
 
     resultCard: { padding: 32, borderRadius: 24, borderWidth: 1, alignItems: 'center', gap: 24, marginBottom: 32, overflow: 'hidden' },
-    badgeContainer: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+    badgeContainer: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12 },
     resultText: { fontSize: 13, fontWeight: '800', textAlign: 'center', letterSpacing: 0.5 }
 });

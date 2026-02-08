@@ -18,6 +18,7 @@ const About = lazy(() => import("./pages/About"));
 const Chatbot = lazy(() => import("./pages/Chatbot"));
 const ReportAnalyzer = lazy(() => import("./pages/ReportAnalyzer"));
 const HeartRisk = lazy(() => import("./pages/HeartRisk"));
+const DiabetesRisk = lazy(() => import("./pages/DiabetesRisk"));
 const Settings = lazy(() => import("./pages/Settings"));
 
 // Loading Component
@@ -60,6 +61,9 @@ const MainContent = () => {
 
       <ThemeTransition />
 
+      {/* Global Sci-Fi Cursor - Show whenever splash is done */}
+      {!showSplash && <HolographicCursor />}
+
       {/* Only show app content if Splash IS DONE */}
       {!showSplash && !hasOnboarded && (
         <WelcomeScreen />
@@ -69,8 +73,6 @@ const MainContent = () => {
       {!showSplash && hasOnboarded && (
         <>
           <Navbar currentPath={location.pathname} />
-          {/* Global Sci-Fi Cursor */}
-          <HolographicCursor />
 
           <main className="pt-20">
             <PageTransition key={location.pathname}>
@@ -83,6 +85,7 @@ const MainContent = () => {
                   <Route path="/chatbot/:specialization" element={<Chatbot />} />
                   <Route path="/report" element={<ReportAnalyzer />} />
                   <Route path="/heart" element={<HeartRisk />} />
+                  <Route path="/diabetes" element={<DiabetesRisk />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/about" element={<About />} />
                 </Routes>

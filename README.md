@@ -1,8 +1,8 @@
-# 🏥 Aether Clinic: AI-Powered Healthcare System
+# Aether Clinic: AI-Powered Healthcare System
 
-**A comprehensive, privacy-first healthcare platform integrating React Native Mobile, Modern Web Clients, Node.js Backend, and Python ML Services.**
+A comprehensive, privacy-first healthcare platform integrating React Native Mobile, Modern Web Clients, Node.js Backend, and Python ML Services.
 
-##  Detailed System Workflows
+## Detailed System Workflows
 
 ```mermaid
 sequenceDiagram
@@ -15,7 +15,7 @@ sequenceDiagram
     participant Ollama as Ollama (Local LLM)
     participant DB as MongoDB
     
-    Note over User,DB: 🔐 Chat & AI Consultation (Zero-Knowledge Privacy)
+    Note over User,DB: Chat & AI Consultation (Zero-Knowledge Privacy)
     User->>App: Send Message / Image
     App->>Server: POST /api/chat (userId, message, image)
     
@@ -28,7 +28,7 @@ sequenceDiagram
     Server->>DB: Fetch Chat History (userId)
     DB-->>Server: Return encrypted history
     Server->>Server: Decrypt history for Context
-
+    
     alt Image provided
         Server->>Gemini: Analyze Image + Context
         Gemini-->>Server: Return visual analysis
@@ -42,7 +42,7 @@ sequenceDiagram
     Server-->>App: Return AI Response
     App-->>User: Display Reply
 
-    Note over User,DB:  Report Analysis (OCR + Medical Intelligence)
+    Note over User,DB: Report Analysis (OCR + Medical Intelligence)
     User->>App: Upload Medical Report (Image)
     App->>Server: POST /api/report/analyze (multipart/form-data)
     
@@ -57,7 +57,7 @@ sequenceDiagram
     Server-->>App: Return Structured JSON
     App-->>User: Show visualize report data
 
-    Note over User,DB:  ML Disease Prediction (Heart/Diabetes)
+    Note over User,DB: ML Disease Prediction (Heart/Diabetes)
     User->>App: Enter Health Metrics (Form)
     App->>Server: POST /api/ml/heart (or /diabetes)
     
@@ -70,7 +70,6 @@ sequenceDiagram
     App-->>User: Display Risk Assessment
 ```
 
-
 ---
 
 ## High-Level Architecture
@@ -80,8 +79,8 @@ The system operates on a microservices-inspired architecture where the backend o
 ```mermaid
 graph TD
     subgraph "Frontend Layer"
-        M["📱 Mobile App (React Native)"] -->|REST API| G["Gateway (Server)"]
-        W["💻 Web Dashboard (React)"] -->|REST API| G
+        M["Mobile App (React Native)"] -->|REST API| G["Gateway (Server)"]
+        W["Web Dashboard (React)"] -->|REST API| G
     end
 
     subgraph "Core Backend (Node.js)"
@@ -104,52 +103,51 @@ graph TD
 
 ---
 
+## Key System Components
 
-##  Key System Components
+### Mobile App
+- **Technologies**: React Native, Expo, Reanimated
+- **Description**: Patient-facing app providing a secure interface for health monitoring, AI-driven consultation, and medical report digitization.
 
-###  **Mobile App**
-- **Tech**: `React Native` `Expo` `Reanimated`
-- **Role**: Patient-facing app. Features "Aether" UI, biometric security, real-time chat, and report scanning.
+### Web Client
+- **Technologies**: React, Vite, TailwindCSS
+- **Description**: Clinical dashboard for healthcare providers to review patient analytics, manage clinic data, and oversee health trends.
 
-###  **Web Client**
-- **Tech**: `React` `Vite` `TailwindCSS`
-- **Role**: Doctor/Admin dashboard. Visualizes patient trends, displays aggregated risk profiles, and manages clinics.
+### Backend API
+- **Technologies**: Node.js, Express, MongoDB
+- **Description**: Central orchestration layer managing authentication, data security, and communication between AI services and frontend clients.
 
-###  **Backend API**
-- **Tech**: `Node.js` `Express` `MongoDB`
-- **Role**: The central nervous system. Handles auth, data persistence, and orchestrates AI requests.
+### ML Engine
+- **Technologies**: Python, Flask, Scikit-Learn
+- **Description**: High-fidelity predictive engine for specialized health risk assessment, specifically for heart disease and diabetes.
 
-### **ML Engine**
-- **Tech**: `Python` `Flask` `Scikit-Learn`
-- **Role**: Specialized service for numerical health predictions (Heart Disease, Diabetes).
+### LLM Service
+- **Technologies**: Google Gemini, Ollama
+- **Description**: Hybrid intelligence model utilizing cloud-based Vision for complex diagnostic analysis and local LLMs for private, secure consultations.
 
-###  **LLM Service**
-- **Tech**: `Google Gemini` + `Ollama`
-- **Role**: Hybrid Intelligence. Uses Cloud Gemini for complex vision tasks and Local Ollama for privacy-focused chat.
-
-###  **Infrastructure**
-- **Tech**: `Kubernetes` `Docker`
-- **Role**: Containerized deployment strategies for scalability and resilience.
-
----
-
-##  Security & Privacy Architecture
-
-The system prioritizes user data privacy through a "Local-First" intelligence approach and rigorous encryption standards.
-
-*   **Zero-Knowledge Chat**: Routine conversations are processed via **Local Ollama**, ensuring chats don't leave the server infrastructure.
-*   **Encrypted Storage**: Medical reports and analysis results are encrypted before storage in MongoDB.
-*   **Ephemeral processing**: Images sent to Cloud Vision are processed in memory and not permanently stored on external servers.
+### Infrastructure
+- **Technologies**: Kubernetes, Docker
+- **Description**: Scalable, containerized infrastructure designed for high availability and resilient data management.
 
 ---
 
-##  Repository Structure
+## Security & Privacy Architecture
 
-*   **/mobile**: The React Native application source code.
-*   **/client**: The Web Dashboard source code.
-*   **/server**: The Node.js Express backend and API routes.
-*   **/ml**: The Python Flask service serving the trained `.pkl` models.
-*   **/k8s**: Kubernetes manifests for deployment.
+Aether Clinic prioritizes user data privacy through a "Local-First" intelligence approach and rigorous encryption standards.
+
+- **Zero-Knowledge Architecture**: Routine consultations are handled by local LLMs to ensure that sensitive health data never leaves the secure server infrastructure.
+- **Data Encryption**: All medical reports and analytical results are encrypted using AES-256 before being stored in the database.
+- **Ephemeral Image Processing**: Images analyzed by vision services are processed in-memory and are not persisted on cloud storage.
 
 ---
-*Built for the Future of Healthcare.*
+
+## Repository Structure
+
+- **/mobile**: Patient application source code.
+- **/client**: Clinical dashboard source code.
+- **/server**: Node.js backend and API infrastructure.
+- **/ml**: Python-based machine learning service.
+- **/k8s**: Deployment manifests for Kubernetes.
+
+---
+*Building for the future of healthcare.*

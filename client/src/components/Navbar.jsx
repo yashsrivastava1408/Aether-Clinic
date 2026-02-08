@@ -65,6 +65,7 @@ export default function Navbar() {
     { path: "/consultation", label: "Talk to Doctor" },
     { path: "/report", label: "Check Report" },
     { path: "/heart", label: "Heart Health" },
+    { path: "/diabetes", label: "Diabetes Health" },
     { path: "/about", label: "About Us" },
   ];
 
@@ -124,6 +125,12 @@ export default function Navbar() {
                   <span className="animate-heartbeat inline-block drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]">
 
                   </span>
+                  <span className={isActive(link.path) ? "text-red-500 font-semibold" : "group-hover:text-red-500 transition-colors"}>
+                    {link.label}
+                  </span>
+                </span>
+              ) : link.path === "/diabetes" ? (
+                <span className="flex items-center gap-2 tracking-wide">
                   <span className={isActive(link.path) ? "text-red-500 font-semibold" : "group-hover:text-red-500 transition-colors"}>
                     {link.label}
                   </span>
@@ -302,6 +309,12 @@ export default function Navbar() {
                   <span className="animate-heartbeat inline-block drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]">
                     ❤️
                   </span>
+                  <span className={isActive(link.path) ? "text-red-500" : "group-hover:text-red-500"}>
+                    {link.label}
+                  </span>
+                </span>
+              ) : link.path === "/diabetes" ? (
+                <span className="flex items-center gap-2">
                   <span className={isActive(link.path) ? "text-red-500" : "group-hover:text-red-500"}>
                     {link.label}
                   </span>
