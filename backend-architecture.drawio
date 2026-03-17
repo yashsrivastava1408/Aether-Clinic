@@ -1,0 +1,172 @@
+<mxfile host="app.diagrams.net" modified="2026-03-13T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="aether-backend-arch" name="Aether Backend Architecture">
+    <mxGraphModel dx="1812" dy="1002" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1080" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="frontend_group" value="Frontend Layer" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="350" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="web_client" value="Web Client (React/Vite)\nDashboard + Chat + Report + ML Forms" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="70" y="120" width="290" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="mobile_client" value="Mobile App (React Native/Expo)\nPatient App" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="70" y="230" width="290" height="80" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="backend_group" value="Node.js Backend (Express)" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#d5e8d4;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="40" width="690" height="660" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="security" value="Global Middleware\nHelmet + CORS + Rate Limit + Sanitization + Logging" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="500" y="90" width="610" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="api_gateway" value="API Gateway\nserver/index.js" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="500" y="180" width="180" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="auth_route" value="/api/auth\nlogin/register" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="710" y="180" width="180" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="chat_route" value="/api/chat\ntext/image consultation" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="920" y="180" width="190" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="report_route" value="/api/report/analyze\nOCR + Report AI" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="500" y="280" width="290" height="80" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ml_route" value="/api/ml/heart + /api/ml/diabetes\nProxy to Flask ML service" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="820" y="280" width="290" height="80" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="chat_controller" value="Chat Controller\nSession gating + RAG lookup + prompt assembly\nEncrypt/decrypt chat text" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="500" y="390" width="290" height="120" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="report_controller" value="Report Controller\nMulter upload + Tesseract OCR\nCalls reportAnalyzer service" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="820" y="390" width="290" height="120" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="llm_service" value="LLM Service\nRouting: Ollama (text) / Gemini (vision/report)" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#fff2cc;" vertex="1" parent="1">
+          <mxGeometry x="500" y="540" width="290" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="rag_service" value="RAG Service\nmedical_knowledge.json keyword retrieval" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#fff2cc;" vertex="1" parent="1">
+          <mxGeometry x="820" y="540" width="290" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="data_group" value="Data Layer" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#f8cecc;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="60" width="660" height="470" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="mongo_db" value="MongoDB (Mongoose)\nUsers active\nReports model present (save currently disabled)\nChat model present" style="shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#ffffff;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="130" width="220" height="100" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="chat_logs" value="chat_logs.json\nCurrent active chat persistence" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#ffffff;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1510" y="130" width="330" height="100" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="uploads_store" value="/server/uploads (temp files)\nMulter staging, deleted after processing" style="shape=folder;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="260" width="280" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="knowledge_json" value="medical_knowledge.json\nRAG knowledge base" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#ffffff;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1570" y="260" width="270" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="intel_group" value="Intelligence Layer" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#9673a6;fillColor=#e1d5e7;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="560" width="660" height="300" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ollama" value="Ollama Local LLM\nllama3.2\ntext chat triage" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#9673a6;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="620" width="190" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="gemini" value="Google Gemini API\nvision + report analysis\nfallback model list" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#9673a6;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="620" width="210" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ml_service" value="Flask ML Service (Python)\n/predict/heart\n/predict/diabetes" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#9673a6;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1720" y="620" width="140" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ml_models" value="Scikit-Learn Models\nheart_model.pkl\ndiabetes_model.pkl" style="shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#ffffff;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1720" y="740" width="140" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="web_client" target="api_gateway">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="mobile_client" target="api_gateway">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e3" value="routes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="api_gateway" target="auth_route">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="routes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="api_gateway" target="chat_route">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="routes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="api_gateway" target="report_route">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="routes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="api_gateway" target="ml_route">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="chat_route" target="chat_controller">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="report_route" target="report_controller">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e9" value="user CRUD" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#b85450;" edge="1" parent="1" source="auth_route" target="mongo_db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e10" value="read/write chat sessions" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#b85450;" edge="1" parent="1" source="chat_controller" target="chat_logs">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e11" value="retrieve context" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#b85450;" edge="1" parent="1" source="chat_controller" target="knowledge_json">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e12" value="prompt+provider" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1" source="chat_controller" target="llm_service">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e13" value="report prompt" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1" source="report_controller" target="llm_service">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e14" value="temp upload" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#b85450;" edge="1" parent="1" source="report_controller" target="uploads_store">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e15" value="calls /api/generate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1" source="llm_service" target="ollama">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e16" value="calls Gemini SDK" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1" source="llm_service" target="gemini">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e17" value="proxy" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1" source="ml_route" target="ml_service">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e18" value="predict" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1" source="ml_service" target="ml_models">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

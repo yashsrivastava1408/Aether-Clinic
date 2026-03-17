@@ -1,0 +1,92 @@
+TITLE: Anxiety and Panic Attacks - Recognition and Self-Management
+SOURCE: American Psychiatric Association (APA) DSM-5-TR; NICE Mental Health Guidelines, 2023
+CATEGORY: Mental Health | Emergency
+
+Generalized Anxiety Disorder (GAD):
+- Excessive worry about multiple domains (work, health, finances, family) more days than not for ≥ 6 months
+- Associated symptoms: Restlessness, fatigue, difficulty concentrating, irritability, muscle tension, sleep disturbance
+- Requires 3 or more associated symptoms in adults
+
+Panic Attack Recognition:
+A panic attack involves an abrupt surge of intense fear reaching peak within minutes, with ≥ 4 of the following:
+- Palpitations, pounding heart, or accelerated heart rate
+- Sweating
+- Trembling or shaking
+- Sensations of shortness of breath or smothering
+- Feeling of choking
+- Chest pain or discomfort
+- Nausea or abdominal distress
+- Dizziness, unsteadiness, lightheadedness, or faintness
+- Chills or hot flashes
+- Numbness or tingling sensations (paresthesias)
+- Derealization or depersonalization
+- Fear of losing control or "going crazy"
+- Fear of dying
+
+IMPORTANT: Panic attack symptoms overlap significantly with cardiac events. If the person has cardiac risk factors, history of heart disease, or this is their FIRST episode, they should seek emergency evaluation to rule out cardiac causes.
+
+Immediate Self-Management During a Panic Attack:
+1. Ground yourself: Name 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, 1 you can taste
+2. Controlled breathing: Breathe in for 4 counts, hold for 4 counts, out for 6 counts (Box Breathing)
+3. Remind yourself: "This is a panic attack. It is temporary. I am not in danger."
+4. Avoid fighting the symptoms — observe them and let them pass
+5. Relax muscles progressively from toes to head
+
+Long-Term Management Strategies:
+- Regular physical exercise (30 min, 5 days/week)
+- Adequate sleep (7-9 hours/night) with consistent schedule
+- Limit caffeine and alcohol
+- Cognitive Behavioral Therapy (CBT) — evidence-based first-line treatment
+- Mindfulness meditation and progressive muscle relaxation
+- Social connection and support networks
+- Journaling to identify anxiety patterns and triggers
+
+When to Seek Professional Help:
+- Anxiety interfering with daily functioning (work, relationships, self-care)
+- Panic attacks increasing in frequency or severity
+- Avoidance behavior limiting normal activities
+- Co-occurring depression symptoms
+- Substance use to manage anxiety
+- Thoughts of self-harm or suicide (IMMEDIATE EMERGENCY — contact crisis line)
+
+Suicide and Crisis Resources:
+- National Suicide Prevention Lifeline: 988 (US)
+- Crisis Text Line: Text HOME to 741741
+- iCall (India): 9152987821
+- Vandrevala Foundation Helpline (India): 1860-2662-345
+
+---
+
+TITLE: Depression - Screening and Self-Care
+SOURCE: PHQ-9 Diagnostic Tool; WHO Mental Health Guidelines, 2023
+CATEGORY: Mental Health
+
+PHQ-9 Screening Domains (Over the past 2 weeks):
+1. Little interest or pleasure in doing things
+2. Feeling down, depressed, or hopeless
+3. Trouble falling/staying asleep, or sleeping too much
+4. Feeling tired or having little energy
+5. Poor appetite or overeating
+6. Feeling bad about yourself — or that you are a failure
+7. Trouble concentrating on things
+8. Moving or speaking so slowly that others could notice, or being fidgety/restless
+9. Thoughts that you would be better off dead or of hurting yourself
+
+Severity Scoring:
+- 0-4: Minimal depression
+- 5-9: Mild depression
+- 10-14: Moderate depression
+- 15-19: Moderately severe depression
+- 20-27: Severe depression
+
+Self-Care Strategies (Evidence-Based):
+- Behavioral Activation: Schedule pleasurable activities even when motivation is low
+- Physical Exercise: Strong evidence for exercise as treatment (equivalent to mild antidepressants for mild-moderate depression)
+- Social Connection: Maintain contact with supportive people even when urge is to isolate
+- Sleep Hygiene: Regular sleep-wake times, no screens 1 hour before bed, dark cool room
+- Nutrition: Mediterranean diet associated with reduced depression risk
+- Limit alcohol: A depressant that worsens symptoms
+- Sunlight exposure: 15-20 minutes of natural light daily
+- Structured routine to provide sense of purpose and accomplishment
+
+CRITICAL: If experiencing thoughts of self-harm or suicide, seek immediate help. This is a medical emergency.

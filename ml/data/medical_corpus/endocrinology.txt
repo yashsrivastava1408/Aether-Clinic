@@ -1,0 +1,90 @@
+TITLE: Type 2 Diabetes Mellitus - Comprehensive Management
+SOURCE: American Diabetes Association (ADA) Standards of Care, 2024
+CATEGORY: Endocrinology | Chronic Management
+
+Diagnostic Criteria for Diabetes:
+- Fasting Plasma Glucose (FPG) ≥ 126 mg/dL (7.0 mmol/L)
+- 2-hour Plasma Glucose ≥ 200 mg/dL (11.1 mmol/L) during OGTT
+- HbA1c ≥ 6.5% (48 mmol/mol)
+- Random Plasma Glucose ≥ 200 mg/dL with classic symptoms
+
+Prediabetes Range (Increased Risk):
+- FPG: 100-125 mg/dL (5.6-6.9 mmol/L)
+- 2-hour PG: 140-199 mg/dL (7.8-11.0 mmol/L)
+- HbA1c: 5.7-6.4% (39-47 mmol/mol)
+
+Target Glycemic Goals:
+- HbA1c < 7.0% for most non-pregnant adults
+- Pre-meal glucose: 80-130 mg/dL (4.4-7.2 mmol/L)
+- Post-meal glucose (1-2 hours): < 180 mg/dL (10.0 mmol/L)
+- Individualize targets based on age, comorbidities, hypoglycemia risk
+
+Lifestyle Management:
+- Medical Nutrition Therapy: Individualized meal plan focusing on carbohydrate consistency
+- Physical Activity: 150+ minutes/week of moderate-intensity aerobic activity
+- Weight Management: 5-7% weight loss for overweight/obese individuals
+- Sleep: 7-8 hours/night; screen for sleep apnea
+- Psychosocial support: Screen for diabetes distress and depression
+
+Hypoglycemia Recognition (Blood Glucose < 70 mg/dL):
+Level 1 (Alert): 54-70 mg/dL - Treat with 15-20g fast-acting carbohydrate
+Level 2 (Clinically Significant): < 54 mg/dL - Requires immediate intervention
+Level 3 (Severe): Altered mental status, requires assistance
+
+Emergency Treatment of Hypoglycemia:
+1. Consume 15g fast-acting glucose (glucose tablets, juice, regular soda)
+2. Recheck blood glucose in 15 minutes
+3. Repeat treatment if still < 70 mg/dL
+4. Once normalized, eat a snack with protein and complex carbs
+5. If unconscious: Do NOT give food/drink; call emergency services; administer glucagon if available
+
+Diabetic Foot Care Protocol:
+- Inspect feet daily for cuts, blisters, redness, swelling
+- Wash feet with lukewarm water, dry thoroughly (especially between toes)
+- Moisturize tops and bottoms (NOT between toes)
+- Wear well-fitting shoes; never walk barefoot
+- Trim toenails straight across
+- Annual comprehensive foot examination by healthcare provider
+
+---
+
+TITLE: Diabetic Ketoacidosis (DKA) - Emergency Recognition
+SOURCE: International Society for Pediatric and Adolescent Diabetes (ISPAD), 2023
+CATEGORY: Endocrinology | Emergency
+
+DKA is a life-threatening complication of diabetes, more common in Type 1 but can occur in Type 2. It results from severe insulin deficiency leading to hyperglycemia, ketosis, and metabolic acidosis.
+
+Warning Signs of DKA:
+- Blood glucose > 250 mg/dL (13.9 mmol/L) with ketones
+- Excessive thirst and frequent urination (polyuria)
+- Nausea, vomiting, and abdominal pain
+- Fruity-smelling breath (acetone odor)
+- Deep, rapid breathing (Kussmaul breathing)
+- Confusion, drowsiness, or loss of consciousness
+- Dehydration signs: dry mouth, sunken eyes, poor skin turgor
+
+CRITICAL: DKA requires IMMEDIATE emergency medical care. Do NOT attempt to manage at home. Call emergency services immediately.
+
+---
+
+TITLE: Gestational Diabetes - Screening and Self-Care
+SOURCE: WHO Recommendations on Gestational Diabetes, 2024
+CATEGORY: Endocrinology | Obstetrics
+
+Gestational Diabetes Mellitus (GDM) affects approximately 14% of pregnancies worldwide. It typically develops during the second or third trimester and increases risks for both mother and baby.
+
+Risk Factors: Age > 25, BMI ≥ 25, family history of diabetes, previous GDM, polycystic ovary syndrome, certain ethnic groups (South Asian, Middle Eastern, African, Hispanic).
+
+Self-Monitoring Protocol:
+- Test fasting glucose every morning (target: < 95 mg/dL)
+- Test 1-hour post-meal glucose (target: < 140 mg/dL)
+- Test 2-hour post-meal glucose (target: < 120 mg/dL)
+- Record all readings in a glucose diary
+- Report readings above target to healthcare provider within 24 hours
+
+Dietary Recommendations:
+- Eat 3 small meals and 2-3 snacks daily
+- Include protein with every meal and snack
+- Choose complex carbohydrates over simple sugars
+- Avoid sugary beverages and fruit juices
+- Include fiber-rich foods (vegetables, legumes, whole grains)

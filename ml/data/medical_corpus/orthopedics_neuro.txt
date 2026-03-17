@@ -1,0 +1,117 @@
+TITLE: Low Back Pain - Assessment and Self-Care
+SOURCE: American College of Physicians (ACP) Clinical Guidelines, 2023
+CATEGORY: Orthopedics | Musculoskeletal
+
+Acute Low Back Pain is one of the most common presenting complaints in primary care, affecting up to 80% of adults at some point. Most cases (90%) are non-specific and resolve within 4-6 weeks with conservative management.
+
+Red Flag Assessment (Rule Out Serious Pathology):
+- Cauda equina syndrome: Bilateral leg weakness, saddle anesthesia, urinary retention/incontinence → SURGICAL EMERGENCY
+- Spinal fracture: Trauma history, osteoporosis, prolonged steroid use, age > 70
+- Cancer: Unexplained weight loss, history of cancer, pain at rest, age > 50 with new-onset
+- Infection: Fever, IV drug use, recent surgery, immunosuppression
+
+Non-Pharmacological First-Line Treatments (ACP Recommended):
+- Stay active: Bed rest is NOT recommended and may worsen outcomes
+- Superficial heat therapy (heating pad, warm bath)
+- Massage therapy
+- Spinal manipulation (chiropractic or osteopathic)
+- Acupuncture for chronic low back pain
+- Mindfulness-based stress reduction
+- Progressive relaxation
+- Yoga and Tai Chi for chronic low back pain
+
+Exercise Recommendations:
+- Core strengthening: Planks, bird-dogs, dead bugs
+- Flexibility: Cat-cow stretches, knee-to-chest, hamstring stretches
+- Walking: 20-30 minutes daily
+- Swimming or water-based exercises
+- Avoid: Heavy lifting, prolonged sitting, high-impact activities during acute phase
+
+Posture and Ergonomics:
+- Sit with feet flat on floor, knees at 90°
+- Use lumbar support or rolled towel at the small of the back
+- Monitor at eye level, arms at 90° for computer work
+- Stand and stretch every 30-45 minutes
+- Sleep on side with pillow between knees, or on back with pillow under knees
+
+When to Seek Urgent Care:
+- Any red flag symptoms listed above
+- Pain lasting > 6 weeks without improvement
+- Progressive neurological deficits (weakness, numbness)
+- Night pain that wakes from sleep
+- Bowel or bladder dysfunction
+
+---
+
+TITLE: Common Musculoskeletal Injuries - RICE Protocol
+SOURCE: American Academy of Orthopaedic Surgeons (AAOS), 2023
+CATEGORY: Orthopedics | Sports Medicine
+
+The RICE protocol (Rest, Ice, Compression, Elevation) is the standard first-aid approach for acute soft tissue injuries including sprains, strains, and contusions during the first 48-72 hours.
+
+Updated Protocol (POLICE - Protection, Optimal Loading, Ice, Compression, Elevation):
+1. Protection: Avoid activities that increase pain; use brace/splint if needed
+2. Optimal Loading: Gentle, pain-free movement to promote healing (complete immobilization may delay recovery)
+3. Ice: Apply for 15-20 minutes every 2-3 hours; use barrier (cloth) between ice and skin
+4. Compression: Elastic bandage, firm but not tight; loosen if numbness/tingling occurs
+5. Elevation: Elevate above heart level when possible to reduce swelling
+
+Sprain vs Strain:
+- Sprain: Injury to a ligament (connects bone to bone). Common in ankles, knees, wrists.
+- Strain: Injury to a muscle or tendon (connects muscle to bone). Common in back, hamstrings, rotator cuff.
+
+Grades of Sprains:
+- Grade 1 (Mild): Microscopic ligament tears, mild swelling, can bear weight
+- Grade 2 (Moderate): Partial ligament tear, moderate swelling, difficulty bearing weight
+- Grade 3 (Severe): Complete ligament tear, significant swelling, inability to bear weight → Requires medical evaluation
+
+When to Seek Medical Imaging/Care:
+- Inability to bear weight immediately after injury or after 4 steps
+- Visible deformity of the joint
+- Significant bruising or swelling within first hour
+- Numbness or loss of pulse below the injury
+- No improvement after 72 hours of RICE/POLICE protocol
+- Suspected fracture (point tenderness over bone)
+
+---
+
+TITLE: Headache Classification and Triage
+SOURCE: International Headache Society (IHS) Classification, ICHD-3, 2023
+CATEGORY: Neurology | General Medicine
+
+Primary Headache Types:
+
+1. Tension-Type Headache (Most Common):
+- Bilateral pressing/tightening quality
+- Mild to moderate intensity
+- Not aggravated by routine physical activity
+- No nausea, may have photophobia OR phonophobia (not both)
+- Self-care: Hydration, rest, stress management, OTC analgesics
+
+2. Migraine:
+- Typically unilateral, pulsating quality
+- Moderate to severe intensity
+- Aggravated by routine physical activity
+- Associated with nausea/vomiting, photophobia AND phonophobia
+- May have aura (visual disturbances, sensory symptoms) lasting 5-60 minutes
+- Triggers: Stress, sleep changes, hormones, certain foods (aged cheese, alcohol, MSG), weather changes
+- Self-care: Dark quiet room, cold compress on forehead, hydration, caffeine in small amounts
+
+3. Cluster Headache:
+- Severe, strictly unilateral, orbital/temporal pain
+- Duration: 15 minutes to 3 hours, occurring in clusters
+- Associated with ipsilateral autonomic features (tearing, nasal congestion, ptosis)
+- Requires specialist management
+
+THUNDERCLAP HEADACHE - EMERGENCY:
+⚠️ Sudden, severe headache reaching maximum intensity within 60 seconds ("worst headache of my life") → CALL EMERGENCY SERVICES IMMEDIATELY
+This may indicate subarachnoid hemorrhage, cerebral venous thrombosis, or other life-threatening conditions. Do NOT wait for symptoms to resolve.
+
+Secondary Headache Red Flags (SNNOOP10 Criteria):
+- Systemic symptoms (fever, weight loss)
+- Neurological signs (confusion, focal deficits)
+- Onset: Sudden/thunderclap
+- Older age (new onset after 50)
+- Position-dependent (worse lying down or standing)
+- Progressive pattern over weeks
+- Triggered by Valsalva (coughing, straining)

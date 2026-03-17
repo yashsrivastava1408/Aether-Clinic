@@ -1,0 +1,98 @@
+TITLE: Dengue Fever - Clinical Management Protocol
+SOURCE: WHO Dengue Guidelines for Diagnosis, Treatment, Prevention, 2024
+CATEGORY: Infectious Disease | Tropical Medicine
+
+Dengue fever is a mosquito-borne viral infection transmitted by Aedes aegypti and Aedes albopictus mosquitoes. It is caused by four serotypes (DENV-1 to DENV-4). Infection with one serotype provides lifelong immunity to that serotype but only partial temporary immunity to others, with secondary infections carrying higher risk of severe dengue.
+
+Clinical Phases:
+1. Febrile Phase (Days 1-7): High fever (40°C/104°F), severe headache, retro-orbital pain, myalgia, arthralgia, rash, mild bleeding (petechiae, gum bleeding)
+2. Critical Phase (Days 3-7 of illness): Defervescence period; highest risk for severe dengue with plasma leakage, severe bleeding, organ impairment
+3. Recovery Phase: Gradual reabsorption of fluid, improved well-being, return of appetite
+
+CRITICAL MEDICATION WARNING:
+⚠️ Do NOT take Aspirin, Ibuprofen, or any NSAID - these increase bleeding risk significantly
+✅ SAFE: Paracetamol (Acetaminophen) only - max 4g/day in adults, weight-based dosing in children
+
+Warning Signs of Severe Dengue (Seek IMMEDIATE Emergency Care):
+- Severe abdominal pain or persistent vomiting
+- Clinical fluid accumulation (ascites, pleural effusion)
+- Mucosal bleeding (gums, nose, gums, vaginal)
+- Lethargy, restlessness, or irritability
+- Liver enlargement > 2 cm
+- Laboratory: Rising hematocrit with rapid decrease in platelet count
+- Platelet count < 100,000/mm³ with declining trend
+
+Home Care for Non-Severe Dengue:
+- Complete bed rest
+- Oral rehydration: Drink 2-3 liters of fluids daily (water, ORS, coconut water, fresh juices)
+- Tepid sponging for fever (NOT cold water baths)
+- Monitor urine output (should be ≥ 0.5 mL/kg/hr)
+- Daily blood count monitoring (CBC with platelet count)
+- Watch for warning signs especially during Days 3-7
+
+---
+
+TITLE: Common Upper Respiratory Tract Infections
+SOURCE: NICE Clinical Guidelines, 2023; CDC Antibiotic Prescribing Guidelines
+CATEGORY: General Medicine | Infectious Disease
+
+Upper Respiratory Tract Infections (URTIs) include the common cold, pharyngitis, sinusitis, and laryngitis. Most are viral in origin (rhinovirus, coronavirus, RSV, influenza, parainfluenza) and are self-limiting.
+
+Common Cold Management:
+- Duration: Typically 7-10 days; cough may persist up to 3 weeks
+- Hydration: Warm liquids (herbal teas, broths, warm water with honey and lemon)
+- Rest: Adequate sleep and reduced activity
+- Nasal saline irrigation for congestion relief
+- Honey (age > 1 year): 1-2 teaspoons for cough relief (evidence-based)
+- Steam inhalation with caution (NOT in children due to burn risk)
+
+Sore Throat (Pharyngitis) Assessment:
+- Most sore throats are viral (70-80%) and do NOT require antibiotics
+- Centor Score for bacterial pharyngitis: Fever > 38°C, tonsillar exudates, tender anterior cervical lymph nodes, absence of cough
+- Score 0-1: Low risk (1-10% streptococcal) → Supportive care only
+- Score 4+: Higher risk (50-60% streptococcal) → Consider rapid strep test
+
+When to Seek Medical Attention for URTI:
+- Symptoms persisting > 10 days without improvement
+- Fever > 39°C (102.2°F) lasting > 3 days
+- Severe or worsening symptoms after initial improvement (secondary infection)
+- Difficulty breathing or swallowing
+- Stiff neck with fever
+- Rash accompanying sore throat
+- Immunocompromised individuals
+
+Antibiotic Stewardship Note:
+Antibiotics are NOT effective against viral infections. Inappropriate antibiotic use contributes to antimicrobial resistance, a critical global health threat. Demand for antibiotics should be addressed with patient education.
+
+---
+
+TITLE: Food Poisoning and Acute Gastroenteritis
+SOURCE: WHO Food Safety Guidelines; CDC Foodborne Illness Management, 2023
+CATEGORY: Gastroenterology | General Medicine
+
+Common causes include Norovirus, Salmonella, E. coli, Campylobacter, and Staphylococcus aureus. Onset ranges from 1 hour (Staph aureus toxin) to 72 hours (Salmonella) after ingestion.
+
+Symptom Assessment:
+- Nausea, vomiting, diarrhea (watery or bloody)
+- Abdominal cramps and pain
+- Low-grade fever
+- Headache, muscle aches, fatigue
+
+Home Management (Mild Cases):
+1. Oral Rehydration: Small, frequent sips of ORS, clear broths, diluted fruit juice
+2. BRAT Diet when tolerated: Bananas, Rice, Applesauce, Toast
+3. Avoid: Dairy, caffeine, alcohol, fatty, or spicy foods for 24-48 hours
+4. Rest and gradual return to normal diet
+
+Dehydration Assessment:
+- Mild: Thirst, decreased urine output, slightly dry mouth
+- Moderate: Very dry mouth, reduced skin turgor, sunken eyes, infrequent urination
+- Severe: Extreme thirst, very sunken eyes, rapid heartbeat, lethargy, no urination for 8+ hours (EMERGENCY)
+
+Red Flags Requiring Emergency Care:
+- Bloody diarrhea or vomit
+- Fever > 38.5°C (101.3°F) lasting > 24 hours
+- Inability to keep any fluids down for > 12 hours
+- Signs of severe dehydration
+- Symptoms in infants, elderly, pregnant women, or immunocompromised
+- Onset after consuming mushrooms, shellfish, or canned food (botulism risk)

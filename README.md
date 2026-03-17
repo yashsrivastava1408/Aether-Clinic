@@ -10,93 +10,82 @@ sequenceDiagram
     participant App as Mobile/Web Client
     participant Server as Node.js Backend
     participant Security as Express Middleware (Helmet/RateLimit/Sanitize)
-    participant MLService as Python ML Service
-    participant Gemini as Gemini Vision (Cloud)
-    participant Ollama as Ollama (Local LLM)
-    participant Logs as chat_logs.json (File Store)
+    participant IntelHub as Python Intelligence Hub (Agents)
+    participant VectorDB as ChromaDB (Medical Knowledge)
+    participant LLM as Hybrid LLM (Gemini/Ollama)
     
-    Note over User,Logs: Chat & AI Consultation (Local Session Logs)
-    User->>App: Send Message / Image
-    App->>Server: POST /api/chat (userId, message, image)
+    Note over User,VectorDB: Chat & Medical Consultation Flow
+    User->>App: Send Symptom / Query
+    App->>Server: POST /api/chat
     
     rect rgb(240, 240, 240)
-        Note left of Server: Rate Limiting & Security
+        Note left of Server: Security Layer
         Security->>Server: Apply Helmet + Rate Limit + Sanitization
     end
 
-    Server->>Logs: Read user session history
-    Logs-->>Server: Return recent messages
+    Server->>IntelHub: POST /api/intelligence/query (semantic search)
+    IntelHub->>VectorDB: Query embeddings (Cosine Similarity)
+    VectorDB-->>IntelHub: Return relevant chunks + citations
+    IntelHub-->>Server: Return Context + Triage Classification
     
-    alt Image provided
-        Server->>Gemini: Analyze Image + Context
-        Gemini-->>Server: Return visual analysis
-    else Text only
-        Server->>Ollama: Generate Response (Local Privacy)
-        Ollama-->>Server: Return medical advice
-    end
-
-    Server->>Logs: Save updated chat session
-    Server-->>App: Return AI Response
-    App-->>User: Display Reply
+    Server->>LLM: Generate Response (Prompt + Context)
+    LLM-->>Server: Raw AI Response
+    
+    Server->>IntelHub: POST /api/intelligence/verify (Safety Check)
+    Note right of IntelHub: Safety Oversight Agent
+    IntelHub-->>Server: Verified/Amended Response
+    
+    Server-->>App: Return Response + Citations
+    App-->>User: Display Triage Advice + Medical Sources
 
     Note over User,Server: Report Analysis (OCR + Medical Intelligence)
     User->>App: Upload Medical Report (Image)
-    App->>Server: POST /api/report/analyze (multipart/form-data)
+    App->>Server: POST /api/report/analyze
     
-    Server->>Server: Multer (Temp Storage)
-    Server->>Server: Validate file (PDF blocked)
     Server->>Server: Tesseract.js OCR (images only)
-    
-    Server->>Gemini: Send OCR Text + Image Base64
-    Gemini-->>Server: Return Structured Analysis (JSON)
-    
-    Note over Server: Report DB save currently disabled in controller
-    Server-->>App: Return Structured JSON
-    App-->>User: Show visualize report data
+    Server->>LLM: Send OCR Text + Image Base64 (Gemini Vision)
+    LLM-->>Server: Return Structured Analysis (JSON)
+    Server-->>App: Display Visualized Report Data
 
-    Note over User,MLService: ML Disease Prediction (Heart/Diabetes)
+    Note over User,IntelHub: ML Disease Prediction (Heart/Diabetes)
     User->>App: Enter Health Metrics (Form)
     App->>Server: POST /api/ml/heart (or /diabetes)
-    
-    Server->>MLService: POST http://localhost:5001/predict/...
-    Note right of MLService: Flask + Scikit-Learn
-    MLService->>MLService: Run .pkl Model Inference
-    MLService-->>Server: Return Probability & Risk
-    
-    Server-->>App: Return Risk Score
-    App-->>User: Display Risk Assessment
+    Server->>IntelHub: Forward to ML Predictor (:5001)
+    IntelHub->>IntelHub: Run .pkl Model Inference
+    IntelHub-->>Server: Return Probability & Risk Level
+    Server-->>App: Return Risk Assessment
 ```
 
 ---
 
 ## High-Level Architecture
 
-The system operates on a microservices-inspired architecture where the backend orchestrates communication between the user interfaces (Mobile/Web) and the specialized Intelligence Layer (Machine Learning & LLMs).
+The system operates on a multi-agent microservices architecture where the Node.js backend acts as the orchestrator between user clients and a specialized Python Intelligence Hub.
 
 ```mermaid
 graph TD
     subgraph "Frontend Layer"
-        M["Mobile App (React Native)"] -->|REST API| G["Gateway (Server)"]
+        M["Mobile App (React Native)"] -->|REST API| G["Gateway (Node.js)"]
         W["Web Dashboard (React)"] -->|REST API| G
     end
 
     subgraph "Core Backend (Node.js)"
-        G -->|Session Logs| F["chat_logs.json (File-Based)"]
-        G -->|OCR + Vision Routing| S["Report Service"]
-        G -->|Triage + RAG + LLM Routing| C["Chat Controller"]
-        G -->|Security Middleware| X["Helmet + RateLimit + Sanitization"]
+        G -->|Chat Logs| F["chat_logs.json (Encrypted)"]
+        G -->|Orchestration| S["Intelligence Service Client"]
+        G -->|Security| X["Helmet + RateLimit + Sanitization"]
     end
 
-    subgraph "Intelligence Layer"
-        S -->|Forward Image| V["Gemini Vision (Cloud)"]
-        C -->|Text Prompt| L["Ollama (Local LLM)"]
-        C -->|Context Retrieval| R["Local Medical Knowledge (JSON)"]
-        G -->|Risk Data| ML["Python ML Service (Flask)"]
+    subgraph "Intelligence Hub (Python)"
+        S -->|Query| TC["🏥 Triage Classifier"]
+        TC -->|Route| KR["🔍 Knowledge Retriever"]
+        KR -->|Semantic Search| CDB[("ChromaDB\n(Medical Corpus)")]
+        S -->|Post-Process| SO["🛡️ Safety Oversight"]
+        G -->|Risk Analysis| ML["ML Predictor (Scikit-Learn)"]
     end
 
-    subgraph "ML Service (Python)"
-        ML -->|Predict| H["Heart Disease Model"]
-        ML -->|Predict| D["Diabetes Model"]
+    subgraph "Foundation Models"
+        G -->|Cloud Vision| V["Gemini 2.0 Flash"]
+        G -->|Local LLM| L["Ollama (Llama 3.2)"]
     end
 ```
 
@@ -112,43 +101,49 @@ graph TD
 - **Technologies**: React, Vite, TailwindCSS
 - **Description**: Clinical dashboard for healthcare providers to review patient analytics, manage clinic data, and oversee health trends.
 
-### Backend API
+### Backend API (Gateway)
 - **Technologies**: Node.js, Express, MongoDB
-- **Description**: Central orchestration layer managing authentication routes, middleware security, OCR/report analysis, chat triage logic, and communication between AI services and frontend clients.
-- **Current Storage Note**: Chat sessions are currently persisted in `chat_logs.json` (file-based flow in controller). MongoDB integration exists in the project but is not the active path for chat/report persistence in the current implementation.
+- **Description**: Central orchestration layer managing authentication, middleware security, OCR processing, and communication between specialized AI agents and frontend clients.
+- **Data Persistence**: Sensitive chat data is encrypted (AES-256) and persisted across sessions.
+
+### Intelligence Hub (Multi-Agent RAG)
+- **Technologies**: Python, Flask, LangGraph, ChromaDB, Sentence-Transformers
+- **Architecture**: A specialized agentic framework consisting of:
+  - **🏥 Triage Classifier**: Categorizes queries and detects emergency urgency.
+  - **🔍 Knowledge Retriever**: Performs hybrid semantic search against a Vector DB (ChromaDB) containing 44+ medical knowledge chunks.
+  - **🛡️ Safety Oversight**: Post-processes AI responses to detect hallucinations and ensure mandatory safety warnings (e.g., Dengue/NSAID warning).
 
 ### ML Engine
-- **Technologies**: Python, Flask, Scikit-Learn
-- **Description**: High-fidelity predictive engine for specialized health risk assessment, specifically for heart disease and diabetes.
+- **Technologies**: Python, Flask, Scikit-Learn, Joblib
+- **Description**: Predictive engine for high-fidelity health risk assessments (Heart Disease and Diabetes) using pre-trained Scikit-Learn models.
 
-### LLM Service
-- **Technologies**: Google Gemini, Ollama
-- **Description**: Hybrid intelligence model utilizing cloud-based Vision for complex diagnostic analysis and local LLMs for private, secure consultations.
-
-### Infrastructure
-- **Technologies**: Kubernetes, Docker
-- **Description**: Scalable, containerized infrastructure designed for high availability and resilient data management.
+### Foundation LLMs
+- **Technologies**: Google Gemini (Cloud), Ollama (Local)
+- **Description**: Hybrid intelligence utilizing Gemini 2.0 Flash for vision/complex analysis and Llama 3.2 (Local) for privacy-first routine consultations.
 
 ---
 
 ## Security & Privacy Architecture
 
-Aether Clinic prioritizes user data privacy through a "Local-First" intelligence approach and rigorous encryption standards.
+Aether Clinic implements a multi-layered security posture designed for healthcare compliance and data integrity.
 
-- **Zero-Knowledge Architecture**: Routine consultations are handled by local LLMs to ensure that sensitive health data never leaves the secure server infrastructure.
-- **Data Encryption Utility**: AES-256 encryption/decryption helpers are implemented for sensitive fields. (Current report save path is disabled in controller; encryption utility is available for active DB persistence flows.)
-- **Ephemeral Image Processing**: Images analyzed by vision services are processed in-memory and are not persisted on cloud storage.
-- **Current Report Input Scope**: Report analyzer currently supports image uploads (JPG/PNG). PDF uploads are blocked in the active controller flow.
+- **Zero-Knowledge Architecture**: Routine consultations are processed locally (Ollama) to ensure sensitive health data remains on secure infrastructure.
+- **AES-256 Encryption**: Every message in the chat logs depends on a 64-character hex key for hardware-isolated encryption.
+- **Agentic Safety Oversight**: Every AI response is cross-checked by a specialized Python agent against clinical guidelines to prevent the recommendation of dangerous medications or missing "Red Flag" warnings.
+- **Ephemeral Image Processing**: Vision analysis (Gemini) occurs in-memory; images are never persisted in cloud storage.
+- **Rate Limiting & Sanitization**: Rigorous protection against NoSQL injection and DoS attacks at the Gateway level.
 
 ---
 
 ## Repository Structure
 
-- **/mobile**: Patient application source code.
-- **/client**: Clinical dashboard source code.
-- **/server**: Node.js backend and API infrastructure.
-- **/ml**: Python-based machine learning service.
-- **/k8s**: Deployment manifests for Kubernetes.
+- **/mobile**: Patient application source code (React Native).
+- **/client**: Clinical dashboard source code (React + Vite).
+- **/server**: Node.js backend, security middleware, and agent orchestration.
+- **/ml**: Python Intelligence Hub, agents, ChromaDB, and ML models.
+  - **/agents**: Source code for Triage, Retrieval, and Safety agents.
+  - **/data/medical_corpus**: Source clinical guidelines for RAG.
+- **/k8s**: Deployment manifests for Kubernetes orchestration.
 
 ---
-*Building for the future of healthcare.*
+*Building for a safer, smarter future of healthcare.*

@@ -4,3 +4,14 @@ pandas==2.2.2
 scikit-learn==1.6.1
 joblib==1.4.2
 gunicorn==21.2.0
+
+# =============================
+# Multi-Agent RAG Dependencies
+# =============================
+chromadb==0.6.3
+sentence-transformers==3.4.1
+langchain==0.3.20
+langchain-community==0.3.19
+langchain-core==0.3.51
+langgraph==0.3.21
+flask-cors==5.0.1

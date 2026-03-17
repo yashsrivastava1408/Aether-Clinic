@@ -35,4 +35,24 @@ router.post("/diabetes", async (req, res) => {
   }
 });
 
+// Intelligence Hub Status
+router.get("/intelligence/status", async (req, res) => {
+  try {
+    const response = await axios.get(
+      `${ML_BASE_URL}/api/intelligence/status`,
+      { timeout: 5000 }
+    );
+    res.json({
+      ...response.data,
+      proxy: "via-node-backend"
+    });
+  } catch (error) {
+    res.json({
+      service: "unavailable",
+      error: error.message,
+      hint: "Ensure the Python ML service is running on port 5001"
+    });
+  }
+});
+
 export default router;

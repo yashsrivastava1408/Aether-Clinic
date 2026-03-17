@@ -1,0 +1,121 @@
+TITLE: Asthma - Self-Management and Action Plans
+SOURCE: Global Initiative for Asthma (GINA) Guidelines, 2024
+CATEGORY: Pulmonology | Chronic Disease
+
+Asthma is a chronic inflammatory disease of the airways characterized by variable expiratory airflow limitation. It affects approximately 300 million people worldwide.
+
+Symptom Recognition:
+- Wheezing (high-pitched whistling sound during breathing)
+- Shortness of breath (dyspnea)
+- Chest tightness
+- Cough (especially at night or early morning)
+- Symptoms are variable and may be triggered by specific exposures
+
+Common Triggers:
+- Allergens: Dust mites, pet dander, mold, pollen
+- Irritants: Smoke, strong odors, air pollution, cold air
+- Respiratory infections (viral)
+- Exercise (exercise-induced bronchoconstriction)
+- Emotional stress
+- Weather changes (cold, humid, or windy conditions)
+- Medications: Aspirin, NSAIDs, beta-blockers in susceptible individuals
+
+Asthma Action Plan (Traffic Light System):
+GREEN ZONE (Doing Well):
+- No cough, wheeze, chest tightness, shortness of breath
+- Can do usual activities
+- Peak flow: 80-100% of personal best
+- Action: Continue maintenance medications
+
+YELLOW ZONE (Getting Worse):
+- Cough, wheeze, chest tightness, or shortness of breath
+- Waking at night due to asthma
+- Some limitation of activities
+- Peak flow: 50-79% of personal best
+- Action: Use quick-relief medication; contact healthcare provider
+
+RED ZONE (Medical Alert):
+- Severe shortness of breath, quick-relief medications not helping
+- Cannot do usual activities
+- Symptoms getting worse
+- Peak flow: < 50% of personal best
+- Action: Take quick-relief medication and GO TO HOSPITAL or CALL EMERGENCY SERVICES
+
+Self-Care Best Practices:
+- Keep rescue inhaler accessible at all times
+- Use spacer with metered-dose inhalers for better drug delivery
+- Rinse mouth after using corticosteroid inhalers (prevents oral thrush)
+- Maintain trigger diary to identify personal triggers
+- Regular peak flow monitoring if prescribed
+- Annual influenza vaccination recommended
+- Keep home humidity below 50% to reduce dust mite and mold growth
+
+---
+
+TITLE: Allergic Reactions and Anaphylaxis
+SOURCE: World Allergy Organization (WAO) Anaphylaxis Guidelines, 2023
+CATEGORY: Allergy & Immunology | Emergency
+
+Mild Allergic Reactions:
+- Localized urticaria (hives), itching
+- Mild swelling at exposure site
+- Sneezing, runny nose, watery eyes
+- Self-care: Remove allergen exposure, cool compress, OTC antihistamines
+
+Anaphylaxis - LIFE-THREATENING EMERGENCY:
+Anaphylaxis is a severe, potentially fatal systemic allergic reaction with rapid onset (usually within minutes to hours of exposure).
+
+Diagnostic Criteria (Any ONE of the following):
+1. Skin/mucosal involvement (hives, flushing, tongue swelling) PLUS respiratory compromise (dyspnea, wheeze, stridor) OR cardiovascular compromise (hypotension, syncope)
+2. Two or more of: skin involvement, respiratory compromise, reduced BP, persistent GI symptoms — after exposure to known allergen
+3. Reduced blood pressure alone after exposure to KNOWN allergen
+
+Common Triggers:
+- Food: Peanuts, tree nuts, shellfish, fish, milk, eggs, wheat, soy
+- Medications: Penicillin, NSAIDs, contrast media
+- Insect stings: Bees, wasps, hornets, fire ants
+- Latex
+- Exercise (food-dependent exercise-induced anaphylaxis)
+
+EMERGENCY ACTION:
+1. Call emergency services IMMEDIATELY
+2. Administer epinephrine auto-injector (e.g., EpiPen) into outer mid-thigh
+3. Lay the person flat (if breathing difficulty, allow them to sit up)
+4. Do NOT give oral medication if there is throat swelling
+5. Second dose of epinephrine after 5-15 minutes if no improvement
+6. CPR if breathing or heartbeat stops
+7. After stabilization: ALL patients must be observed in hospital for 4-6 hours (biphasic reactions can occur)
+
+---
+
+TITLE: Skin Conditions - Primary Assessment Guide
+SOURCE: British Association of Dermatologists (BAD) Patient Guidelines, 2023
+CATEGORY: Dermatology | General Medicine
+
+Eczema (Atopic Dermatitis):
+- Chronic, relapsing inflammatory skin condition
+- Appears as dry, itchy, red, rough patches
+- Common locations: Creases of elbows, behind knees, face, hands
+- Self-care: Moisturize frequently (emollients 2-3 times daily), lukewarm baths (not hot), avoid harsh soaps, identify and avoid triggers (wool, synthetic fabrics, certain detergents)
+- Seek care if: Oozing, crusting, spreading rapidly, signs of infection (yellow crusting, increased redness/warmth)
+
+Psoriasis:
+- Chronic autoimmune condition causing rapid skin cell turnover
+- Well-defined, raised red patches with silvery-white scales
+- Common locations: Elbows, knees, scalp, lower back
+- Triggers: Stress, infections (streptococcal), certain medications, cold weather, alcohol
+- Self-care: Keep skin moisturized, gentle sun exposure (10-15 min), avoid picking/scratching scales, warm (not hot) baths with colloidal oatmeal
+
+Contact Dermatitis:
+- Irritant: Direct damage from chemicals (detergents, solvents, acids)
+- Allergic: Immune reaction to allergens (nickel, latex, poison ivy, fragrances)
+- Self-care: Identify and avoid causative agent, wash affected area thoroughly, cool compress, calamine lotion
+
+ABCDE Rule for Moles (Melanoma Screening):
+- A = Asymmetry: One half unlike the other
+- B = Border: Irregular, scalloped, or poorly defined
+- C = Color: Varied from one area to another (shades of brown, tan, black, sometimes white, red, or blue)
+- D = Diameter: Larger than 6mm (pencil eraser size)
+- E = Evolving: Size, shape, or color is changing
+
+⚠️ If ANY of the ABCDE criteria are met, seek dermatological evaluation promptly. Early detection of melanoma is critical for survival.

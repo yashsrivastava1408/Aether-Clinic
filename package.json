@@ -1,0 +1,16 @@
+{
+  "name": "ai-doctor-final",
+  "version": "1.0.0",
+  "description": "A comprehensive, privacy-first healthcare platform integrating React Native Mobile, Modern Web Clients, Node.js Backend, and Python ML Services.",
+  "main": "index.js",
+  "scripts": {
+    "dev:full": "concurrently --kill-others \"cd client && npm run dev\" \"cd server && npm run dev\" \"ollama serve\" \"cd ml && python3 app.py\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

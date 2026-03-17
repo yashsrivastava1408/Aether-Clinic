@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 import { getVisionPrompt } from "../services/prompts/visionPrompt.js";
 import { getTextPrompt } from "../services/prompts/textPrompt.js";
-import { retrieveContext } from "../services/ragService.js";
+import { retrieveIntelligence, verifyResponse, retrieveContext } from "../services/ragService.js";
 
 const CHAT_LOGS_PATH = path.resolve("chat_logs.json");
 
@@ -176,41 +176,72 @@ export const handleChat = async (req, res) => {
       DECISION: forceFinal ? '🎯 FINAL REPORT' : '❓ INVESTIGATION'
     });
 
-    /* ================== RAG RETRIEVAL ================== */
+    /* ================== MULTI-AGENT RAG RETRIEVAL ================== */
     const ragQuery = [
       message || "",
       ...userTexts.slice(-3)
     ].join(" ").toLowerCase();
 
-    console.log("🔍 RAG QUERY:", ragQuery.substring(0, 100));
+    console.log("🔍 RAG v2 QUERY:", ragQuery.substring(0, 100));
 
-    const retrievedContext = retrieveContext(ragQuery);
-    const hasRAG = retrievedContext && retrievedContext.trim().length > 0;
+    // Use the new Intelligence Hub (async, with fallback)
+    let intelligenceResult;
+    try {
+      intelligenceResult = await retrieveIntelligence(
+        ragQuery,
+        specialization,
+        historyContext
+      );
+    } catch (ragErr) {
+      console.warn("⚠️ Intelligence Hub call failed, using sync fallback:", ragErr.message);
+      const fallbackContext = retrieveContext(ragQuery);
+      intelligenceResult = {
+        context: fallbackContext || "",
+        citations: [],
+        classification: { category: "general_medicine", urgency: "routine" },
+        hasContext: !!fallbackContext,
+        usedFallback: true
+      };
+    }
 
-    console.log("📚 RAG STATUS:", {
+    const retrievedContext = intelligenceResult.context;
+    const hasRAG = intelligenceResult.hasContext;
+    const ragCitations = intelligenceResult.citations;
+    const ragClassification = intelligenceResult.classification;
+
+    console.log("📚 RAG v2 STATUS:", {
       found: hasRAG,
-      length: retrievedContext?.length || 0,
+      chunks: ragCitations.length,
+      classification: ragClassification?.category,
+      urgency: ragClassification?.urgency,
+      usedFallback: intelligenceResult.usedFallback,
       preview: retrievedContext?.substring(0, 120)
     });
 
     /* ================== SYSTEM PROMPT CONSTRUCTION ================== */
     let systemPrompt;
 
+    // Build citations reference for the LLM
+    const citationBlock = ragCitations.length > 0
+      ? `\n📖 AVAILABLE CITATIONS:\n${ragCitations.map((c, i) => `   [${i + 1}] "${c.title}" — ${c.source}`).join('\n')}\n\nWhen referencing medical information, cite using the format: (Source: [N])\n`
+      : '';
+
     if (forceFinal) {
       systemPrompt = `You are a Medical Triage Assistant specializing in ${specialization}.
 
 ${hasRAG ? `
 ╔═══════════════════════════════════════════════════════════════╗
-║  🏥 AUTHORITATIVE MEDICAL PROTOCOL (PRIORITY KNOWLEDGE)       ║
+║  🏥 EVIDENCE-BASED MEDICAL PROTOCOLS (PRIORITY KNOWLEDGE)    ║
 ╚═══════════════════════════════════════════════════════════════╝
 
 ${retrievedContext}
+${citationBlock}
 
 ⚠️  CRITICAL INSTRUCTIONS:
     • This protocol OVERRIDES general medical knowledge
     • Apply these recommendations FIRST before general advice
     • Include protocol-specific warnings verbatim
-    • ALWAYS cite as: "(Source: Internal Medical Protocol)"
+    • CITE your sources using the format: (Source: [N]) referencing the numbered citations above
 
 ╔═══════════════════════════════════════════════════════════════╗
 ` : ''}
@@ -232,17 +263,17 @@ One clear sentence describing what the user reported and key context.
 - List 2-3 COMMON, NON-ALARMING potential explanations
 - Start with most benign/common causes
 - Use accessible, non-technical language
-${hasRAG ? '- PRIORITIZE protocol-specific conditions if relevant' : ''}
+${hasRAG ? '- PRIORITIZE protocol-specific conditions if relevant\n- CITE sources: (Source: [N])' : ''}
 
 🧠 Suggestions:
 - Practical self-care: rest, ice/heat, posture, hydration
 - Over-the-counter options if appropriate
 - Lifestyle modifications
-${hasRAG ? '- Protocol-recommended interventions (MUST CITE SOURCE)' : ''}
+${hasRAG ? '- Protocol-recommended interventions (CITE SOURCE)' : ''}
 
 🚨 When to Seek Urgent Care:
 - 1-2 RED FLAG symptoms requiring immediate medical attention
-${hasRAG ? '- Include any protocol-mandated warnings (MUST CITE SOURCE)' : ''}
+${hasRAG ? '- Include any protocol-mandated warnings (CITE SOURCE)' : ''}
 
 🤔 Optional Follow-up:
 - ONE gentle question about managing or monitoring the condition
@@ -290,13 +321,35 @@ CURRENT PRIORITY: ${!facts.location ? 'WHERE exactly is the issue located?' :
     ) + (message ? `\n\nUser: ${message}` : "");
 
     /* ================== LLM CALL ================== */
-    const aiReply = await generateResponse(
+    let aiReply = await generateResponse(
       prompt,
       req.file ? imageBase64 : null,
       { provider: req.file ? "gemini" : "ollama" }
     );
 
     if (req.file) fs.unlinkSync(req.file.path);
+
+    /* ================== SAFETY VERIFICATION (Multi-Agent) ================== */
+    let safetyResult = { isSafe: true, modifiedResponse: aiReply, safetyScore: 1.0, warningsAdded: [], violationsFound: [] };
+
+    if (forceFinal && hasRAG) {
+      // Only run safety verification on final reports that used RAG context
+      try {
+        safetyResult = await verifyResponse(
+          aiReply,
+          retrievedContext,
+          message || "",
+          ragClassification?.urgency || "routine"
+        );
+
+        if (safetyResult.warningsAdded.length > 0) {
+          console.log("🛡️ Safety Agent amended response with", safetyResult.warningsAdded.length, "warnings");
+          aiReply = safetyResult.modifiedResponse;
+        }
+      } catch (safetyErr) {
+        console.warn("⚠️ Safety verification unavailable:", safetyErr.message);
+      }
+    }
 
     /* ================== SESSION LOCK ON FINAL REPORT ================== */
     if (forceFinal) {
@@ -324,15 +377,29 @@ CURRENT PRIORITY: ${!facts.location ? 'WHERE exactly is the issue located?' :
     );
     writeLogs(finalLogs);
 
-    /* ================== RESPONSE WITH DEBUG INFO ================== */
+    /* ================== RESPONSE WITH INTELLIGENCE METADATA ================== */
     return res.json({
       reply: aiReply,
       sessionComplete: forceFinal, // Frontend can show "Start New Session" button
+      citations: ragCitations,      // NEW: Medical source citations for frontend display
       _debug: {
         mode: forceFinal ? 'FINAL_REPORT' : 'INVESTIGATION',
         userTurns,
         factsCollected: knownFacts,
-        ragUsed: hasRAG,
+        // RAG v2 intelligence metadata
+        intelligence: {
+          ragVersion: intelligenceResult.usedFallback ? 'v1_fallback' : 'v2_multi_agent',
+          classification: ragClassification,
+          chunksRetrieved: ragCitations.length,
+          hasContext: hasRAG,
+          citationCount: ragCitations.length,
+          safety: {
+            score: safetyResult.safetyScore,
+            isSafe: safetyResult.isSafe,
+            warningsAdded: safetyResult.warningsAdded.length,
+            violationsFound: safetyResult.violationsFound.length
+          }
+        },
         sessionLocked: chat.sessionClosed,
         triggers: {
           asksForConclusion: userAsksForConclusion,
@@ -398,6 +465,7 @@ export const forceFinalReport = async (req, res) => {
       return res.json({
         reply: "Unable to generate report: The consultation history is missing or has been cleared. Please start a new session.",
         sessionComplete: true,
+        citations: [],
         message: "Session not found, prompt to start new."
       });
     }
@@ -410,8 +478,20 @@ export const forceFinalReport = async (req, res) => {
     // Build comprehensive summary context
     const summaryContext = userTexts.join(". ");
 
+    // Get Intelligence Hub context for the final report
+    let ragContext = "";
+    let ragCitations = [];
+    try {
+      const intelligence = await retrieveIntelligence(summaryContext, specialization);
+      ragContext = intelligence.context;
+      ragCitations = intelligence.citations;
+    } catch (err) {
+      console.warn("⚠️ Intelligence unavailable for force-final:", err.message);
+    }
+
     // Force final report prompt - EXACT USER FORMAT
     const forcedPrompt = `You are a Medical Triage Assistant - ${specialization}.
+${ragContext ? `\nRELEVANT MEDICAL PROTOCOLS:\n${ragContext}\n` : ''}
 Based on the following conversation, provide the final report EXACTLY in this format:
 
 📝 Summary:
@@ -467,6 +547,7 @@ ${summaryContext}
     return res.json({
       reply: aiReply,
       sessionComplete: true,
+      citations: ragCitations,
       message: "Final report generated and session closed"
     });
 

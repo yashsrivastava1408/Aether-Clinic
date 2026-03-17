@@ -1,0 +1,86 @@
+TITLE: Acute Coronary Syndrome - Emergency Triage Protocol
+SOURCE: WHO Cardiovascular Disease Guidelines, 2024 Edition
+CATEGORY: Cardiology | Emergency
+
+Acute Coronary Syndrome (ACS) encompasses a spectrum of clinical presentations ranging from unstable angina to ST-elevation myocardial infarction (STEMI). The hallmark symptom is chest pain or discomfort, typically described as pressure, squeezing, or heaviness in the central or left chest. Pain may radiate to the left arm, jaw, neck, back, or epigastric region.
+
+Key Risk Factors: Hypertension, diabetes mellitus, smoking, dyslipidemia, family history of premature coronary artery disease, obesity, and sedentary lifestyle.
+
+Red Flag Symptoms Requiring Immediate Emergency Care:
+- Chest pain lasting more than 20 minutes at rest
+- Pain accompanied by diaphoresis (profuse sweating), nausea, or dyspnea
+- Sudden onset of severe chest pain with radiation to jaw or left arm
+- Syncope (fainting) or near-syncope with chest discomfort
+- Known cardiac history with new or worsening symptoms
+
+Initial Triage Actions:
+1. Call emergency services immediately (911 or local equivalent)
+2. Chew aspirin 300mg if available and not allergic
+3. Rest in a semi-upright position
+4. Loosen tight clothing
+5. Do NOT drive yourself to the hospital
+
+Differential Diagnoses to Consider: Gastroesophageal reflux disease (GERD), musculoskeletal pain, pulmonary embolism, pericarditis, aortic dissection, pneumothorax, panic disorder.
+
+---
+
+TITLE: Hypertension Management - Primary Care Protocol
+SOURCE: American Heart Association (AHA) Guidelines, 2023
+CATEGORY: Cardiology | Chronic Management
+
+Blood Pressure Classification (AHA 2023):
+- Normal: Systolic < 120 mmHg AND Diastolic < 80 mmHg
+- Elevated: Systolic 120-129 mmHg AND Diastolic < 80 mmHg
+- Stage 1 Hypertension: Systolic 130-139 mmHg OR Diastolic 80-89 mmHg
+- Stage 2 Hypertension: Systolic ≥ 140 mmHg OR Diastolic ≥ 90 mmHg
+- Hypertensive Crisis: Systolic > 180 mmHg AND/OR Diastolic > 120 mmHg
+
+Lifestyle Modifications (First-Line for All Stages):
+- DASH diet (rich in fruits, vegetables, whole grains, lean proteins)
+- Sodium restriction to < 2,300 mg/day (ideally < 1,500 mg/day)
+- Regular aerobic exercise: 150 minutes/week of moderate-intensity activity
+- Weight management: target BMI 18.5-24.9 kg/m²
+- Limit alcohol: ≤ 2 drinks/day for men, ≤ 1 drink/day for women
+- Smoking cessation
+- Stress management techniques
+
+When to Seek Urgent Medical Attention:
+- Blood pressure reading > 180/120 mmHg
+- Severe headache with visual changes
+- Chest pain or shortness of breath with elevated BP
+- Neurological symptoms (confusion, difficulty speaking, numbness)
+- Blood in urine with elevated readings
+
+---
+
+TITLE: Heart Failure - Recognition and Monitoring
+SOURCE: European Society of Cardiology (ESC) Heart Failure Guidelines, 2023
+CATEGORY: Cardiology | Chronic Disease
+
+Heart failure occurs when the heart cannot pump blood efficiently enough to meet the body's metabolic demands. It is classified by ejection fraction: HFrEF (reduced, ≤40%), HFmrEF (mildly reduced, 41-49%), and HFpEF (preserved, ≥50%).
+
+Common Symptoms to Monitor:
+- Progressive dyspnea (shortness of breath), initially on exertion, then at rest
+- Orthopnea (difficulty breathing when lying flat)
+- Paroxysmal nocturnal dyspnea (waking up breathless at night)
+- Peripheral edema (swelling in ankles, feet, legs)
+- Unexplained fatigue and reduced exercise tolerance
+- Persistent cough, especially when lying down
+- Rapid or irregular heartbeat (palpitations)
+- Rapid weight gain (>2 kg in 3 days suggests fluid retention)
+
+Self-Monitoring Protocol for Patients:
+1. Weigh yourself daily at the same time, in the same clothes
+2. Record blood pressure twice daily
+3. Track fluid intake (typically restricted to 1.5-2L/day)
+4. Monitor sodium intake (<2,000 mg/day)
+5. Note any increase in swelling or breathlessness
+6. Contact healthcare provider if weight increases >2 kg in 3 days
+
+Warning Signs Requiring Immediate Medical Contact:
+- Sudden weight gain of 2+ kg in 48-72 hours
+- Worsening shortness of breath at rest
+- New or worsening chest pain
+- Inability to sleep flat (need extra pillows)
+- Persistent cough with pink, frothy sputum
+- Confusion or altered mental status
