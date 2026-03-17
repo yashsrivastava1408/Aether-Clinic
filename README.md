@@ -103,6 +103,32 @@ The Multi-Agent RAG system uses semantic search and specialized agents to provid
 - **Knowledge Retriever**: Performs hybrid semantic search against a Vector DB (ChromaDB) containing 44+ medical knowledge chunks.
 - **Safety Oversight**: Post-processes AI responses to detect hallucinations and ensure mandatory safety warnings are present.
 
+### Internal Agent Workflow
+The following diagram illustrates the internal decision-making and data retrieval flow within the Intelligence Hub.
+
+```mermaid
+graph TD
+    UserQuery["User Query"] --> NodeBackend["Node.js Backend"]
+    NodeBackend -->|POST /api/intelligence/query| IntelHub["Python Intelligence Hub"]
+
+    subgraph "Multi-Agent System (Python)"
+        IntelHub --> TC["Triage Classifier"]
+        TC -->|category + urgency| KR["Knowledge Retriever"]
+        KR -->|semantic search| CDB[("ChromaDB\n44 chunks")]
+        CDB -->|context + citations| KR
+        KR -->|formatted context| IntelHub
+    end
+
+    IntelHub -->|context + citations + classification| NodeBackend
+    NodeBackend -->|prompt + context| LLM["Ollama / Gemini LLM"]
+    LLM -->|AI response| NodeBackend
+    
+    NodeBackend -->|POST /api/intelligence/verify| SO["Safety Oversight"]
+    SO -->|verified / amended response| NodeBackend
+    
+    NodeBackend -->|Final response + citations| UserQuery
+```
+
 ### Implementation Details
 
 #### New Files (Python ML Service)
