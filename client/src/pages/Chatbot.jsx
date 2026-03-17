@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import TiltCard from "../components/TiltCard";
 import VoiceVisualizer from "../components/VoiceVisualizer";
+import LegalModal from "../components/LegalModal";
 import { getUserId } from "../utils/user";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -15,6 +16,8 @@ export default function Chatbot({ doctor, onBack }) {
   const [imagePreview, setImagePreview] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState(null);
+  const [hasConsented, setHasConsented] = useState(false);
+  const [isLegalOpen, setIsLegalOpen] = useState(false);
   const chatEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const { theme } = useTheme();
@@ -55,7 +58,7 @@ export default function Chatbot({ doctor, onBack }) {
 
   // Initial greeting when doctor selected
   useEffect(() => {
-    if (activeDoctor) {
+    if (activeDoctor && hasConsented) {
       // Fetch history logic
       const userId = getUserId();
       axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/api/chat/history/${userId}/${encodeURIComponent(activeDoctor.name)}`)
@@ -85,7 +88,7 @@ State your symptoms or upload a photo for analysis.`,
           setIsInitializing(false);
         });
     }
-  }, [activeDoctor?.name]);
+  }, [activeDoctor?.name, hasConsented]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -160,6 +163,26 @@ State your symptoms or upload a photo for analysis.`,
     if (e.key === "Enter") {
       e.preventDefault();
       sendMessage();
+    }
+  };
+
+  const handleFeedback = async (messageIndex, type) => {
+    try {
+      const message = messages[messageIndex];
+      // Update local state to show selection
+      const updatedMessages = [...messages];
+      updatedMessages[messageIndex] = { ...message, feedback: type };
+      setMessages(updatedMessages);
+
+      // API call to store feedback (fails gracefully if endpoint doesn't exist yet)
+      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/api/chat/feedback`, {
+        userId: getUserId(),
+        messageText: message.text,
+        type: type,
+        specialization: activeDoctor?.name
+      });
+    } catch (err) {
+      console.warn("Feedback recorded locally, but server sync failed.");
     }
   };
 
@@ -266,6 +289,40 @@ State your symptoms or upload a photo for analysis.`,
                   return msg.text;
                 })()}
               </span>
+
+              {/* FEEDBACK BUTTONS */}
+              {msg.sender === 'ai' && !msg.isSystem && (
+                <div className="flex items-center gap-3 mt-4 pt-3 border-t border-emerald-500/10">
+                  <span className="text-[10px] text-gray-500 font-mono uppercase tracking-tighter">Accurate?</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleFeedback(i, 'up')}
+                      className={`p-1.5 rounded-md transition-all ${msg.feedback === 'up' 
+                        ? 'bg-emerald-500/20 text-emerald-500 scale-110' 
+                        : 'text-gray-500 hover:text-emerald-500 hover:bg-emerald-500/10'}`}
+                      title="Accurate Information"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 10c0-1.1-.9-2-2-2h-3.11l.46-2.21c.08-.38-.05-.73-.34-.97L13.89 4l-4.71 4.71c-.26.26-.41.61-.41.97v9c0 .83.67 1.5 1.5 1.5h6.75c.62 0 1.15-.38 1.38-.91l2.26-5.27c.07-.17.11-.36.11-.53V10zM4 21h2c.55 0 1-.45 1-1v-9c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v9c0 .55.45 1 1 1z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleFeedback(i, 'down')}
+                      className={`p-1.5 rounded-md transition-all ${msg.feedback === 'down' 
+                        ? 'bg-red-500/20 text-red-500 scale-110' 
+                        : 'text-gray-500 hover:text-red-500 hover:bg-red-500/10'}`}
+                      title="Contains Errors"
+                    >
+                      <svg className="w-3.5 h-3.5 transform rotate-180" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 10c0-1.1-.9-2-2-2h-3.11l.46-2.21c.08-.38-.05-.73-.34-.97L13.89 4l-4.71 4.71c-.26.26-.41.61-.41.97v9c0 .83.67 1.5 1.5 1.5h6.75c.62 0 1.15-.38 1.38-.91l2.26-5.27c.07-.17.11-.36.11-.53V10zM4 21h2c.55 0 1-.45 1-1v-9c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v9c0 .55.45 1 1 1z" />
+                      </svg>
+                    </button>
+                  </div>
+                  {msg.feedback && (
+                    <span className="text-[9px] text-emerald-500 font-mono animate-pulse">THANK YOU FOR FEEDBACK</span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -375,6 +432,51 @@ State your symptoms or upload a photo for analysis.`,
           <span>{user?.isGuest ? 'IDENTITY: GUEST' : 'IDENTITY: VERIFIED'}</span>
         </div>
       </div>
+
+      {/* CONSENT MODAL OVERLAY */}
+      {!hasConsented && (
+        <div className="absolute inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-xl bg-black/60">
+          <div className={`max-w-md w-full p-8 rounded-3xl border shadow-2xl transition-all duration-500 transform scale-100 ${isDark ? 'bg-[#0a0a0a] border-emerald-500/30' : 'bg-white border-slate-200'}`}>
+            <div className="text-center space-y-6">
+              <div className={`w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl ${isDark ? 'bg-emerald-500/20 text-emerald-500' : 'bg-emerald-100 text-emerald-600'}`}>
+                ⚖️
+              </div>
+              <h3 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                Medical Liability Waiver
+              </h3>
+              <div className={`text-sm leading-relaxed text-left space-y-4 ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>
+                <p>
+                  By proceeding, you acknowledge that <span className="text-emerald-500 font-bold uppercase">Aether Clinic</span> is an experimental Artificial Intelligence platform for educational use.
+                </p>
+                <div className={`p-3 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <ul className="list-disc list-inside space-y-1 text-xs">
+                    <li>I understand this is <span className="text-red-500 font-bold underline">NOT a doctor</span>.</li>
+                    <li>I will not use this for life-threatening emergencies.</li>
+                    <li>I will seek professional medical advice before taking any medicine.</li>
+                  </ul>
+                  <button 
+                    onClick={() => setIsLegalOpen(true)}
+                    className="mt-3 text-[10px] text-emerald-500 hover:text-emerald-400 underline font-mono uppercase block"
+                  >
+                    View Full Legal Protocols & Privacy
+                  </button>
+                </div>
+              </div>
+              <button
+                onClick={() => setHasConsented(true)}
+                className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] ${isDark ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)]' : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg'}`}
+              >
+                I UNDERSTAND & AGREE
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <LegalModal 
+        isOpen={isLegalOpen} 
+        onClose={() => setIsLegalOpen(false)} 
+      />
     </div>
   );
 }

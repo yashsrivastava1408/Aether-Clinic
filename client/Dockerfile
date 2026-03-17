@@ -1,0 +1,29 @@
+# Build Stage
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+RUN npm install
+
+# Copy source
+COPY . .
+
+# Set build-time env variable for Vite
+# Use a placeholder that can be replaced or defined via docker-compose
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
+RUN npm run build
+
+# Production Stage (Nginx)
+FROM nginx:stable-alpine
+
+# Copy built assets from build stage
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

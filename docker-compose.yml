@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # 🍃 DATABASE: Locally hosted MongoDB
+  mongodb:
+    image: mongo:latest
+    container_name: aether-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - aether-network
+    restart: always
+
+  # 🧠 ML SERVICE: Multi-Agent RAG Hub (Python)
+  ml-service:
+    build:
+      context: ./ml
+    container_name: aether-ml-service
+    ports:
+      - "5001:5001"
+    environment:
+      - FLASK_ENV=production
+      - CHROMA_DB_PATH=/app/chroma_db
+    volumes:
+      - ./ml/chroma_db:/app/chroma_db
+    networks:
+      - aether-network
+    restart: always
+
+  # 🚀 BACKEND: Node.js API Gateway
+  backend-service:
+    build:
+      context: ./server
+    container_name: aether-backend
+    ports:
+      - "5050:5050"
+    environment:
+      - PORT=5050
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongodb:27017/ai_doctor_db
+      - ML_BASE_URL=http://ml-service:5001
+      - INTELLIGENCE_BASE_URL=http://ml-service:5001
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+    depends_on:
+      - mongodb
+      - ml-service
+    networks:
+      - aether-network
+    restart: always
+
+  # 💻 FRONTEND: React Web Client (Nginx)
+  frontend:
+    build:
+      context: ./client
+      args:
+        - VITE_API_URL=http://localhost:5050
+    container_name: aether-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend-service
+    networks:
+      - aether-network
+    restart: always
+
+networks:
+  aether-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
