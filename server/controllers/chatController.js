@@ -5,33 +5,44 @@ import path from "path";
 import { getVisionPrompt } from "../services/prompts/visionPrompt.js";
 import { getTextPrompt } from "../services/prompts/textPrompt.js";
 import { retrieveIntelligence, verifyResponse, retrieveContext } from "../services/ragService.js";
+import Chat from "../models/Chat.js";
+import { chatDB } from "../utils/jsonDB.js";
+import mongoose from "mongoose";
 
 const CHAT_LOGS_PATH = path.resolve("chat_logs.json");
 
 /**
- * FILE HELPER: READ LOCKS
+ * DATABASE SELECTOR: Uses MongoDB if connected, falls back to JSON for WiFi-restricted environments.
  */
-const readLogs = () => {
-  try {
-    if (!fs.existsSync(CHAT_LOGS_PATH)) return [];
-    const data = fs.readFileSync(CHAT_LOGS_PATH, "utf8");
-    return JSON.parse(data || "[]");
-  } catch (err) {
-    console.error("❌ Error reading chat logs:", err);
-    return [];
-  }
+const getDB = () => {
+  return mongoose.connection.readyState === 1 ? Chat : chatDB;
 };
 
 /**
- * FILE HELPER: WRITE LOCKS
+ * HISTORY SANITIZATION: Strips redundant symbols and disclaimer footers from context
+ * to prevent the LLM from hallucinating/repeating them.
  */
-const writeLogs = (logs) => {
-  try {
-    fs.writeFileSync(CHAT_LOGS_PATH, JSON.stringify(logs, null, 2), "utf8");
-  } catch (err) {
-    console.error("❌ Error writing chat logs:", err);
+const sanitizeContext = (text) => {
+  if (!text) return "";
+  
+  // Strip anything after any variation of the disclaimer
+  const markers = [
+    "⚖️ MEDICAL LEGAL DISCLAIMER",
+    "MEDICAL LEGAL DISCLAIMER",
+    "🛡️ SAFETY OVERSIGHT",
+    "---"
+  ];
+  
+  let cleaned = text;
+  for (const marker of markers) {
+    cleaned = cleaned.split(marker)[0];
   }
+  
+  return cleaned
+    .replace(/[━─-]{5,}/g, "") // Strip any long divider lines (various symbols)
+    .trim();
 };
+
 
 /**
  * FACT EXTRACTION - MEDICAL SIGNALS ONLY
@@ -89,8 +100,9 @@ function isNegativeConfirmation(message) {
  */
 export const handleChat = async (req, res) => {
   try {
-    const { message, specialization = "General Medicine", userId } = req.body;
+    const { message, specialization = "General Medicine", userId, tier = "basic" } = req.body;
     if (!userId) return res.status(400).json({ error: "USER_ID_MISSING" });
+
 
     /* ================== IMAGE HANDLING ================== */
     let imageBase64 = null;
@@ -100,13 +112,17 @@ export const handleChat = async (req, res) => {
     }
 
     /* ================== CHAT SESSION ================== */
-    const logs = readLogs();
-    let chat = logs.find(c => c.userId === userId && c.specialist === specialization);
+    const db = getDB();
+    let chat = await db.findOne({ userId, specialist: specialization });
 
     if (!chat) {
-      chat = { userId, specialist: specialization, messages: [], sessionClosed: false, lastActive: new Date() };
-      logs.push(chat);
-      writeLogs(logs);
+      chat = await db.create({ 
+        userId, 
+        specialist: specialization, 
+        messages: [], 
+        sessionClosed: false, 
+        lastActive: new Date() 
+      });
     }
 
     // 🚨 SESSION LOCK - Prevent chat after final report
@@ -132,7 +148,7 @@ export const handleChat = async (req, res) => {
     const historyContext = recentMessages.length
       ? "\n\nRecent conversation:\n" +
       recentMessages.map(m =>
-        `${m.sender === "user" ? "User" : "Assistant"}: ${decrypt(m.text)}`
+        `${m.sender === "user" ? "User" : "Assistant"}: ${sanitizeContext(decrypt(m.text))}`
       ).join("\n")
       : "";
 
@@ -223,88 +239,43 @@ export const handleChat = async (req, res) => {
 
     // Build citations reference for the LLM
     const citationBlock = ragCitations.length > 0
-      ? `\n📖 AVAILABLE CITATIONS:\n${ragCitations.map((c, i) => `   [${i + 1}] "${c.title}" — ${c.source}`).join('\n')}\n\nWhen referencing medical information, cite using the format: (Source: [N])\n`
+      ? `\nAvailable citations:\n${ragCitations.map((c, i) => `[${i + 1}] ${c.title} — ${c.source}`).join('\n')}\n\nIf you use a citation, format it inline as (Source: [N]).\n`
       : '';
 
     if (forceFinal) {
       systemPrompt = `You are a Medical Triage Assistant specializing in ${specialization}.
 
 ${hasRAG ? `
-╔═══════════════════════════════════════════════════════════════╗
-║  🏥 EVIDENCE-BASED MEDICAL PROTOCOLS (PRIORITY KNOWLEDGE)    ║
-╚═══════════════════════════════════════════════════════════════╝
-
+Relevant medical context:
 ${retrievedContext}
+
 ${citationBlock}
-
-⚠️  CRITICAL INSTRUCTIONS:
-    • This protocol OVERRIDES general medical knowledge
-    • Apply these recommendations FIRST before general advice
-    • Include protocol-specific warnings verbatim
-    • CITE your sources using the format: (Source: [N]) referencing the numbered citations above
-
-╔═══════════════════════════════════════════════════════════════╗
 ` : ''}
+MODE: FINAL MEDICAL ASSESSMENT
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 MODE: FINAL MEDICAL ASSESSMENT (MANDATORY)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Return a concise final assessment with these sections only:
+Summary
+General Possibilities
+Suggestions
+When to Seek Urgent Care
+Optional Follow-up
 
-You MUST provide a complete, structured assessment NOW.
-DO NOT ask additional questions.
-DO NOT defer without providing analysis.
-
-REQUIRED FORMAT (use EXACTLY these emojis):
-
-📝 Summary:
-One clear sentence describing what the user reported and key context.
-
-💡 General Possibilities:
-- List 2-3 COMMON, NON-ALARMING potential explanations
-- Start with most benign/common causes
-- Use accessible, non-technical language
-${hasRAG ? '- PRIORITIZE protocol-specific conditions if relevant\n- CITE sources: (Source: [N])' : ''}
-
-🧠 Suggestions:
-- Practical self-care: rest, ice/heat, posture, hydration
-- Over-the-counter options if appropriate
-- Lifestyle modifications
-${hasRAG ? '- Protocol-recommended interventions (CITE SOURCE)' : ''}
-
-🚨 When to Seek Urgent Care:
-- 1-2 RED FLAG symptoms requiring immediate medical attention
-${hasRAG ? '- Include any protocol-mandated warnings (CITE SOURCE)' : ''}
-
-🤔 Optional Follow-up:
-- ONE gentle question about managing or monitoring the condition
-
-TONE: Warm, professional, evidence-based, non-diagnostic
-REMEMBER: You are providing triage guidance, not a diagnosis.`;
+Rules:
+- Do not include internal labels, debug text, source counts, legal footers, or decorative separators.
+- Do not ask more than one follow-up question.
+- Keep the language warm, factual, and non-diagnostic.
+- If citations are relevant, cite inline only as (Source: [N]).`;
 
     } else {
       systemPrompt = `You are a Medical Triage Assistant specializing in ${specialization}.
 
-${hasRAG ? `
-╔═══════════════════════════════════════════════════════════════╗
-║  📋 RELEVANT MEDICAL CONTEXT                                  ║
-╚═══════════════════════════════════════════════════════════════╝
+${hasRAG ? `Relevant medical context:\n${retrievedContext}\n` : ''}
+MODE: INFORMATION GATHERING
 
-${retrievedContext}
-
-Keep this protocol in mind while gathering information.
-
-╔═══════════════════════════════════════════════════════════════╗
-` : ''}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 MODE: INFORMATION GATHERING
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-STRICT RULES:
-- Ask ONLY ONE clear, specific question
-- NO diagnoses, possibilities, or medical conclusions
-- NO advice or treatment recommendations yet
-- Keep warm, conversational, and empathetic
+Strict rules:
+- Ask only one clear, specific question.
+- Do not provide diagnoses, possibilities, or treatment advice yet.
+- Keep it warm, conversational, and empathetic.
 
 CURRENT PRIORITY: ${!facts.location ? 'WHERE exactly is the issue located?' :
           !facts.duration ? 'HOW LONG has this been happening?' :
@@ -324,7 +295,7 @@ CURRENT PRIORITY: ${!facts.location ? 'WHERE exactly is the issue located?' :
     let aiReply = await generateResponse(
       prompt,
       req.file ? imageBase64 : null,
-      { provider: req.file ? "gemini" : "ollama" }
+      { provider: req.file ? "gemini" : "ollama", tier }
     );
 
     if (req.file) fs.unlinkSync(req.file.path);
@@ -332,23 +303,20 @@ CURRENT PRIORITY: ${!facts.location ? 'WHERE exactly is the issue located?' :
     /* ================== SAFETY VERIFICATION (Multi-Agent) ================== */
     let safetyResult = { isSafe: true, modifiedResponse: aiReply, safetyScore: 1.0, warningsAdded: [], violationsFound: [] };
 
-    if (forceFinal && hasRAG) {
-      // Only run safety verification on final reports that used RAG context
-      try {
-        safetyResult = await verifyResponse(
-          aiReply,
-          retrievedContext,
-          message || "",
-          ragClassification?.urgency || "routine"
-        );
+    try {
+      safetyResult = await verifyResponse(
+        aiReply,
+        retrievedContext,
+        message || "",
+        ragClassification?.urgency || "routine"
+      );
 
-        if (safetyResult.warningsAdded.length > 0) {
-          console.log("🛡️ Safety Agent amended response with", safetyResult.warningsAdded.length, "warnings");
-          aiReply = safetyResult.modifiedResponse;
-        }
-      } catch (safetyErr) {
-        console.warn("⚠️ Safety verification unavailable:", safetyErr.message);
+      if (safetyResult.warningsAdded.length > 0) {
+        console.log("🛡️ Safety Agent amended response with", safetyResult.warningsAdded.length, "warnings");
+        aiReply = safetyResult.modifiedResponse;
       }
+    } catch (safetyErr) {
+      console.warn("⚠️ Safety verification unavailable:", safetyErr.message);
     }
 
     /* ================== SESSION LOCK ON FINAL REPORT ================== */
@@ -372,10 +340,7 @@ CURRENT PRIORITY: ${!facts.location ? 'WHERE exactly is the issue located?' :
     });
 
     chat.lastActive = new Date();
-    const finalLogs = readLogs().map(c =>
-      (c.userId === userId && c.specialist === specialization) ? chat : c
-    );
-    writeLogs(finalLogs);
+    await chat.save();
 
     /* ================== RESPONSE WITH INTELLIGENCE METADATA ================== */
     return res.json({
@@ -420,14 +385,14 @@ CURRENT PRIORITY: ${!facts.location ? 'WHERE exactly is the issue located?' :
 export const getChatHistory = async (req, res) => {
   try {
     const { userId, specialization } = req.params;
-    const logs = readLogs();
-    const chat = logs.find(c => c.userId === userId && c.specialist === specialization);
+    const db = getDB();
+    const chat = await db.findOne({ userId, specialist: specialization });
 
     if (!chat) return res.json({ messages: [], sessionClosed: false });
 
     res.json({
       messages: chat.messages.map(m => ({
-        ...m,
+        ...(m.toObject ? m.toObject() : m),
         text: decrypt(m.text)
       })),
       sessionClosed: chat.sessionClosed || false
@@ -442,9 +407,8 @@ export const getChatHistory = async (req, res) => {
 export const deleteChat = async (req, res) => {
   try {
     const { userId, specialization } = req.params;
-    const logs = readLogs();
-    const filteredLogs = logs.filter(c => !(c.userId === userId && c.specialist === specialization));
-    writeLogs(filteredLogs);
+    const db = getDB();
+    await db.deleteOne({ userId, specialist: specialization });
     res.json({ message: "Chat deleted successfully" });
   } catch (err) {
     console.error("❌ DELETE ERROR:", err);
@@ -456,9 +420,8 @@ export const deleteChat = async (req, res) => {
 export const forceFinalReport = async (req, res) => {
   try {
     const { userId, specialization } = req.body;
-
-    const logs = readLogs();
-    const chat = logs.find(c => c.userId === userId && c.specialist === specialization);
+    const db = getDB();
+    const chat = await db.findOne({ userId, specialist: specialization });
 
     if (!chat) {
       // Return a friendly message instead of a 404 error
@@ -539,10 +502,7 @@ ${summaryContext}
     });
 
     chat.lastActive = new Date();
-    const emergencyLogs = readLogs().map(c =>
-      (c.userId === userId && c.specialist === specialization) ? chat : c
-    );
-    writeLogs(emergencyLogs);
+    await chat.save();
 
     return res.json({
       reply: aiReply,
@@ -558,5 +518,65 @@ ${summaryContext}
       details: err.message,
       hint: "Check server logs for LLM connection issues."
     });
+  }
+};
+
+/**
+ * HANDLE USER FEEDBACK (FLYHAVEEL)
+ * Captures user thumbs up/down and stores it for ML reinforcement loop
+ */
+const FEEDBACK_LOGS_PATH = fs.existsSync("/app/shared") 
+  ? "/app/shared/feedback_logs.json" 
+  : path.resolve("feedback_logs.json");
+
+export const handleFeedback = async (req, res) => {
+  try {
+    const { userId, messageText, type, specialization } = req.body;
+    if (!userId || !messageText || !type) {
+      return res.status(400).json({ error: "MISSING_FIELDS" });
+    }
+
+    // 1. Load existing feedback
+    let feedbackLogs = [];
+    try {
+      if (fs.existsSync(FEEDBACK_LOGS_PATH)) {
+        const data = fs.readFileSync(FEEDBACK_LOGS_PATH, "utf8");
+        feedbackLogs = JSON.parse(data || "[]");
+      }
+    } catch (e) {
+      console.error("Error reading feedback logs:", e);
+    }
+
+    // 2. Supplement with source context if possible
+    const db = getDB();
+    const chat = await db.findOne({ userId, specialist: specialization });
+    let originalQuery = "";
+    if (chat && chat.messages.length >= 2) {
+      // Find the user message immediately preceding this AI message
+      const aiMsgIndex = chat.messages.findIndex(m => m.sender === "ai" && decrypt(m.text) === messageText);
+      if (aiMsgIndex > 0) {
+        originalQuery = decrypt(chat.messages[aiMsgIndex - 1].text);
+      }
+    }
+
+    // 3. Save new entry
+    const newEntry = {
+      userId,
+      specialization,
+      originalQuery,
+      aiResponse: messageText,
+      feedback: type, // "up" or "down"
+      timestamp: new Date()
+    };
+
+    feedbackLogs.push(newEntry);
+    fs.writeFileSync(FEEDBACK_LOGS_PATH, JSON.stringify(feedbackLogs, null, 2), "utf8");
+
+    console.log(`🛡️  FEEDBACK LOGGED: User ${userId} flagged response as ${type}`);
+    res.json({ message: "Feedback recorded. Thank you for helping us improve." });
+
+  } catch (err) {
+    console.error("❌ FEEDBACK ERROR:", err);
+    res.status(500).json({ error: "FEEDBACK_STORAGE_FAILED" });
   }
 };

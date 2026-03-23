@@ -52,7 +52,12 @@ def extract_metadata(text_block: str) -> dict:
     if source_match:
         metadata["source"] = source_match.group(1).strip()
     if category_match:
-        metadata["category"] = category_match.group(1).strip()
+        # Standardize: "Infectious Disease | Tropical Medicine" -> "Infectious Disease, Tropical Medicine"
+        raw_category = category_match.group(1).strip()
+        cleaned_categories = [c.strip() for c in re.split(r"[|/,]", raw_category) if c.strip()]
+        metadata["category"] = ", ".join(cleaned_categories)
+        # Store primary category separately for easier filtering
+        metadata["primary_category"] = cleaned_categories[0] if cleaned_categories else "General Medicine"
 
     return metadata
 

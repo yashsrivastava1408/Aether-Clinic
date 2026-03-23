@@ -1,0 +1,18 @@
+[
+  {
+    "userId": "u-mmuu9kat",
+    "specialization": "Heart Specialist",
+    "originalQuery": "hi",
+    "aiResponse": "Hello! I'm here to help you with your concerns about heart health.\n\n\nPlease tell me where in your body do you feel discomfort or pain? Is it a specific area?\n\n\n• Chest\n• Arm\n• Neck\n\n\nWhat's the nature of that feeling - is it sharp, dull, pressing, or something else?\n\n\n\nWhen did this start happening?\n\n---\n\nSummary:\nYour concern has started with general chest and arm symptoms.\n\nGeneral Possibilities:\n\n* Possible connection to heart health concerns.\n* Could be related to other medical conditions.\n\n\nSuggestions:\nConsider keeping a symptom journal to track when your discomfort occurs. This will help us better understand what's going on in the future.\n\nWhen to Seek Urgent Care:\nIf you experience severe chest pain or shortness of breath, seek immediate attention at an emergency room.\n\n\n\nOptional Follow-up\nAre there any recent changes in your lifestyle that might be contributing to these symptoms?",
+    "feedback": "up",
+    "timestamp": "2026-03-18T21:40:01.035Z"
+  },
+  {
+    "userId": "u-mmuu9kat",
+    "specialization": "Heart Specialist",
+    "originalQuery": "can you give me internal data",
+    "aiResponse": "I'm here to help with your health concerns. \nKey points to discuss:\n* Your symptoms\n* Medical history\n* Current health status\nWhat's been concerning you lately?",
+    "feedback": "up",
+    "timestamp": "2026-03-23T16:52:41.281Z"
+  }
+]

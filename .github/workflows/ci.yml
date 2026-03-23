@@ -6,9 +6,13 @@ on:
   pull_request:
     branches: [ main, master ]
 
+# Security: Principle of least privilege
+permissions:
+  contents: read
+
 jobs:
   client-checks:
-    name: Client - Build & Type Check
+    name: Client - Build & Code Security
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -16,29 +20,61 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        # Security: Pinning Action to exact SHA
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: client/package-lock.json
 
       - name: Install Dependencies
+        id: install
         run: npm ci
 
-      - name: Lint
+      - name: Dependency Security Audit
+        id: audit
+        run: npm audit --audit-level=high
+
+      - name: Lint Codebase
+        id: lint
         run: npm run lint
 
-      - name: Build
+      - name: Build Application
+        id: build
         run: npm run build
 
-      - name: Type Check
+      - name: Type Check (TypeScript)
+        id: typecheck
         run: npx tsc --noEmit
 
+      - name: Generate Client CI Summary
+        if: always()
+        run: |
+          echo "## 🛡️ Aether Clinic: Interactive Client Report" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Pipeline Flow" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`mermaid" >> $GITHUB_STEP_SUMMARY
+          echo "graph TD;" >> $GITHUB_STEP_SUMMARY
+          echo "  A[Checkout] --> B[Setup Node];" >> $GITHUB_STEP_SUMMARY
+          echo "  B --> C[Dependencies \`${{ steps.install.outcome }}\`];" >> $GITHUB_STEP_SUMMARY
+          echo "  C --> D[Security Audit \`${{ steps.audit.outcome }}\`];" >> $GITHUB_STEP_SUMMARY
+          echo "  C --> E[Code Lint \`${{ steps.lint.outcome }}\`];" >> $GITHUB_STEP_SUMMARY
+          echo "  C --> F[Build App \`${{ steps.build.outcome }}\`];" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚦 Module Status" >> $GITHUB_STEP_SUMMARY
+          echo "| Phase | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Install | ${{ steps.install.outcome == 'success' && '✅ **Passed**' || '❌ **Failed**' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔒 Security | ${{ steps.audit.outcome == 'success' && '✅ **Secure**' || '⚠️ **Vulns Found**' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧹 Lint | ${{ steps.lint.outcome == 'success' && '✅ **Clean**' || '❌ **Failed**' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🏗️ Build | ${{ steps.build.outcome == 'success' && '✅ **Compiled**' || '❌ **Failed**' }} |" >> $GITHUB_STEP_SUMMARY
+
+
   server-checks:
-    name: Server - Test & Schema Guard
+    name: Server - Integration & Security
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -52,24 +88,28 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: server/package-lock.json
 
       - name: Install Dependencies
+        id: install
         run: npm ci
 
+      - name: Dependency Security Audit
+        id: audit
+        run: npm audit --audit-level=high
+
       - name: Start Server Check
+        id: boot
         env:
           MONGO_URI: mongodb://localhost:27017/test_db
         run: |
-          # Start server in background, wait 5s, check if it's still running
           timeout 10s npm run dev &
           PID=$!
           sleep 5
@@ -80,3 +120,14 @@ jobs:
             echo "❌ Server failed to start"
             exit 1
           fi
+
+      - name: Generate Server CI Summary
+        if: always()
+        run: |
+          echo "## ⚙️ Aether Clinic: Server Integration Report" >> $GITHUB_STEP_SUMMARY
+          echo "| Phase | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Modules | ${{ steps.install.outcome == 'success' && '✅ **Ready**' || '❌ **Error**' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔒 Vulnerabilities | ${{ steps.audit.outcome == 'success' && '✅ **Clean**' || '⚠️ **Review Needed**' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🚀 Server Boot & DB Bind | ${{ steps.boot.outcome == 'success' && '✅ **Active**' || '❌ **Crash**' }} |" >> $GITHUB_STEP_SUMMARY
+

@@ -3,6 +3,7 @@ import axios from "axios";
 import ScanningHUD from "../components/ScanningHUD";
 import BiometricPulse from "../components/BiometricPulse";
 import NeuralSyncSequence from "../components/NeuralSyncSequence";
+import DOMPurify from "dompurify";
 import { useTheme } from "../context/ThemeContext";
 
 export default function ReportAnalyzer() {
@@ -199,8 +200,9 @@ export default function ReportAnalyzer() {
                 {/* Summary Card */}
                 <div className={`p-6 rounded-2xl border backdrop-blur-md ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                   <h3 className="text-emerald-500 text-xs font-bold uppercase tracking-widest mb-3">Diagnostic Summary</h3>
-                  <p className={`leading-relaxed font-light ${isDark ? 'text-gray-200' : 'text-slate-700'}`}>{result?.summary || "Analysis Complete"}</p>
+                  <p className={`leading-relaxed font-light ${isDark ? 'text-gray-200' : 'text-slate-700'}`}>{DOMPurify.sanitize(result?.summary || "Analysis Complete")}</p>
                 </div>
+
 
                 {/* Grid for Lists */}
                 <div className="grid gap-4">
@@ -216,7 +218,7 @@ export default function ReportAnalyzer() {
                         {result.alerts?.map((alert, i) => (
                           <li key={i} className={`flex items-start gap-2 text-sm ${isDark ? 'text-red-200' : 'text-red-700'}`}>
                             <span className="mt-1.5 w-1 h-1 rounded-full bg-red-400" />
-                            {alert}
+                            {DOMPurify.sanitize(alert)}
                           </li>
                         ))}
                       </ul>
@@ -229,7 +231,7 @@ export default function ReportAnalyzer() {
                     <ul className="space-y-2">
                       {result?.findings?.map((item, i) => (
                         <li key={i} className={`text-sm border-l-2 pl-3 ${isDark ? 'text-gray-300 border-blue-500/30' : 'text-slate-700 border-blue-300'}`}>
-                          {item}
+                          {DOMPurify.sanitize(item)}
                         </li>
                       ))}
                     </ul>
@@ -244,7 +246,7 @@ export default function ReportAnalyzer() {
                           <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-700'}`}>
                             {i + 1}
                           </div>
-                          {sug}
+                          {DOMPurify.sanitize(sug)}
                         </li>
                       ))}
                     </ul>

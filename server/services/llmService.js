@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import axios from "axios";
+import CacheManager from "../utils/cacheManager.js";
+import Groq from "groq-sdk";
 
 // Gemini initialization helper
 const getGenAI = () => {
@@ -21,18 +23,36 @@ const getGenAI = () => {
 export const generateResponse = async (prompt, imageBase64 = null, options = {}) => {
   const { provider = "ollama" } = options;
 
-  try {
-    // Switch to Gemini if image is provided OR provider is specifically gemini
-    if (imageBase64 || provider === "gemini") {
-      const genAI = getGenAI();
-      if (!genAI) {
-        throw new Error("GEMINI_API_KEY is not set. Gemini features (Vision/Report Analysis) are disabled.");
-      }
-      return await generateGeminiResponse(prompt, imageBase64, genAI);
-    }
+  // Check cache first
+  const cacheKey = { prompt, imageBase64, provider, ...options };
+  const cachedResponse = await CacheManager.get(cacheKey, 'llm');
+  if (cachedResponse) return cachedResponse;
 
-    // Default to local Ollama for regular text chat to save costs
-    return await generateOllamaResponse(prompt, options);
+    try {
+      let responseText;
+      // 1. Vision Tasks ALWAYS go to Gemini
+      if (imageBase64) {
+        const genAI = getGenAI();
+        if (!genAI) {
+          throw new Error("GEMINI_API_KEY is not set. Gemini features (Vision/Report Analysis) are disabled.");
+        }
+        responseText = await generateGeminiResponse(prompt, imageBase64, genAI);
+      } 
+      // 2. Premium Tier (Groq Llama-3.3-70b)
+      else if (options.tier === 'premium') {
+        responseText = await generateGroqResponse(prompt, options);
+      } 
+      // 3. Basic Tier (Local Ollama) or explicitly requested provider
+      else if (provider === "gemini") {
+         const genAI = getGenAI();
+         responseText = await generateGeminiResponse(prompt, null, genAI);
+      } else {
+        responseText = await generateOllamaResponse(prompt, options);
+      }
+
+    // Store in cache
+    await CacheManager.set(cacheKey, responseText, provider, 'llm');
+    return responseText;
   } catch (error) {
     console.error(`❌ LLM Service Error [${provider}]:`, error.message);
     throw error;
@@ -44,13 +64,15 @@ export const generateResponse = async (prompt, imageBase64 = null, options = {})
  * Uses the llama3.2 model which is optimized for speed/accuracy balance.
  */
 const generateOllamaResponse = async (prompt, options = {}) => {
+  console.log(`🐢 Standard Engine Active: Routing to Local Ollama`);
   const ollamaHost = process.env.OLLAMA_HOST || "http://localhost:11434";
 
   // Default heavily tuned parameters for medical accuracy & safety
   const finalOptions = {
-    temperature: options.temperature || 0.6,      // Lower for more focused/deterministic answers
-    top_p: options.top_p || 0.9,                 // Standard high quality nucleus sampling
-    repeat_penalty: options.repeat_penalty || 1.1, // Prevent loops
+    temperature: options.temperature || 0.4,      // Even lower for tighter medical focus
+    top_p: options.top_p || 0.8,
+    repeat_penalty: options.repeat_penalty || 1.3, // Stronger penalty for symbol loops
+    num_predict: options.num_predict || 300,       // Keep responses concise to prevent runaway
     ...options
   };
 
@@ -143,3 +165,35 @@ const generateGeminiResponse = async (prompt, imageBase64 = null, genAI) => {
   if (lastError) throw lastError;
   throw new Error("All Gemini models failed to generate response.");
 };
+
+/**
+ * Internal helper for Groq (Premium Tier).
+ * Uses llama-3.3-70b-versatile for exceptional reasoning and speed.
+ */
+const generateGroqResponse = async (prompt, options = {}) => {
+  console.log(`🚀 Premium Engine Active: Routing to Groq (llama-3.3-70b-versatile)`);
+  const groqApiKey = process.env.GROQ_API_KEY;
+  if (!groqApiKey) {
+    console.warn("⚠️ GROQ_API_KEY missing. Falling back to Ollama.");
+    return generateOllamaResponse(prompt, options);
+  }
+
+  const groq = new Groq({ apiKey: groqApiKey });
+  
+  try {
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+      temperature: options.temperature || 0.4,
+      max_tokens: options.num_predict || 1024,
+      top_p: options.top_p || 0.8,
+    });
+    
+    return completion.choices[0]?.message?.content || "";
+  } catch (error) {
+    console.error("❌ Groq API Error:", error.message);
+    // Graceful fallback to local if Groq fails
+    return generateOllamaResponse(prompt, options);
+  }
+};
+

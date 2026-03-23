@@ -23,6 +23,11 @@ app = Flask(__name__)
 CORS(app)
 
 # =========================
+# Configuration
+# =========================
+COLLECTION_NAME = "medical_knowledge"
+
+# =========================
 # Load ML models once at startup
 # =========================
 heart_model = joblib.load("models/heart_model.pkl")
@@ -137,12 +142,29 @@ def intelligence_query():
             return jsonify({"error": "Query is required"}), 400
 
         # Import agents
+        from agents.guardrail_agent import scan_query
         from agents.triage_classifier import classify_query
         from agents.knowledge_retriever import (
             retrieve_knowledge,
             format_context_for_llm,
             extract_citations
         )
+
+        # === AGENT 0: Security Guardrail ===
+        guardrail_result = scan_query(query)
+        if guardrail_result["is_blocked"]:
+            print(f"🛡️ GUARDRAIL BLOCKED: {guardrail_result['reason']}")
+            return jsonify({
+                "status": "blocked",
+                "reason": "SAFETY_GUARDRAIL_TRIGGERED",
+                "details": guardrail_result["reason"],
+                "context": "⚠️ SECURITY ALERT: This query has been blocked by our safety systems. Please ensure your questions are related to medical guidance.",
+                "citations": [],
+                "classification": {"category": "security_violation", "urgency": "blocked"},
+                "chunk_count": 0,
+                "has_context": False
+            }), 403
+
 
         # === AGENT 1: Triage Classification ===
         classification = classify_query(query, specialization)
@@ -198,6 +220,36 @@ def intelligence_query():
         })
 
 
+@app.route("/api/intelligence/feedback-examples", methods=["GET"])
+def get_feedback_examples():
+    """
+    Retrieves internal feedback logs (negative examples) to help the 
+    Safety Oversight agent learn from past mistakes.
+    """
+    try:
+        # feedback_logs.json is in the shared volume in Docker
+        # Fallback to local path for dev
+        feedback_path = "/app/shared/feedback_logs.json"
+        if not os.path.exists(feedback_path):
+            feedback_path = os.path.join(os.path.dirname(__file__), "..", "server", "feedback_logs.json")
+        
+        if not os.path.exists(feedback_path):
+            return jsonify({"examples": []})
+        
+        with open(feedback_path, "r") as f:
+            import json
+            logs = json.load(f)
+            
+        # Return only "down" (negative) examples for the safety agent
+        negative_examples = [log for log in logs if log.get("feedback") == "down"]
+        
+        # Take the 5 most recent
+        return jsonify({"examples": negative_examples[-5:]})
+    except Exception as e:
+        print(f"Error fetching feedback examples: {e}")
+        return jsonify({"examples": []})
+
+
 @app.route("/api/intelligence/verify", methods=["POST"])
 def intelligence_verify():
     """
@@ -233,11 +285,28 @@ def intelligence_verify():
 
         from agents.safety_oversight import verify_response
 
+        # Fetch feedback examples for the Flywheel
+        feedback_examples = []
+        try:
+            # Check shared volume first
+            feedback_path = "/app/shared/feedback_logs.json"
+            if not os.path.exists(feedback_path):
+                feedback_path = os.path.join(os.path.dirname(__file__), "..", "server", "feedback_logs.json")
+                
+            if os.path.exists(feedback_path):
+                with open(feedback_path, "r") as f:
+                    import json
+                    logs = json.load(f)
+                    feedback_examples = [log for log in logs if log.get("feedback") == "down"][-5:]
+        except Exception as e:
+            print(f"Error fetching feedback for verify: {e}")
+
         result = verify_response(
             ai_response=ai_response,
             retrieved_context=retrieved_context,
             user_query=user_query,
-            urgency=urgency
+            urgency=urgency,
+            feedback_examples=feedback_examples
         )
 
         print(f"🛡️ Safety Check: score={result['safety_score']}, safe={result['is_safe']}, "

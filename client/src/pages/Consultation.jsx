@@ -46,7 +46,7 @@ const specialists = [
   { id: 2, name: "Brain Specialist", role: "Neurologist", description: "Help with headaches and nerve issues.", accuracy: "99.7%", cases: "8,291", icon: <BrainIcon />, color: "violet" },
   { id: 3, name: "Lung Specialist", role: "Pulmonologist", description: "Check your breathing and lungs.", accuracy: "99.5%", cases: "15,100", icon: <LungsIcon />, color: "cyan" },
   { id: 4, name: "Stomach Specialist", role: "Gastroenterologist", description: "Help with digestion and stomach pain.", accuracy: "99.8%", cases: "9,855", icon: <StomachIcon />, color: "emerald" },
-  { id: 5, name: "Bone Specialist", role: "Orthopedist", description: "Check your bones and joints.", accuracy: "99.6%", cases: "11,203", icon: <BoneIcon />, color: "amber" },
+  { id: 5, name: "Bone Specialist", role: "Orthopedist", description: "Check your bones and joints.", accuracy: "99.6%", cases: "11,203", icon: <BoneIcon />, color: "violet" },
 ];
 
 export default function Consultation() {
@@ -64,6 +64,7 @@ export default function Consultation() {
   const [pendingDoctor, setPendingDoctor] = useState(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [isCheckingHistory, setIsCheckingHistory] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
 
   useEffect(() => {
     // Simulate Neural Link initialization
@@ -148,7 +149,8 @@ export default function Consultation() {
     navigate(`/chatbot/${encodeURIComponent(doctor.name)}`, {
       state: {
         specializationName: doctor.name,
-        specializationRole: doctor.role
+        specializationRole: doctor.role,
+        tier: isPremium ? 'premium' : 'basic'
       }
     });
   };
@@ -181,6 +183,7 @@ export default function Consultation() {
 
 
   const getColorClass = (color) => {
+    if (isPremium) return 'text-cyan-400 border-cyan-500/50 bg-cyan-900/30 group-hover:bg-cyan-800/40 group-hover:border-cyan-400/80 shadow-[0_0_20px_rgba(6,182,212,0.5)]';
     switch (color) {
       case 'rose': return 'text-rose-500 border-rose-500/30 bg-rose-500/10 group-hover:bg-rose-500/20 group-hover:border-rose-500/50';
       case 'violet': return 'text-violet-500 border-violet-500/30 bg-violet-500/10 group-hover:bg-violet-500/20 group-hover:border-violet-500/50';
@@ -192,6 +195,7 @@ export default function Consultation() {
   };
 
   const getGlow = (color) => {
+    if (isPremium) return 'shadow-[0_0_30px_rgba(6,182,212,0.3)] group-hover:shadow-[0_0_50px_rgba(6,182,212,0.6)] border-cyan-500/50';
     switch (color) {
       case 'rose': return 'shadow-[0_0_20px_rgba(244,63,94,0.1)] group-hover:shadow-[0_0_30px_rgba(244,63,94,0.3)]';
       case 'violet': return 'shadow-[0_0_20px_rgba(139,92,246,0.1)] group-hover:shadow-[0_0_30px_rgba(139,92,246,0.3)]';
@@ -204,7 +208,7 @@ export default function Consultation() {
 
   return (
     <div
-      className={`h-screen relative flex flex-col items-center justify-center transition-colors duration-500 ${isDark ? 'bg-[#030303]' : 'bg-slate-50'}`}
+      className={`h-screen w-full relative flex flex-col items-center justify-center transition-all duration-1000 ${isPremium ? 'bg-black' : (isDark ? 'bg-gradient-to-br from-[#0a0a0a] to-[#030303]' : 'bg-slate-50')}`}
       style={{ perspective: "1500px", overflow: "hidden" }}
     >
       {/* Module Splash Screen Overhaul */}
@@ -256,22 +260,42 @@ export default function Consultation() {
       )}
 
       {/* Background Grid */}
-      <div className={`absolute inset-0 pointer-events-none ${isDark ? 'opacity-[0.05]' : 'opacity-[0.03]'}`}
+      <div className={`absolute inset-0 pointer-events-none transition-all duration-1000 ${isPremium ? 'opacity-[0.15]' : (isDark ? 'opacity-[0.05]' : 'opacity-[0.03]')}`}
         style={{
-          backgroundImage: `linear-gradient(${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} 1px, transparent 1px),
-                                  linear-gradient(90deg, ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(${isPremium ? 'rgba(6,182,212,0.5)' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)')} 1px, transparent 1px),
+                                  linear-gradient(90deg, ${isPremium ? 'rgba(6,182,212,0.5)' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)')} 1px, transparent 1px)`,
           backgroundSize: '40px 40px'
         }}
       />
 
       {/* Floating Header */}
       <div className="absolute top-24 left-1/2 -translate-x-1/2 text-center z-50 pointer-events-none">
-        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-mono tracking-widest uppercase mb-4 ${isDark ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-emerald-500/30 bg-white/80 text-emerald-600 shadow-sm'}`}>
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        
+        {/* PREMIUM TOGGLE ADDED HERE */}
+        <div className="pointer-events-auto mb-6 flex justify-center">
+          <button
+            onClick={() => setIsPremium(!isPremium)}
+            className={`relative flex items-center gap-3 px-6 py-2.5 rounded-full border overflow-hidden transition-all duration-500 hover:scale-105 active:scale-95 shadow-lg ${isPremium ? 'border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] bg-cyan-950/30' : 'border-white/10 bg-[#0a0a0a]/80 hover:bg-[#111]'}`}
+          >
+            <div className={`absolute inset-0 bg-gradient-to-r transition-opacity duration-500 ${isPremium ? 'from-cyan-500/20 to-transparent opacity-100' : 'opacity-0'}`} />
+            <div className="relative z-10 flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full shadow-[0_0_10px_currentColor] transition-colors duration-500 ${isPremium ? 'bg-cyan-400 text-cyan-400' : 'bg-emerald-500 text-emerald-500'}`} />
+              <span className={`text-[11px] font-mono tracking-widest uppercase transition-colors duration-500 ${isPremium ? 'text-cyan-300' : 'text-slate-400'}`}>
+                {isPremium ? 'ENGINE: GROQ (PRO)' : 'ENGINE: LOCAL'}
+              </span>
+            </div>
+            <div className={`relative z-10 px-2 py-0.5 rounded text-[9px] font-bold tracking-wider transition-all duration-500 ${isPremium ? 'bg-cyan-500 text-black' : 'bg-emerald-500/20 text-emerald-500'}`}>
+              {isPremium ? 'AETHER+' : 'STANDARD'}
+            </div>
+          </button>
+        </div>
+
+        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-mono tracking-widest uppercase mb-4 transition-colors duration-500 ${isPremium ? 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400' : (isDark ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-emerald-500/30 bg-white/80 text-emerald-600 shadow-sm')}`}>
+          <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isPremium ? 'bg-cyan-400' : 'bg-emerald-500'}`} />
           Online
         </div>
-        <h2 className={`text-4xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Select a Doctor</h2>
-        <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-slate-500'}`}>Scroll to rotate • Click card to chat</p>
+        <h2 className={`text-4xl font-bold mb-2 transition-colors duration-500 ${isPremium ? 'text-cyan-300 drop-shadow-[0_0_15px_rgba(6,182,212,0.5)]' : (isDark ? 'text-white' : 'text-slate-900')}`}>Select a Doctor</h2>
+        <p className={`text-sm transition-colors duration-500 ${isPremium ? 'text-cyan-500/80 font-medium' : (isDark ? 'text-gray-500' : 'text-slate-500')}`}>Scroll to rotate • Click card to chat</p>
 
         {/* Loading Indicator for History Check */}
         {isCheckingHistory && (
@@ -283,13 +307,13 @@ export default function Consultation() {
 
       {/* Central Hologram Core */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-        <div className="relative animate-pulse opacity-60">
-          <div className={`absolute inset-0 blur-[80px] rounded-full mix-blend-screen ${isDark ? 'bg-emerald-500/20' : 'bg-emerald-400/10'}`} />
-          <h1 className={`text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b tracking-tighter select-none ${isDark ? 'from-white/20 to-transparent' : 'from-slate-900/10 to-transparent'}`}>
-            HEALTH
+        <div className="relative animate-pulse opacity-60 transition-all duration-1000">
+          <div className={`absolute inset-0 blur-[80px] rounded-full mix-blend-screen transition-all duration-1000 ${isPremium ? 'bg-cyan-500/30 scale-150' : (isDark ? 'bg-emerald-500/20' : 'bg-emerald-400/10')}`} />
+          <h1 className={`text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b tracking-tighter select-none transition-all duration-1000 ${isPremium ? 'from-cyan-200 via-cyan-400 to-transparent drop-shadow-[0_0_30px_rgba(6,182,212,0.8)]' : (isDark ? 'from-emerald-100/20 to-transparent' : 'from-slate-900/10 to-transparent')}`}>
+            {isPremium ? 'AETHER+' : 'HEALTH'}
           </h1>
-          <div className="text-emerald-500/30 text-lg md:text-xl font-mono tracking-[1.2em] text-center mt-[-10px] ml-[1.2em] select-none">
-            CLINIC
+          <div className={`text-lg md:text-xl font-mono tracking-[1.2em] text-center mt-[-10px] ml-[1.2em] select-none transition-all duration-1000 ${isPremium ? 'text-cyan-300 font-bold' : 'text-emerald-500/30'}`}>
+            {isPremium ? 'PREMIUM' : 'CLINIC'}
           </div>
         </div>
       </div>
@@ -330,7 +354,7 @@ export default function Consultation() {
                 style={{ zIndex: 200 }}
               >
                 <TiltCard
-                  className={`relative group w-full h-full backdrop-blur-md border rounded-2xl overflow-hidden transition-all duration-500 ${isDark ? 'bg-[#0a0a0a]/90 border-white/10 hover:border-white/30' : 'bg-white/90 border-slate-200 hover:border-slate-300 shadow-lg'} ${getGlow(spec.color)}`}
+                  className={`relative group w-full h-full backdrop-blur-md border rounded-2xl overflow-hidden transition-all duration-700 ${getGlow(spec.color)} ${isPremium ? (isDark ? 'bg-[#0d051c]/90 hover:bg-[#1a0d2e]/90' : 'bg-violet-100/90 hover:bg-violet-50/90') : (isDark ? 'bg-[#0a0a0a]/90 hover:bg-[#111111]/90' : 'bg-white/90 hover:bg-slate-50/90')}`}
                   onClick={() => {
                     console.log("🟣 TILT CARD CLICKED:", spec.name);
                     handleDoctorSelect(spec);
@@ -351,18 +375,18 @@ export default function Consultation() {
                     </div>
 
                     <div className="flex-1">
-                      <h3 className={`text-xl font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>{spec.name}</h3>
-                      <div className={`text-${spec.color}-500/80 text-xs font-medium uppercase tracking-wider mb-2`}>{spec.role}</div>
-                      <p className={`text-xs leading-relaxed line-clamp-3 ${isDark ? 'text-gray-500' : 'text-slate-600'}`}>{spec.description}</p>
+                      <h3 className={`text-xl font-bold mb-1 transition-colors duration-500 ${isPremium ? 'text-white' : (isDark ? 'text-white' : 'text-slate-900')}`}>{spec.name}</h3>
+                      <div className={`text-xs font-medium uppercase tracking-wider mb-2 transition-colors duration-500 ${isPremium ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]' : `text-${spec.color}-500/80`}`}>{spec.role}</div>
+                      <p className={`text-xs leading-relaxed line-clamp-3 transition-colors duration-500 ${isPremium ? 'text-slate-300' : (isDark ? 'text-gray-400' : 'text-slate-600')}`}>{spec.description}</p>
                     </div>
 
-                    <div className={`pt-4 border-t flex justify-between items-end mt-2 ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
+                    <div className={`pt-4 border-t flex justify-between items-end mt-2 transition-colors duration-500 ${isPremium ? 'border-cyan-500/30' : (isDark ? 'border-white/5' : 'border-slate-100')}`}>
                       <div>
-                        <div className={`text-[9px] uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>Accuracy</div>
-                        <div className={`text-sm font-mono font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{spec.accuracy}</div>
+                        <div className={`text-[9px] uppercase tracking-wider transition-colors duration-500 ${isPremium ? 'text-cyan-500/80' : (isDark ? 'text-gray-500' : 'text-slate-400')}`}>Accuracy</div>
+                        <div className={`text-sm font-mono font-bold transition-colors duration-500 ${isPremium ? 'text-cyan-300' : (isDark ? 'text-white' : 'text-slate-900')}`}>{spec.accuracy}</div>
                       </div>
-                      <div className={`w-16 h-1 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
-                        <div className={`h-full bg-${spec.color}-500 w-[${spec.accuracy.slice(0, -1)}%]`} />
+                      <div className={`w-16 h-1 rounded-full overflow-hidden transition-colors duration-500 ${isPremium ? 'bg-cyan-950/80 shadow-[0_0_10px_rgba(6,182,212,0.2)]' : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}>
+                        <div className={`h-full transition-all duration-500 ${isPremium ? 'bg-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.8)]' : `bg-${spec.color}-500`} w-[${spec.accuracy.slice(0, -1)}%]`} />
                       </div>
                     </div>
                   </div>
@@ -374,7 +398,7 @@ export default function Consultation() {
       </div>
 
       {/* Floor Reflection Gradient */}
-      <div className={`absolute bottom-0 w-full h-1/3 bg-gradient-to-t z-40 pointer-events-none ${isDark ? 'from-[#030303] to-transparent' : 'from-slate-50 to-transparent'}`} />
+      <div className={`absolute bottom-0 w-full h-[60%] bg-gradient-to-t z-40 pointer-events-none transition-all duration-1000 ${isPremium ? 'from-black via-[#000510]/90 to-transparent' : (isDark ? 'from-[#030303] via-[#030303]/80 to-transparent' : 'from-slate-50 via-slate-50/80 to-transparent')}`} />
     </div>
   );
 }

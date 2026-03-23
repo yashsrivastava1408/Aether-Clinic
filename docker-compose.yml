@@ -25,6 +25,7 @@ services:
       - CHROMA_DB_PATH=/app/chroma_db
     volumes:
       - ./ml/chroma_db:/app/chroma_db
+      - feedback-data:/app/shared # Shared volume for Flywheel logs
     networks:
       - aether-network
     restart: always
@@ -49,6 +50,8 @@ services:
       - ml-service
     networks:
       - aether-network
+    volumes:
+      - feedback-data:/app/shared
     restart: always
 
   # 💻 FRONTEND: React Web Client (Nginx)
@@ -72,3 +75,4 @@ networks:
 
 volumes:
   mongo-data:
+  feedback-data:

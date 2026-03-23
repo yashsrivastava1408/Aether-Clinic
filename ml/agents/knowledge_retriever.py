@@ -82,20 +82,18 @@ def retrieve_knowledge(
     query_embedding = model.encode([query]).tolist()
 
     # Build where filter for category-based filtering (if categories provided)
+    # We now filter on 'primary_category' which is exactly matched during ingestion
     where_filter = None
     if categories and len(categories) > 0:
-        if len(categories) == 1:
-            # Single category: use $contains for partial matching
-            where_filter = {
-                "category": {"$contains": categories[0].replace("_", " ").title()}
-            }
+        # Standardize categories for matching primary_category
+        # e.g., 'general_medicine' -> 'General Medicine'
+        formatted_cats = [cat.replace("_", " ").title() for cat in categories]
+        
+        if len(formatted_cats) == 1:
+            where_filter = {"primary_category": {"$eq": formatted_cats[0]}}
         else:
-            # Multiple categories: use $or with $contains
             where_filter = {
-                "$or": [
-                    {"category": {"$contains": cat.replace("_", " ").title()}}
-                    for cat in categories
-                ]
+                "$or": [{"primary_category": {"$eq": cat}} for cat in formatted_cats]
             }
 
     # Query ChromaDB
