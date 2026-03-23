@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import DOMPurify from "dompurify";
@@ -67,13 +67,17 @@ export default function Chatbot({ doctor, onBack }) {
   };
 
   // Reconstruct doctor object from serializable navigation state
-  const stateDoctor = location.state?.specializationName ? {
-    name: location.state.specializationName,
-    role: location.state.specializationRole || "Specialist"
-  } : null;
+  const stateDoctor = useMemo(() => {
+    return location.state?.specializationName ? {
+      name: location.state.specializationName,
+      role: location.state.specializationRole || "Specialist"
+    } : null;
+  }, [location.state?.specializationName, location.state?.specializationRole]);
 
   // Prefer prop -> then state -> then URL param -> then fallback
-  const activeDoctor = doctor || stateDoctor || (specialization ? { name: specialization, role: "Specialist" } : { name: "General", role: "Medical Assistant" });
+  const activeDoctor = useMemo(() => {
+    return doctor || stateDoctor || (specialization ? { name: specialization, role: "Specialist" } : { name: "General", role: "Medical Assistant" });
+  }, [doctor, stateDoctor, specialization]);
   const isPremium = location.state?.tier === 'premium';
 
   useEffect(() => {
@@ -128,7 +132,7 @@ State your symptoms or upload a photo for analysis.`,
           setIsInitializing(false);
         });
     }
-  }, [activeDoctor?.name, hasConsented]);
+  }, [activeDoctor, hasConsented]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -231,7 +235,7 @@ State your symptoms or upload a photo for analysis.`,
         specialization: activeDoctor?.name
       });
     } catch (err) {
-      console.warn("Feedback recorded locally, but server sync failed.");
+      console.warn("Feedback recorded locally, but server sync failed.", err);
     }
   };
 
