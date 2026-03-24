@@ -21,10 +21,10 @@ const getGenAI = () => {
  * @param {Object} options - Options including 'provider' (ollama or gemini)
  */
 export const generateResponse = async (prompt, imageBase64 = null, options = {}) => {
-  const { provider = "ollama" } = options;
+  const { provider = "ollama", userRam = 8 } = options;
 
   // Check cache first
-  const cacheKey = { prompt, imageBase64, provider, ...options };
+  const cacheKey = { prompt, imageBase64, provider, userRam, ...options };
   const cachedResponse = await CacheManager.get(cacheKey, 'llm');
   if (cachedResponse) return cachedResponse;
 
@@ -76,9 +76,21 @@ const generateOllamaResponse = async (prompt, options = {}) => {
     ...options
   };
 
+  // Dynamic model categorization based on user memory (Quantization Awareness)
+  const userRam = Number(options.userRam || 8);
+  let selectedModel = "llama3.2"; // Default 4-bit
+
+  if (userRam < 4) {
+    selectedModel = "llama3.2:1b"; // Ultra-light for low-end devices
+    console.log(`📉 Low RAM detected (${userRam}GB). Using light-weight 1B model.`);
+  } else if (userRam >= 16) {
+    selectedModel = "llama3.2:3b-instruct-fp16"; // High-fidelity for pro workstations
+    console.log(`🚀 High RAM detected (${userRam}GB). Using full-precision 3B model.`);
+  }
+
   try {
     const response = await axios.post(`${ollamaHost}/api/generate`, {
-      model: "llama3.2",
+      model: selectedModel,
       prompt: prompt,
       stream: false,
       options: {

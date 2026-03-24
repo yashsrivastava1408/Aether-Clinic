@@ -150,7 +150,8 @@ export default function Consultation() {
       state: {
         specializationName: doctor.name,
         specializationRole: doctor.role,
-        tier: isPremium ? 'premium' : 'basic'
+        tier: isPremium ? 'premium' : 'basic',
+        userRam: navigator.deviceMemory || 8 // Default to 8 if API not available
       }
     });
   };

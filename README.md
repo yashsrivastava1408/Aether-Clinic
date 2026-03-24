@@ -7,12 +7,11 @@ A comprehensive, privacy-first healthcare platform integrating React Native Mobi
 ```mermaid
 sequenceDiagram
     actor User
-    participant App as Mobile/Web Client
-    participant Server as Node.js Backend
+    participant App as Mobile/Web (RAM Detection)
+    participant Server as Node.js (Dynamic Router)
     participant Security as Express Middleware (Helmet/RateLimit/Sanitize)
-    participant IntelHub as Python Intelligence Hub (Agents)
-    participant VectorDB as ChromaDB (Medical Knowledge)
-    participant LLM as Hybrid LLM (Gemini/Ollama)
+    participant IntelHub as Python Intelligence (Qdrant + Chroma)
+    participant LLM as Hybrid LLM (Groq/Ollama-fp16/q4/1b)
     
     Note over User,VectorDB: Chat & Medical Consultation Flow
     User->>App: Send Symptom / Query
@@ -24,8 +23,7 @@ sequenceDiagram
     end
 
     Server->>IntelHub: POST /api/intelligence/query (semantic search)
-    IntelHub->>VectorDB: Query embeddings (Cosine Similarity)
-    VectorDB-->>IntelHub: Return relevant chunks + citations
+    Note over IntelHub: Distributed RAG (Qdrant)
     IntelHub-->>Server: Return Context + Triage Classification
     
     Server->>LLM: Generate Response (Prompt + Context)
@@ -83,9 +81,13 @@ graph TD
         G -->|Risk Analysis| ML["ML Predictor (Scikit-Learn)"]
     end
 
-    subgraph "Foundation Models"
-        G -->|Cloud Vision| V["Gemini 2.0 Flash"]
-        G -->|Local LLM| L["Ollama (Llama 3.2)"]
+    subgraph "Foundation Models (Hardware-Aware)"
+        G -->|Cloud Vision| V["Gemini 1.5 Flash"]
+        G -->|Premium Engine| GR["Groq (Llama-3.3-70B)"]
+        G -->|Local Logic| L["Ollama Router"]
+        L --> Q1["1B (Low RAM)"]
+        L --> Q2["3B (Standard)"]
+        L --> Q3["3B-fp16 (High RAM)"]
     end
 ```
 
@@ -128,6 +130,32 @@ graph TD
     
     NodeBackend -->|Final response + citations| UserQuery
 ```
+
+
+---
+
+## Advanced Scaling & Hardware-Aware AI 🧠🚀
+
+To ensure production-grade reliability and cost-efficiency, Aether Clinic implements a **Four-Layer Model Infrastructure** that dynamically adapts to the user's hardware and subscription status.
+
+### 1. Dynamic Quantization Strategy (Hardware-Aware)
+The system uses the `navigator.deviceMemory` API to detect available RAM and automatically routes to the most efficient quantization level:
+
+| Layer | RAM Threshold | Model Used | Performance Profile |
+| :--- | :--- | :--- | :--- |
+| **Layer 1: Ultra-Light** | < 4GB | `llama3.2:1b` | Optimized for low-end mobile/laptop devices |
+| **Layer 2: Balanced** | 4GB - 16GB | `llama3.2` | Standard 3B model for smooth real-time chat |
+| **Layer 3: Professional** | > 16GB | `llama3.2:3b-fp16` | Full-precision 16-bit model for maximum accuracy |
+| **Layer 4: Premium** | Aether+ Tier | `llama-3.3-70b` | High-performance Groq Cloud (450+ tokens/sec) |
+
+### 2. Distributed RAG Scalability (Qdrant + ChromaDB)
+We transitioned from a local-only vector store to a **Hybrid Distributed Architecture** designed to handle millions of medical research papers:
+
+- **Primary Cluster (Qdrant)**: A cloud-ready, distributed vector database used for high-throughput, low-latency semantic search across clusters.
+- **Edge Fallback (ChromaDB)**: A local persistent client remains in the stack to provide "Offline-First" resiliency if the Qdrant cluster is unreachable.
+- **Auto-Sync Logic**: The Python ML Hub includes a "Cold-Start" sync mechanism that automatically migrates local medical protocols into the Qdrant cluster during the initial system boot.
+
+---
 
 ### Implementation Details
 

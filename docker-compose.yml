@@ -13,6 +13,19 @@ services:
       - aether-network
     restart: always
 
+  # 🔍 VECTOR DB: Qdrant for Distributed RAG
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: aether-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    networks:
+      - aether-network
+    restart: always
+
   # 🧠 ML SERVICE: Multi-Agent RAG Hub (Python)
   ml-service:
     build:
@@ -23,11 +36,15 @@ services:
     environment:
       - FLASK_ENV=production
       - CHROMA_DB_PATH=/app/chroma_db
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
     volumes:
       - ./ml/chroma_db:/app/chroma_db
       - feedback-data:/app/shared # Shared volume for Flywheel logs
     networks:
       - aether-network
+    depends_on:
+      - qdrant
     restart: always
 
   # 🚀 BACKEND: Node.js API Gateway
@@ -48,6 +65,7 @@ services:
     depends_on:
       - mongodb
       - ml-service
+      - qdrant
     networks:
       - aether-network
     volumes:
@@ -76,3 +94,4 @@ networks:
 volumes:
   mongo-data:
   feedback-data:
+  qdrant-data:

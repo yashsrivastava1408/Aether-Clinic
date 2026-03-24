@@ -173,6 +173,7 @@ State your symptoms or upload a photo for analysis.`,
     formData.append("specialization", activeDoctor?.name || "General");
     formData.append("userId", getUserId());
     formData.append("tier", isPremium ? "premium" : "basic");
+    formData.append("userRam", location.state?.userRam || 8);
     if (image) {
       formData.append("image", image);
     }

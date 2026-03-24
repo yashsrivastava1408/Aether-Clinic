@@ -100,7 +100,7 @@ function isNegativeConfirmation(message) {
  */
 export const handleChat = async (req, res) => {
   try {
-    const { message, specialization = "General Medicine", userId, tier = "basic" } = req.body;
+    const { message, specialization = "General Medicine", userId, tier = "basic", userRam = 8 } = req.body;
     if (!userId) return res.status(400).json({ error: "USER_ID_MISSING" });
 
 
@@ -295,7 +295,7 @@ CURRENT PRIORITY: ${!facts.location ? 'WHERE exactly is the issue located?' :
     let aiReply = await generateResponse(
       prompt,
       req.file ? imageBase64 : null,
-      { provider: req.file ? "gemini" : "ollama", tier }
+      { provider: req.file ? "gemini" : "ollama", tier, userRam }
     );
 
     if (req.file) fs.unlinkSync(req.file.path);

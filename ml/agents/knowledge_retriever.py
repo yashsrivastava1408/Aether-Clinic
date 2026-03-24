@@ -11,6 +11,8 @@ for maximum accuracy on medical terminology.
 import os
 import chromadb
 from sentence_transformers import SentenceTransformer
+from qdrant_client import QdrantClient
+from qdrant_client.http import models
 
 # =============================
 # Configuration
@@ -18,10 +20,13 @@ from sentence_transformers import SentenceTransformer
 CHROMA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "chroma_db")
 COLLECTION_NAME = "medical_knowledge"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
+QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
 
 # Singleton instances (loaded once, reused)
 _model = None
 _collection = None
+_qdrant_client = None
 
 
 def _get_model():
@@ -33,6 +38,21 @@ def _get_model():
     return _model
 
 
+def _get_qdrant_client():
+    global _qdrant_client
+    if _qdrant_client is None:
+        try:
+            client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT, timeout=5)
+            # Check connection
+            client.get_collections()
+            _qdrant_client = client
+            print(f"✅ Knowledge Retriever: Connected to Qdrant at {QDRANT_HOST}:{QDRANT_PORT}")
+        except Exception as e:
+            print(f"⚠️ Qdrant unavailable: {e}")
+            _qdrant_client = None
+    return _qdrant_client
+
+
 def _get_collection():
     global _collection
     if _collection is None:
@@ -42,11 +62,53 @@ def _get_collection():
         client = chromadb.PersistentClient(path=CHROMA_DIR)
         try:
             _collection = client.get_collection(COLLECTION_NAME)
-            print(f"✅ Knowledge Retriever: Connected to collection '{COLLECTION_NAME}' ({_collection.count()} chunks)")
+            print(f"✅ Knowledge Retriever: Connected to ChromaDB collection '{COLLECTION_NAME}' ({_collection.count()} chunks)")
         except Exception as e:
-            print(f"❌ Collection '{COLLECTION_NAME}' not found: {e}")
+            print(f"❌ ChromaDB Collection '{COLLECTION_NAME}' not found: {e}")
             return None
     return _collection
+
+
+def _sync_to_qdrant(q_client, collection):
+    """Bootstraps Qdrant by copying data from local ChromaDB."""
+    try:
+        # Check if collection exists
+        collections = q_client.get_collections().collections
+        exists = any(c.name == COLLECTION_NAME for c in collections)
+        
+        if not exists:
+            print(f"🔄 Knowledge Retriever: Creating Qdrant collection '{COLLECTION_NAME}'...")
+            q_client.create_collection(
+                collection_name=COLLECTION_NAME,
+                vectors_config=models.VectorParams(size=384, distance=models.Distance.COSINE),
+            )
+            
+        # Count points
+        count = q_client.count(collection_name=COLLECTION_NAME).count
+        if count == 0:
+            print(f"📥 Knowledge Retriever: Syncing data from ChromaDB to Qdrant...")
+            all_data = collection.get(include=["metadatas", "documents", "embeddings"])
+            
+            if not all_data["ids"]:
+                return
+
+            points = []
+            for i, idx in enumerate(all_data["ids"]):
+                points.append(models.PointStruct(
+                    id=i,
+                    vector=all_data["embeddings"][i],
+                    payload={
+                        "content": all_data["documents"][i],
+                        **all_data["metadatas"][i]
+                    }
+                ))
+            
+            # Batch upload
+            q_client.upsert(collection_name=COLLECTION_NAME, points=points)
+            print(f"✅ Knowledge Retriever: Successfully synced {len(points)} points to Qdrant.")
+            
+    except Exception as e:
+        print(f"⚠️ Sync to Qdrant failed: {e}")
 
 
 def retrieve_knowledge(
@@ -56,89 +118,90 @@ def retrieve_knowledge(
     min_relevance: float = 0.35
 ) -> list[dict]:
     """
-    Performs hybrid semantic + metadata search against the medical knowledge base.
-
-    Args:
-        query: The user's medical query or symptom description
-        categories: Optional list of categories to filter by (from Triage Classifier)
-        n_results: Number of results to return
-        min_relevance: Minimum cosine similarity threshold (0-1, lower = more similar for distances)
-
-    Returns:
-        list[dict]: Each dict contains:
-            - content: The matched text chunk
-            - title: Protocol title
-            - source: Original medical source
-            - category: Medical category
-            - relevance_score: Cosine similarity score (0-1, higher = more relevant)
+    Hybrid semantic search prioritizing Qdrant with ChromaDB fallback.
     """
-    collection = _get_collection()
-    if collection is None:
-        return []
-
     model = _get_model()
+    query_embedding = model.encode([query]).tolist()[0]
+    
+    q_client = _get_qdrant_client()
+    chroma_coll = _get_collection()
+    
+    # 1. Try Qdrant (Distributed)
+    if q_client:
+        try:
+            # Bootstrap if empty
+            if chroma_coll:
+                _sync_to_qdrant(q_client, chroma_coll)
 
-    # Generate embedding for the query
-    query_embedding = model.encode([query]).tolist()
+            print(f"🔍 Knowledge Retriever: Querying Qdrant ({QDRANT_HOST})")
+            results = q_client.search(
+                collection_name=COLLECTION_NAME,
+                query_vector=query_embedding,
+                limit=n_results,
+                with_payload=True
+            )
+            
+            retrieved = []
+            for hit in results:
+                if hit.score < min_relevance:
+                    continue
+                
+                retrieved.append({
+                    "content": hit.payload.get("content", ""),
+                    "title": hit.payload.get("title", "Unknown"),
+                    "source": hit.payload.get("source", "Internal Protocol"),
+                    "category": hit.payload.get("category", "General"),
+                    "relevance_score": round(hit.score, 4),
+                    "chunk_index": hit.payload.get("chunk_index", 0),
+                    "total_chunks": hit.payload.get("total_chunks", 1)
+                })
+            
+            if retrieved:
+                return retrieved
+        except Exception as e:
+            print(f"⚠️ Qdrant search failed, falling back to ChromaDB: {e}")
 
-    # Build where filter for category-based filtering (if categories provided)
-    # We now filter on 'primary_category' which is exactly matched during ingestion
-    where_filter = None
-    if categories and len(categories) > 0:
-        # Standardize categories for matching primary_category
-        # e.g., 'general_medicine' -> 'General Medicine'
-        formatted_cats = [cat.replace("_", " ").title() for cat in categories]
-        
-        if len(formatted_cats) == 1:
-            where_filter = {"primary_category": {"$eq": formatted_cats[0]}}
-        else:
-            where_filter = {
-                "$or": [{"primary_category": {"$eq": cat}} for cat in formatted_cats]
-            }
+    # 2. Fallback to ChromaDB (Local)
+    if chroma_coll:
+        print(f"🔍 Knowledge Retriever: Querying local ChromaDB fallback")
+        try:
+            # Build filter
+            where_filter = None
+            if categories:
+                formatted_cats = [cat.replace("_", " ").title() for cat in categories]
+                if len(formatted_cats) == 1:
+                    where_filter = {"primary_category": {"$eq": formatted_cats[0]}}
+                else:
+                    where_filter = {"$or": [{"primary_category": {"$eq": cat}} for cat in formatted_cats]}
 
-    # Query ChromaDB
-    try:
-        results = collection.query(
-            query_embeddings=query_embedding,
-            n_results=n_results,
-            where=where_filter if where_filter else None
-        )
-    except Exception as e:
-        # If the filter causes issues, fall back to unfiltered search
-        print(f"⚠️ Filtered search failed ({e}), falling back to unfiltered...")
-        results = collection.query(
-            query_embeddings=query_embedding,
-            n_results=n_results
-        )
+            results = chroma_coll.query(
+                query_embeddings=[query_embedding],
+                n_results=n_results,
+                where=where_filter
+            )
+            
+            retrieved = []
+            if results and results["documents"] and results["documents"][0]:
+                for i, doc in enumerate(results["documents"][0]):
+                    metadata = results["metadatas"][0][i]
+                    distance = results["distances"][0][i]
+                    relevance_score = 1 - (distance / 2)
+                    
+                    if relevance_score < min_relevance:
+                        continue
+                        
+                    retrieved.append({
+                        "content": doc,
+                        "title": metadata.get("title", "Unknown"),
+                        "source": metadata.get("source", "Internal Protocol"),
+                        "category": metadata.get("category", "General"),
+                        "relevance_score": round(relevance_score, 4)
+                    })
+            return retrieved
+        except Exception as e:
+            print(f"❌ ChromaDB search failed: {e}")
 
-    # Process and format results
-    retrieved = []
-    if results and results["documents"] and results["documents"][0]:
-        for i, doc in enumerate(results["documents"][0]):
-            metadata = results["metadatas"][0][i]
-            distance = results["distances"][0][i]
-
-            # ChromaDB returns cosine distance (0 = identical, 2 = opposite)
-            # Convert to similarity score (1 = identical, 0 = unrelated)
-            relevance_score = 1 - (distance / 2)
-
-            if relevance_score < min_relevance:
-                continue
-
-            retrieved.append({
-                "content": doc,
-                "title": metadata.get("title", "Unknown"),
-                "source": metadata.get("source", "Internal Protocol"),
-                "category": metadata.get("category", "General"),
-                "relevance_score": round(relevance_score, 4),
-                "chunk_index": metadata.get("chunk_index", 0),
-                "total_chunks": metadata.get("total_chunks", 1)
-            })
-
-    # Sort by relevance (highest first)
-    retrieved.sort(key=lambda x: x["relevance_score"], reverse=True)
-
-    return retrieved
+    return []
 
 
 def format_context_for_llm(results: list[dict]) -> str:
