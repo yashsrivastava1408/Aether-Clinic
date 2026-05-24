@@ -92,7 +92,7 @@ export default function OnboardingScreen() {
 
                 <Animated.View entering={FadeInDown.delay(400).springify()}>
                     <GlitchText
-                        text="AETHER CLINIC"
+                        text="MEDNEXUS"
                         style={styles.title}
                         color="#10b981"
                     />

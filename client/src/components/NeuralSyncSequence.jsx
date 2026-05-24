@@ -11,7 +11,7 @@ const NeuralSyncSequence = ({ onComplete }) => {
             "CALIBRATING SYNAPTIC INTERFACE...",
             "SYNCHRONIZING BIOMETRIC DATA...",
             "MAPPING NEURAL PATHWAYS...",
-            "AETHER_CORE OPTIMIZED.",
+            "MEDNEXUS_CORE OPTIMIZED.",
             "SYNC_SUCCESSFUL [ID: #9X29]"
         ];
 

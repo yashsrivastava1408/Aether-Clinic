@@ -2,19 +2,25 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# System dependencies (required by chromadb and sentence-transformers)
+# System deps
 RUN apt-get update && apt-get install -y gcc g++ build-essential && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first (Docker layer caching)
+# Copy only requirements first
 COPY requirements.txt .
 
+# Upgrade pip (important for faster installs)
+RUN pip install --upgrade pip
+
+# Install CPU torch first
+RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+# Install rest
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy ML source code (models, agents, data, scripts)
-COPY . .
+# Copy rest of code
+COPY . ./ml
 
-# Run ingestion at build time to populate ChromaDB
-RUN python ingestion_service.py
+WORKDIR /app/ml
 
 EXPOSE 5001
 

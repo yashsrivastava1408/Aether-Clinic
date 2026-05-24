@@ -1,4 +1,4 @@
-# Aether Clinic: AI-Powered Healthcare System
+# MedNexus: AI-Powered Healthcare System
 
 A comprehensive, privacy-first healthcare platform integrating React Native Mobile, Modern Web Clients, Node.js Backend, and Python ML Services.
 
@@ -26,8 +26,14 @@ sequenceDiagram
     Note over IntelHub: Distributed RAG (Qdrant)
     IntelHub-->>Server: Return Context + Triage Classification
     
-    Server->>LLM: Generate Response (Prompt + Context)
-    LLM-->>Server: Raw AI Response
+    Server->>Server: Check LLM Cache (Memory/Mongo)
+    alt Cache Miss
+        Server->>LLM: Generate Response (Prompt + Context)
+        LLM-->>Server: Raw AI Response
+        Server->>Server: Save AI Response to Cache
+    else Cache Hit
+        Server-->>Server: Retrieve Cached Response
+    end
     
     Server->>IntelHub: POST /api/intelligence/verify (Safety Check)
     Note right of IntelHub: Safety Oversight Agent
@@ -71,6 +77,7 @@ graph TD
         G -->|Chat Logs| F["chat_logs.json (Encrypted)"]
         G -->|Orchestration| S["Intelligence Service Client"]
         G -->|Security| X["Helmet + RateLimit + Sanitization"]
+        G -->|Inference Cache| C["Dual-Tier Cache (Map + MongoDB)"]
     end
 
     subgraph "Intelligence Hub (Python)"
@@ -136,7 +143,7 @@ graph TD
 
 ## Advanced Scaling & Hardware-Aware AI 🧠🚀
 
-To ensure production-grade reliability and cost-efficiency, Aether Clinic implements a **Four-Layer Model Infrastructure** that dynamically adapts to the user's hardware and subscription status.
+To ensure production-grade reliability and cost-efficiency, MedNexus implements a **Four-Layer Model Infrastructure** that dynamically adapts to the user's hardware and subscription status.
 
 ### 1. Dynamic Quantization Strategy (Hardware-Aware)
 The system uses the `navigator.deviceMemory` API to detect available RAM and automatically routes to the most efficient quantization level:
@@ -146,7 +153,7 @@ The system uses the `navigator.deviceMemory` API to detect available RAM and aut
 | **Layer 1: Ultra-Light** | < 4GB | `llama3.2:1b` | Optimized for low-end mobile/laptop devices |
 | **Layer 2: Balanced** | 4GB - 16GB | `llama3.2` | Standard 3B model for smooth real-time chat |
 | **Layer 3: Professional** | > 16GB | `llama3.2:3b-fp16` | Full-precision 16-bit model for maximum accuracy |
-| **Layer 4: Premium** | Aether+ Tier | `llama-3.3-70b` | High-performance Groq Cloud (450+ tokens/sec) |
+| **Layer 4: Premium** | MedNexus+ Tier | `llama-3.3-70b` | High-performance Groq Cloud (450+ tokens/sec) |
 
 ### 2. Distributed RAG Scalability (Qdrant + ChromaDB)
 We transitioned from a local-only vector store to a **Hybrid Distributed Architecture** designed to handle millions of medical research papers:
@@ -154,6 +161,11 @@ We transitioned from a local-only vector store to a **Hybrid Distributed Archite
 - **Primary Cluster (Qdrant)**: A cloud-ready, distributed vector database used for high-throughput, low-latency semantic search across clusters.
 - **Edge Fallback (ChromaDB)**: A local persistent client remains in the stack to provide "Offline-First" resiliency if the Qdrant cluster is unreachable.
 - **Auto-Sync Logic**: The Python ML Hub includes a "Cold-Start" sync mechanism that automatically migrates local medical protocols into the Qdrant cluster during the initial system boot.
+
+### 3. Dual-Tier Inference Caching
+To dramatically reduce API costs and latency for redundant queries, the Node.js API Gateway utilizes a structured dual-tier LLM caching system:
+- **L1 Memory Cache**: Instant retrieval of repeat queries using a Node.js in-memory Map.
+- **L2 MongoDB Cache**: Persistent cluster-level caching wrapper. The system automatically syncs L2 cache hits back to L1 for faster subsequent reads.
 
 ---
 

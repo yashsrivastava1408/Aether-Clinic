@@ -169,7 +169,7 @@ export default function CareScreen() {
                     </TouchableOpacity>
 
                     <Text style={styles.footerDisclaimer}>
-                        Aether Clinic does not provide medical advice. Consult a doctor.
+                        MedNexus does not provide medical advice. Consult a doctor.
                     </Text>
 
                 </ScrollView>

@@ -14,5 +14,13 @@
     "aiResponse": "I'm here to help with your health concerns. \nKey points to discuss:\n* Your symptoms\n* Medical history\n* Current health status\nWhat's been concerning you lately?",
     "feedback": "up",
     "timestamp": "2026-03-23T16:52:41.281Z"
+  },
+  {
+    "userId": "69c6d9259886a3abb56583d9",
+    "specialization": "Heart Specialist",
+    "originalQuery": "hi",
+    "aiResponse": "Hello! I'm Dr. AI, your medical assistant today. How can I help you?\n\nPlease feel free to share what brings you here – any symptoms or concerns that are bothering you?",
+    "feedback": "up",
+    "timestamp": "2026-03-27T19:53:06.929Z"
   }
 ]

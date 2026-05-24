@@ -569,14 +569,48 @@
     }
 }
 
+/* Smooth Ripple Effect */
+@keyframes smoothRipple {
+    0% {
+        transform: scale(0.5);
+        opacity: 0.8;
+        border-width: 8px;
+    }
+    100% {
+        transform: scale(8);
+        opacity: 0;
+        border-width: 1px;
+    }
+}
+
+/* Smooth Flash */
+@keyframes smoothFlash {
+    0% {
+        opacity: 0;
+    }
+    15% {
+        opacity: 0.6;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
 /* Scan Line */
 @keyframes scanLine {
     0% {
         top: -100%;
+        opacity: 0;
     }
-
+    20% {
+        opacity: 1;
+    }
+    80% {
+        opacity: 1;
+    }
     100% {
         top: 100%;
+        opacity: 0;
     }
 }
 
@@ -656,8 +690,16 @@
     animation: ripple 1s ease-out forwards;
 }
 
+.animate-smooth-ripple {
+    animation: smoothRipple 1.5s cubic-bezier(0.1, 0.7, 0.1, 1) forwards;
+}
+
+.animate-smooth-flash {
+    animation: smoothFlash 1.5s ease-out forwards;
+}
+
 .animate-scan-line {
-    animation: scanLine 4s linear infinite;
+    animation: scanLine 1.5s ease-in-out forwards;
 }
 
 .animate-text-gradient-flow {

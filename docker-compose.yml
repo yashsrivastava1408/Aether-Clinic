@@ -77,7 +77,7 @@ services:
     build:
       context: ./client
       args:
-        - VITE_API_URL=http://localhost:5050
+        - VITE_API_URL=http://${PUBLIC_IP}:5050
     container_name: aether-frontend
     ports:
       - "80:80"

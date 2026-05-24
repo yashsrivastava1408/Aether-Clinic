@@ -1,6 +1,9 @@
 # Python
 __pycache__/
 *.pyc
+venv/
+.venv/
+env/
 
 # ML artifacts (optional – comment if you want to track models)
 # ml/models/*.pkl

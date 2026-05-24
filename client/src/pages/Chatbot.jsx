@@ -43,7 +43,7 @@ export default function Chatbot({ doctor, onBack }) {
         trimmed.startsWith("VERIFIED SOURCES") ||
         trimmed.startsWith("LATENCY:") ||
         trimmed.startsWith("UPTIME:") ||
-        trimmed.startsWith("AETHER CLINIC v") ||
+        trimmed.startsWith("MEDNEXUS v") ||
         trimmed.startsWith("BUILD:") ||
         trimmed.startsWith("CORE:") ||
         trimmed.startsWith("IDENTITY:") ||
@@ -541,16 +541,16 @@ State your symptoms or upload a photo for analysis.`,
                 ⚖️
               </div>
               <h3 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                Medical Liability Waiver
+                Medical Liability & Privacy Consent
               </h3>
               <div className={`text-sm leading-relaxed text-left space-y-4 ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>
                 <p>
-                  By proceeding, you acknowledge that <span className="text-emerald-500 font-bold uppercase">Aether Clinic</span> is an experimental Artificial Intelligence platform for educational use.
+                  By proceeding, you explicitly consent to the processing of your personal health data by <span className="text-emerald-500 font-bold uppercase">MedNexus</span> in accordance with the <strong>DPDP Act, 2023 (India)</strong>.
                 </p>
                 <div className={`p-3 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                  <ul className="list-disc list-inside space-y-1 text-xs">
-                    <li>I understand this is <span className="text-red-500 font-bold underline">NOT a doctor</span>.</li>
-                    <li>I will not use this for life-threatening emergencies.</li>
+                  <ul className="list-disc list-inside space-y-2 text-xs">
+                    <li>I understand this AI is <span className="text-red-500 font-bold underline">NOT a Registered Medical Practitioner (RMP)</span> and cannot provide diagnosis or prescriptions under Telemedicine Guidelines.</li>
+                    <li>I consent to my anonymized data being securely processed for triage routing.</li>
                     <li>I will seek professional medical advice before taking any medicine.</li>
                   </ul>
                   <button 

@@ -17,7 +17,13 @@ from flask_cors import CORS
 import joblib
 import numpy as np
 import os
+import sys
 import traceback
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 app = Flask(__name__)
 CORS(app)

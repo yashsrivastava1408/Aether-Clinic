@@ -75,7 +75,7 @@ const HolographicHUD = ({ isDark }) => {
       {/* Top Center Status */}
       <div className={`absolute top-24 left-1/2 -translate-x-1/2 flex items-center gap-4 px-6 py-2 rounded-full border backdrop-blur ${isDark ? 'bg-[#030303]/80 border-white/5' : 'bg-white/80 border-slate-200 shadow-sm'}`}>
         <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-        <span className={`text-[10px] font-mono tracking-[0.2em] ${isDark ? 'text-emerald-500/80' : 'text-emerald-600/90'}`}>AETHER_OS v2.0 :: SYSTEM_ONLINE</span>
+        <span className={`text-[10px] font-mono tracking-[0.2em] ${isDark ? 'text-emerald-500/80' : 'text-emerald-600/90'}`}>MEDNEXUS_OS v2.0 :: SYSTEM_ONLINE</span>
         <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
       </div>
 
@@ -276,7 +276,7 @@ const GlitchMetaText = ({ initialText, hoverText, isHovered, className = "" }) =
 // 💬 The Synapse Component - Theme Aware
 const SynapseSection = ({ isDark }) => {
   const [messages, setMessages] = useState([
-    { id: 1, sender: 'bot', text: 'Hello. I am Aether. How can I assist with your health today?' }
+    { id: 1, sender: 'bot', text: 'Hello. I am MedNexus AI. How can I assist with your health today?' }
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const [demoStep, setDemoStep] = useState(0);
@@ -427,8 +427,8 @@ const SystemFooter = ({ isDark }) => {
       <div className="flex-1 overflow-hidden relative mx-4">
         <div className="animate-marquee whitespace-nowrap absolute top-1/2 -translate-y-1/2">
           <span>
-            {">"} INITIALIZING SECURITY PROTOCOLS... {">"} NODE_TOKYO CONNECTED... {">"} ENCRYPTING DATA PACKETS... {">"} AETHER_CORE OPTIMIZED... {">"} SCANNING BIOMETRICS... {">"} VITAL SIGNS NORMAL... {">"}
-            INITIALIZING SECURITY PROTOCOLS... {">"} NODE_TOKYO CONNECTED... {">"} ENCRYPTING DATA PACKETS... {">"} AETHER_CORE OPTIMIZED... {">"} SCANNING BIOMETRICS... {">"} VITAL SIGNS NORMAL...
+            {">"} INITIALIZING SECURITY PROTOCOLS... {">"} NODE_TOKYO CONNECTED... {">"} ENCRYPTING DATA PACKETS... {">"} MEDNEXUS_CORE OPTIMIZED... {">"} SCANNING BIOMETRICS... {">"} VITAL SIGNS NORMAL... {">"}
+            INITIALIZING SECURITY PROTOCOLS... {">"} NODE_TOKYO CONNECTED... {">"} ENCRYPTING DATA PACKETS... {">"} MEDNEXUS_CORE OPTIMIZED... {">"} SCANNING BIOMETRICS... {">"} VITAL SIGNS NORMAL...
           </span>
         </div>
       </div>
@@ -564,14 +564,14 @@ export default function Dashboard({ navigate }) {
           >
             <GlitchMetaText
               initialText="Smart"
-              hoverText="Aether"
+              hoverText="Med"
               isHovered={isHeaderHovered}
               className={`${isDark ? 'text-white' : 'text-slate-900'} hover:text-emerald-400 transition-colors`}
             />
             <br />
             <GlitchMetaText
               initialText="Health"
-              hoverText="Clinic"
+              hoverText="Nexus"
               isHovered={isHeaderHovered}
               className={`text-emerald-500 ${isDark ? 'hover:text-white' : 'hover:text-slate-900'} transition-colors`}
             />
@@ -805,7 +805,7 @@ export default function Dashboard({ navigate }) {
               </h2>
 
               <p className={`text-lg mb-8 leading-relaxed ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>
-                AetherClinic utilizes state-of-the-art Large Language Models customized for medical triage. Every interaction is processed securely, ensuring privacy while delivering hospital-grade preliminary assessments.
+                MedNexus utilizes state-of-the-art Large Language Models customized for medical triage. Every interaction is processed securely, ensuring privacy while delivering hospital-grade preliminary assessments.
               </p>
 
               <ul className="space-y-4">

@@ -1,0 +1,129 @@
+{
+  "problem": "diabetes",
+  "feature_columns": [
+    "Pregnancies",
+    "Glucose",
+    "BloodPressure",
+    "SkinThickness",
+    "Insulin",
+    "BMI",
+    "DiabetesPedigreeFunction",
+    "Age"
+  ],
+  "feature_schema": {
+    "Pregnancies": {
+      "min": 0.0,
+      "max": 17.0,
+      "mean": 3.8450520833333335
+    },
+    "Glucose": {
+      "min": 44.0,
+      "max": 199.0,
+      "mean": 121.65625
+    },
+    "BloodPressure": {
+      "min": 24.0,
+      "max": 122.0,
+      "mean": 72.38671875
+    },
+    "SkinThickness": {
+      "min": 7.0,
+      "max": 99.0,
+      "mean": 29.108072916666668
+    },
+    "Insulin": {
+      "min": 14.0,
+      "max": 846.0,
+      "mean": 140.671875
+    },
+    "BMI": {
+      "min": 18.2,
+      "max": 67.1,
+      "mean": 32.45520833333333
+    },
+    "DiabetesPedigreeFunction": {
+      "min": 0.078,
+      "max": 2.42,
+      "mean": 0.47187630208333325
+    },
+    "Age": {
+      "min": 21.0,
+      "max": 81.0,
+      "mean": 33.240885416666664
+    }
+  },
+  "candidate_cv_metrics": {
+    "logistic_regression": {
+      "accuracy": 0.7573081878359768,
+      "balanced_accuracy": 0.7460778885197489,
+      "roc_auc": 0.8429275101513475,
+      "average_precision": 0.7405872680523304,
+      "precision": 0.6425649891012115,
+      "recall": 0.7088224437061647,
+      "f1": 0.671159604051988
+    },
+    "rbf_svc": {
+      "accuracy": 0.7567506330801014,
+      "balanced_accuracy": 0.7568401624215577,
+      "roc_auc": 0.8313598191214471,
+      "average_precision": 0.6905723133696972,
+      "precision": 0.6301274625386938,
+      "recall": 0.757013658176449,
+      "f1": 0.6846153693786527
+    },
+    "random_forest": {
+      "accuracy": 0.7657536985205916,
+      "balanced_accuracy": 0.7417065799187892,
+      "roc_auc": 0.8313157530454042,
+      "average_precision": 0.7232842579425501,
+      "precision": 0.6698911694002222,
+      "recall": 0.6621631598375785,
+      "f1": 0.6628687463432955
+    },
+    "extra_trees": {
+      "accuracy": 0.7633124527966593,
+      "balanced_accuracy": 0.7327849298634184,
+      "roc_auc": 0.8346973052787006,
+      "average_precision": 0.727899311171576,
+      "precision": 0.6765451418397863,
+      "recall": 0.6318198597268363,
+      "f1": 0.6495064844620754
+    },
+    "soft_voting_ensemble": {
+      "accuracy": 0.7660180372295528,
+      "balanced_accuracy": 0.7386420265780732,
+      "roc_auc": 0.8453246124031009,
+      "average_precision": 0.7371773243745419,
+      "precision": 0.6760724368261726,
+      "recall": 0.6481173864894797,
+      "f1": 0.6581753460193257
+    }
+  },
+  "finalists": [
+    "soft_voting_ensemble",
+    "logistic_regression"
+  ],
+  "selected_model": "soft_voting_ensemble",
+  "selected_threshold": 0.3516942176923894,
+  "holdout_metrics": {
+    "accuracy": 0.7402597402597403,
+    "balanced_accuracy": 0.7446296296296296,
+    "roc_auc": 0.8214814814814815,
+    "average_precision": 0.6889668444099195,
+    "brier_score": 0.16637222483455572,
+    "precision": 0.6029411764705882,
+    "recall": 0.7592592592592593,
+    "f1": 0.6721311475409836
+  },
+  "training_strategy": {
+    "candidate_cv": "RepeatedStratifiedKFold(n_splits=5, n_repeats=6, random_state=42)",
+    "calibration": "CalibratedClassifierCV(method='sigmoid', cv=5)",
+    "threshold_tuning": "TunedThresholdClassifierCV(scoring='balanced_accuracy', thresholds=101, cv=5)"
+  },
+  "artifact": {
+    "current_model_path": "/Users/yashsrivastava32/Desktop/ai-doctor-final/ml/models/diabetes_model.pkl",
+    "versioned_model_path": "/Users/yashsrivastava32/Desktop/ai-doctor-final/ml/models/versions/diabetes_model_20260401T190437Z.pkl",
+    "metadata_path": "/Users/yashsrivastava32/Desktop/ai-doctor-final/ml/models/metadata/diabetes_model_20260401T190437Z.json",
+    "created_at_utc": "20260401T190437Z"
+  }
+}

@@ -243,7 +243,7 @@ const SentientCore = () => {
       {/* The Text Logo with Hyper Scramble */}
       <View style={{ transform: [{ scale: 1.0 }] }}>
         <HyperScramble
-          text="AETHER CLINIC"
+          text="MEDNEXUS"
           style={styles.coreTitle}
         />
       </View>
@@ -265,7 +265,7 @@ const DailyProtocol = () => (
     <Text style={styles.quoteText}>
       "Your health is a journey of understanding. We are here to provide clarity and calm at every step."
     </Text>
-    <Text style={styles.quoteAuthor}>Aether Clinic</Text>
+    <Text style={styles.quoteAuthor}>MedNexus</Text>
   </View>
 );
 

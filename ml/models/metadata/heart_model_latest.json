@@ -1,0 +1,159 @@
+{
+  "problem": "heart_disease",
+  "feature_columns": [
+    "age",
+    "sex",
+    "cp",
+    "trestbps",
+    "chol",
+    "fbs",
+    "restecg",
+    "thalach",
+    "exang",
+    "oldpeak",
+    "slope",
+    "ca",
+    "thal"
+  ],
+  "feature_schema": {
+    "age": {
+      "min": 29.0,
+      "max": 77.0,
+      "mean": 54.43894389438944
+    },
+    "sex": {
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.6798679867986799
+    },
+    "cp": {
+      "min": 1.0,
+      "max": 4.0,
+      "mean": 3.1584158415841586
+    },
+    "trestbps": {
+      "min": 94.0,
+      "max": 200.0,
+      "mean": 131.68976897689768
+    },
+    "chol": {
+      "min": 126.0,
+      "max": 564.0,
+      "mean": 246.69306930693068
+    },
+    "fbs": {
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.1485148514851485
+    },
+    "restecg": {
+      "min": 0.0,
+      "max": 2.0,
+      "mean": 0.9900990099009901
+    },
+    "thalach": {
+      "min": 71.0,
+      "max": 202.0,
+      "mean": 149.6072607260726
+    },
+    "exang": {
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.32673267326732675
+    },
+    "oldpeak": {
+      "min": 0.0,
+      "max": 6.2,
+      "mean": 1.0396039603960396
+    },
+    "slope": {
+      "min": 1.0,
+      "max": 3.0,
+      "mean": 1.6006600660066006
+    },
+    "ca": {
+      "min": 0.0,
+      "max": 3.0,
+      "mean": 0.6633663366336634
+    },
+    "thal": {
+      "min": 3.0,
+      "max": 7.0,
+      "mean": 4.7227722772277225
+    }
+  },
+  "candidate_cv_metrics": {
+    "logistic_regression": {
+      "accuracy": 0.8196960034013605,
+      "balanced_accuracy": 0.8171002809589766,
+      "roc_auc": 0.8923353518462214,
+      "average_precision": 0.8911239240723081,
+      "precision": 0.820345496885694,
+      "recall": 0.7869071146245059,
+      "f1": 0.8003889816351709
+    },
+    "rbf_svc": {
+      "accuracy": 0.8015731292517007,
+      "balanced_accuracy": 0.7998229930295147,
+      "roc_auc": 0.8747611989459816,
+      "average_precision": 0.8709549614570836,
+      "precision": 0.7904550422674497,
+      "recall": 0.7802371541501976,
+      "f1": 0.7831088648502393
+    },
+    "random_forest": {
+      "accuracy": 0.8021789965986394,
+      "balanced_accuracy": 0.7993284292197336,
+      "roc_auc": 0.8941327291870771,
+      "average_precision": 0.8932650977421357,
+      "precision": 0.8004665252979123,
+      "recall": 0.7676383399209487,
+      "f1": 0.7804780618198682
+    },
+    "extra_trees": {
+      "accuracy": 0.8021364795918368,
+      "balanced_accuracy": 0.7999868388455345,
+      "roc_auc": 0.8956609010956837,
+      "average_precision": 0.8932120638141345,
+      "precision": 0.7931738398651846,
+      "recall": 0.7755434782608696,
+      "f1": 0.7812702955161971
+    },
+    "soft_voting_ensemble": {
+      "accuracy": 0.8041772959183675,
+      "balanced_accuracy": 0.8021612445525488,
+      "roc_auc": 0.8964923763836807,
+      "average_precision": 0.8929182621454776,
+      "precision": 0.7966110596863389,
+      "recall": 0.779001976284585,
+      "f1": 0.7851447701318441
+    }
+  },
+  "finalists": [
+    "soft_voting_ensemble",
+    "extra_trees"
+  ],
+  "selected_model": "soft_voting_ensemble",
+  "selected_threshold": 0.5765762263241772,
+  "holdout_metrics": {
+    "accuracy": 0.9016393442622951,
+    "balanced_accuracy": 0.900974025974026,
+    "roc_auc": 0.961038961038961,
+    "average_precision": 0.9511380754796367,
+    "brier_score": 0.08696905721017938,
+    "precision": 0.8928571428571429,
+    "recall": 0.8928571428571429,
+    "f1": 0.8928571428571429
+  },
+  "training_strategy": {
+    "candidate_cv": "RepeatedStratifiedKFold(n_splits=5, n_repeats=8, random_state=42)",
+    "calibration": "CalibratedClassifierCV(method='sigmoid', cv=5)",
+    "threshold_tuning": "TunedThresholdClassifierCV(scoring='balanced_accuracy', thresholds=101, cv=5)"
+  },
+  "artifact": {
+    "current_model_path": "/Users/yashsrivastava32/Desktop/ai-doctor-final/ml/models/heart_model.pkl",
+    "versioned_model_path": "/Users/yashsrivastava32/Desktop/ai-doctor-final/ml/models/versions/heart_model_20260421T174815Z.pkl",
+    "metadata_path": "/Users/yashsrivastava32/Desktop/ai-doctor-final/ml/models/metadata/heart_model_20260421T174815Z.json",
+    "created_at_utc": "20260421T174815Z"
+  }
+}

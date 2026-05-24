@@ -89,7 +89,7 @@ export default function ProfileScreen() {
                             <View style={styles.legalItem}>
                                 <Text style={styles.legalTitle}>Medical Disclaimer</Text>
                                 <Text style={styles.legalText}>
-                                    Aether Clinic provides AI-assisted health information and educational insights only.
+                                    MedNexus provides AI-assisted health information and educational insights only.
                                     It does not provide medical advice, diagnosis, prescriptions, or treatment.
                                     Always consult a qualified healthcare professional for medical concerns.
                                 </Text>
@@ -99,7 +99,7 @@ export default function ProfileScreen() {
                             <View style={styles.legalItem}>
                                 <Text style={styles.legalTitle}>Emergency Notice</Text>
                                 <Text style={styles.legalText}>
-                                    Aether Clinic is not designed for medical emergencies.
+                                    MedNexus is not designed for medical emergencies.
                                     If you experience severe or urgent symptoms, contact local emergency services or visit the nearest hospital immediately.
                                 </Text>
                             </View>
@@ -109,7 +109,7 @@ export default function ProfileScreen() {
                                 <Text style={styles.legalTitle}>Data & Privacy Notice</Text>
                                 <Text style={styles.legalText}>
                                     Your data is encrypted and handled securely.
-                                    Aether Clinic does not share personal health information without user consent.
+                                    MedNexus does not share personal health information without user consent.
                                 </Text>
                             </View>
 
@@ -147,7 +147,7 @@ export default function ProfileScreen() {
                             <Text style={styles.logoutText}>DISCONNECT LINK</Text>
                         </TouchableOpacity>
 
-                        <Text style={styles.versionText}>Aether Clinic Mobile v1.0.0 (Build 2026.1)</Text>
+                        <Text style={styles.versionText}>MedNexus Mobile v1.0.0 (Build 2026.1)</Text>
                     </View>
 
                 </ScrollView>

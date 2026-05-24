@@ -95,7 +95,7 @@ export default function Navbar() {
             </div>
             <div>
               <span className={`font-bold text-lg tracking-tight hidden sm:block ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                Aether<span className="text-emerald-500">Clinic</span>
+                Med<span className="text-emerald-500">Nexus</span>
               </span>
               <span className="text-[10px] text-emerald-500/60 font-mono tracking-widest hidden sm:block uppercase">
                 Neural Interface V2.0
@@ -132,6 +132,15 @@ export default function Navbar() {
               ) : link.path === "/diabetes" ? (
                 <span className="flex items-center gap-2 tracking-wide">
                   <span className={isActive(link.path) ? "text-red-500 font-semibold" : "group-hover:text-red-500 transition-colors"}>
+                    {link.label}
+                  </span>
+                </span>
+              ) : link.path === "/about" ? (
+                <span className="flex items-center gap-1.5">
+                  <svg className={`w-4 h-4 transition-transform duration-300 group-hover:scale-110 group-hover:text-emerald-400 ${isActive(link.path) ? "text-emerald-500" : "opacity-70"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className={isActive(link.path) ? "text-emerald-500 font-semibold" : "group-hover:text-emerald-400 transition-colors"}>
                     {link.label}
                   </span>
                 </span>
@@ -316,6 +325,15 @@ export default function Navbar() {
               ) : link.path === "/diabetes" ? (
                 <span className="flex items-center gap-2">
                   <span className={isActive(link.path) ? "text-red-500" : "group-hover:text-red-500"}>
+                    {link.label}
+                  </span>
+                </span>
+              ) : link.path === "/about" ? (
+                <span className="flex items-center gap-2">
+                  <svg className={`w-4 h-4 transition-transform duration-300 group-hover:scale-110 ${isActive(link.path) ? "text-emerald-400" : "opacity-70"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className={isActive(link.path) ? "text-emerald-500" : "group-hover:text-emerald-400"}>
                     {link.label}
                   </span>
                 </span>

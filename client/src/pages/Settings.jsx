@@ -129,7 +129,7 @@ export default function Settings() {
 
                     {/* 💻 System Info */}
                     <div className="text-center pt-4 opacity-40">
-                        <p className="text-xs font-mono">Aether Clinic v2.1.0 (Stable)</p>
+                        <p className="text-xs font-mono">MedNexus v2.1.0 (Stable)</p>
                         <p className="text-[10px]">Build: 2026.01.16.RC4</p>
                     </div>
 

@@ -41,7 +41,7 @@ const LegalModal = ({ isOpen, onClose }) => {
                         </h4>
                         <div className="pl-3.5">
                             <p className="text-gray-400 text-xs leading-relaxed">
-                                Aether Clinic provides AI-assisted health information and educational insights only.
+                                MedNexus provides AI-assisted health information and educational insights only.
                                 It does not provide medical advice, diagnosis, prescriptions, or treatment.
                                 Always consult a qualified healthcare professional for medical concerns.
                             </p>
@@ -55,7 +55,7 @@ const LegalModal = ({ isOpen, onClose }) => {
                         </h4>
                         <div className="pl-3.5">
                             <p className="text-gray-400 text-xs leading-relaxed">
-                                Aether Clinic is not designed for medical emergencies.
+                                MedNexus is not designed for medical emergencies.
                                 If you experience severe or urgent symptoms, contact local emergency services or visit the nearest hospital immediately.
                             </p>
                         </div>
@@ -69,7 +69,7 @@ const LegalModal = ({ isOpen, onClose }) => {
                         <div className="pl-3.5">
                             <p className="text-gray-400 text-xs leading-relaxed">
                                 Your data is encrypted and handled securely.
-                                Aether Clinic does not share personal health information without user consent.
+                                MedNexus does not share personal health information without user consent.
                             </p>
                         </div>
                     </div>

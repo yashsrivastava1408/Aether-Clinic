@@ -29,7 +29,7 @@ export default function SystemFooter() {
                     <div className="space-y-2">
                         <div className="flex items-center gap-2 text-emerald-500/80">
                             <span className="w-2 h-2 bg-emerald-500 rounded-sm animate-pulse" />
-                            <span className="tracking-widest font-bold">AETHER CLINIC v2.4.0</span>
+                            <span className="tracking-widest font-bold">MEDNEXUS v2.4.0</span>
                         </div>
                         <div className="text-gray-500 space-y-1">
                             <p>BUILD: {currentYear}.01.09.RC1</p>
@@ -39,12 +39,12 @@ export default function SystemFooter() {
 
                     {/* Center: Copyright/Legal */}
                     <div className="text-center text-gray-600">
-                        <p>&copy; {currentYear} Aether Medical Systems.</p>
+                        <p>&copy; {currentYear} MedNexus Systems.</p>
                         <p className="mt-1 text-[10px] uppercase tracking-wider text-emerald-900/60">
                             Unauthorized access to patient data is a federal offense.
                         </p>
                         <p className="mt-2 text-[10px] text-gray-500 max-w-xs mx-auto">
-                            Aether Clinic does not provide medical advice. Consult a doctor.
+                            MedNexus does not provide medical advice. Consult a doctor.
                         </p>
                         <button
                             onClick={() => setIsLegalModalOpen(true)}
@@ -56,19 +56,14 @@ export default function SystemFooter() {
 
                     {/* Right: Uplinks */}
                     <div className="flex justify-end gap-6 text-emerald-400/70">
-                        <a href="#" className="hover:text-emerald-400 hover:glow-sm transition-all group flex items-center gap-1">
+                        <a href="#" className="hover:text-emerald-400 transition-all group flex items-center gap-1">
                             <span className="opacity-50 group-hover:opacity-100 transition-opacity">[</span>
                             GITHUB
                             <span className="opacity-50 group-hover:opacity-100 transition-opacity">]</span>
                         </a>
-                        <a href="#" className="hover:text-emerald-400 hover:glow-sm transition-all group flex items-center gap-1">
+                        <a href="#" className="hover:text-emerald-400 transition-all group flex items-center gap-1">
                             <span className="opacity-50 group-hover:opacity-100 transition-opacity">[</span>
                             LINKEDIN
-                            <span className="opacity-50 group-hover:opacity-100 transition-opacity">]</span>
-                        </a>
-                        <a href="#" className="hover:text-emerald-400 hover:glow-sm transition-all group flex items-center gap-1">
-                            <span className="opacity-50 group-hover:opacity-100 transition-opacity">[</span>
-                            TWITTER
                             <span className="opacity-50 group-hover:opacity-100 transition-opacity">]</span>
                         </a>
                     </div>

@@ -8,6 +8,8 @@ Scans incoming user queries for:
   3. Non-medical/Off-topic Queries (Hacker attempts)
 """
 
+from __future__ import annotations
+
 import re
 import unicodedata
 

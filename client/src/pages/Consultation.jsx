@@ -65,6 +65,13 @@ export default function Consultation() {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [isCheckingHistory, setIsCheckingHistory] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
+  const [animationKey, setAnimationKey] = useState(0);
+
+  const handlePremiumToggle = () => {
+    setIsPremium(!isPremium);
+    // Incrementing key cleanly restarts the CSS animations from scratch
+    setAnimationKey(prev => prev + 1);
+  };
 
   useEffect(() => {
     // Simulate Neural Link initialization
@@ -260,6 +267,20 @@ export default function Consultation() {
         </div>
       )}
 
+      {/* Transformation Animation Overlay */}
+      {animationKey > 0 && (
+        <div key={animationKey} className="absolute inset-0 z-[200] pointer-events-none flex items-center justify-center overflow-hidden mix-blend-screen">
+          {/* Scanline sweep */}
+          <div className={`absolute w-full h-[150%] bg-gradient-to-b from-transparent ${isPremium ? 'via-cyan-400/30' : 'via-emerald-400/30'} to-transparent animate-scan-line`} style={{ top: '-150%' }} />
+          
+          {/* Smooth Flash Effect */}
+          <div className={`absolute inset-0 bg-gradient-to-b ${isPremium ? 'from-cyan-500/20 to-transparent' : 'from-emerald-500/20 to-transparent'} animate-smooth-flash`} />
+          
+          {/* Ripple Expansion */}
+          <div className={`absolute w-32 h-32 rounded-full border-4 ${isPremium ? 'border-cyan-400 shadow-[0_0_80px_rgba(6,182,212,0.8)]' : 'border-emerald-400 shadow-[0_0_80px_rgba(16,185,129,0.8)]'} animate-smooth-ripple`} />
+        </div>
+      )}
+
       {/* Background Grid */}
       <div className={`absolute inset-0 pointer-events-none transition-all duration-1000 ${isPremium ? 'opacity-[0.15]' : (isDark ? 'opacity-[0.05]' : 'opacity-[0.03]')}`}
         style={{
@@ -275,7 +296,7 @@ export default function Consultation() {
         {/* PREMIUM TOGGLE ADDED HERE */}
         <div className="pointer-events-auto mb-6 flex justify-center">
           <button
-            onClick={() => setIsPremium(!isPremium)}
+            onClick={handlePremiumToggle}
             className={`relative flex items-center gap-3 px-6 py-2.5 rounded-full border overflow-hidden transition-all duration-500 hover:scale-105 active:scale-95 shadow-lg ${isPremium ? 'border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] bg-cyan-950/30' : 'border-white/10 bg-[#0a0a0a]/80 hover:bg-[#111]'}`}
           >
             <div className={`absolute inset-0 bg-gradient-to-r transition-opacity duration-500 ${isPremium ? 'from-cyan-500/20 to-transparent opacity-100' : 'opacity-0'}`} />

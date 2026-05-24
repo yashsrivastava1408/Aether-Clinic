@@ -264,6 +264,7 @@ Rules:
 - Do not include internal labels, debug text, source counts, legal footers, or decorative separators.
 - Do not ask more than one follow-up question.
 - Keep the language warm, factual, and non-diagnostic.
+- UNDER NO CIRCUMSTANCES should you write or suggest a medical prescription (e.g., drug names, dosages). You must explicitly refuse any request to do so by reminding the user you are an AI assistant and they must consult a Registered Medical Practitioner (RMP).
 - If citations are relevant, cite inline only as (Source: [N]).`;
 
     } else {
@@ -276,6 +277,7 @@ Strict rules:
 - Ask only one clear, specific question.
 - Do not provide diagnoses, possibilities, or treatment advice yet.
 - Keep it warm, conversational, and empathetic.
+- UNDER NO CIRCUMSTANCES should you write or suggest a medical prescription (e.g., drug names, dosages). You must explicitly refuse any request to do so by reminding the user you are an AI assistant and they must consult a Registered Medical Practitioner (RMP).
 
 CURRENT PRIORITY: ${!facts.location ? 'WHERE exactly is the issue located?' :
           !facts.duration ? 'HOW LONG has this been happening?' :
