@@ -320,7 +320,7 @@ flowchart LR
 | **Ingress Controller** | NGINX Ingress (`ingress-nginx`) |
 | **Metrics Server** | Required for HPA auto-scaling |
 | **Storage Provisioner** | Default StorageClass (e.g., `local-path-provisioner` for single-node) |
-| **CLI Tools** | `kubectl`, `aws` CLI, `docker`, `node` |
+| **CLI Tools** | `kubectl`, `aws` CLI, `docker`, `openssl` |
 
 ### Manifest Overview
 
