@@ -1,6 +1,20 @@
 # MedNexus: AI-Powered Healthcare System
 
-A comprehensive, privacy-first healthcare platform integrating React Native Mobile, Modern Web Clients, Node.js Backend, and Python ML Services.
+A comprehensive, privacy-first healthcare platform integrating React Native Mobile, Modern Web Clients, Node.js Backend, and Python ML Services — deployable locally via Docker Compose or at scale on Kubernetes (AWS ECR + kubeadm).
+
+---
+
+## Table of Contents
+- [System Workflows](#detailed-system-workflows)
+- [High-Level Architecture](#high-level-architecture)
+- [Intelligence Hub (Multi-Agent RAG)](#intelligence-hub-multi-agent-rag)
+- [Advanced Scaling & Hardware-Aware AI](#advanced-scaling--hardware-aware-ai-)
+- [Kubernetes Deployment](#kubernetes-deployment-)
+- [Key System Components](#key-system-components)
+- [Security & Privacy Architecture](#security--privacy-architecture)
+- [Repository Structure](#repository-structure)
+
+---
 
 ## Detailed System Workflows
 
@@ -202,7 +216,7 @@ To dramatically reduce API costs and latency for redundant queries, the Node.js 
 - **44 Indexed Chunks**: High-dimensionality semantic embeddings.
 - **Embedding Model**: all-MiniLM-L6-v2 (384 dimensions).
 
-### Workflow: How to Run
+### Workflow: How to Run (Local Development)
 ```bash
 # 1. Ingest medical knowledge (one-time or when adding new protocols)
 cd ml && python3 ingestion_service.py
@@ -217,6 +231,180 @@ cd server && npm run dev
 > [!NOTE]
 > If the Intelligence Hub is unavailable, the system gracefully falls back to the legacy keyword-based retrieval system for maximum reliability.
 
+### Docker Compose (Single-Machine Deployment)
+For a quick all-in-one deployment without Kubernetes:
+```bash
+# Set required environment variables
+export GEMINI_API_KEY="your-key"
+export ENCRYPTION_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+export PUBLIC_IP="your-server-ip"
+
+# Launch all services
+docker compose up -d --build
+```
+
+This starts MongoDB, Qdrant, ML Service, Backend, and Frontend in a single bridge network.
+
+---
+
+## Kubernetes Deployment ☸️
+
+MedNexus supports production-grade deployment on a Kubernetes cluster with AWS ECR as the container registry. The deployment is fully automated via a single shell script.
+
+### Cluster Architecture
+
+```mermaid
+graph TB
+    Internet["🌐 Internet"] --> LB["☁️ AWS EC2 Public IP"]
+    LB --> IC["Nginx Ingress Controller"]
+    
+    subgraph K8s["Kubernetes Cluster (kubeadm)"]
+        IC -->|"/ (frontend)"| CS["Client Service\n:80"]
+        IC -->|"/api (backend)"| BS["Backend Service\n:5050"]
+        
+        subgraph App["Application Pods"]
+            CS --> CP1["Frontend\nPod 1"]
+            CS --> CP2["Frontend\nPod 2"]
+            BS --> BP1["Backend\nPod 1"]
+            BS --> BP2["Backend\nPod 2"]
+        end
+
+        subgraph ML["ML Layer"]
+            MLS["ML Service\n:5001"] --> MP1["ML\nPod 1"]
+            MLS --> MP2["ML\nPod 2"]
+        end
+
+        subgraph Data["Data Layer (Persistent)"]
+            MDB[("MongoDB\n:27017\n+ PVC")]
+            QD[("Qdrant\n:6333/:6334\n+ PVC")]
+            RD[("Redis\n:6379\n+ PVC")]
+        end
+
+        BP1 & BP2 --> MLS
+        BP1 & BP2 --> MDB
+        BP1 & BP2 --> RD
+        MP1 & MP2 --> QD
+    end
+
+    subgraph Scaling["Auto-Scaling"]
+        HPA["HPA\nCPU > 75%"] -.->|scale| BP1
+        HPA -.->|scale| MP1
+        MS["Metrics Server"] -.->|metrics| HPA
+    end
+```
+
+### Deployment Pipeline
+
+```mermaid
+flowchart LR
+    A["🧑‍💻 Developer"] -->|"git push"| B["📦 Source Code"]
+    B --> C["🏗️ deploy_k8s.sh"]
+    
+    C --> D["🔐 AWS ECR Login"]
+    D --> E["🐳 Build & Push\n3 Docker Images"]
+    E --> F["📝 Substitute\nPlaceholders"]
+    F --> G["🛡️ Create K8s Secrets\n• aether-secrets\n• mongo-credentials\n• ecr-registry-secret"]
+    G --> H["⛵ kubectl apply"]
+    H --> I["✅ Pods Running"]
+    
+    style A fill:#e1f5fe
+    style I fill:#c8e6c9
+```
+
+### Prerequisites
+
+| Requirement | Details |
+|:---|:---|
+| **Kubernetes Cluster** | kubeadm (v1.28+), single or multi-node |
+| **Container Registry** | AWS ECR (3 repos auto-created by script) |
+| **Ingress Controller** | NGINX Ingress (`ingress-nginx`) |
+| **Metrics Server** | Required for HPA auto-scaling |
+| **Storage Provisioner** | Default StorageClass (e.g., `local-path-provisioner` for single-node) |
+| **CLI Tools** | `kubectl`, `aws` CLI, `docker`, `node` |
+
+### Manifest Overview
+
+| Manifest | Resource | Replicas | Persistence |
+|:---|:---|:---|:---|
+| `backend-deployment.yaml` | Backend API (Node.js) | 2 (HPA: 2→10) | Shared volume (`hostPath`) |
+| `client-deployment.yaml` | Web Frontend (Nginx) | 2 | — |
+| `ml-deployment.yaml` | ML Intelligence Hub (Python) | 2 (HPA: 2→5) | Shared volume (`hostPath`) |
+| `ml-job.yaml` | One-shot ML training Job | 1 | — |
+| `mongo-deployment.yaml` | MongoDB | 1 | 5Gi PVC |
+| `qdrant-deployment.yaml` | Qdrant Vector DB | 1 | 5Gi PVC |
+| `redis-deployment.yaml` | Redis Cache | 1 | 1Gi PVC (AOF enabled) |
+| `ingress.yaml` | NGINX Ingress routes | — | — |
+| `hpa.yaml` | Autoscalers (CPU 75%) | — | — |
+
+### Service Wiring
+
+Internal DNS resolution connects all services within the cluster:
+
+```mermaid
+graph LR
+    BE["Backend Pods"] -->|"mongodb:27017"| MONGO["MongoDB Service"]
+    BE -->|"redis:6379"| REDIS["Redis Service"]
+    BE -->|"aether-ml-service:5001"| ML["ML Service"]
+    
+    ING["Ingress /api"] -->|"backend-service:5050"| BE
+    ING2["Ingress /"] -->|"client-service:80"| FE["Frontend Pods"]
+```
+
+### Secrets Management
+
+The deploy script automatically creates three Kubernetes secrets:
+
+| Secret | Keys | Source |
+|:---|:---|:---|
+| `aether-secrets` | `gemini-api-key`, `encryption-key` | User prompt + auto-generated |
+| `mongo-credentials` | `username`, `password` | Auto-generated (printed to terminal) |
+| `ecr-registry-secret` | Docker registry auth | AWS ECR login token |
+
+### Quick Deploy
+
+```bash
+# 1. Clone the repo on your EC2/k8s node
+git clone https://github.com/your-org/ai-doctor-final.git
+cd ai-doctor-final
+
+# 2. Run the automated deployment pipeline
+bash scripts/deploy_k8s.sh
+# → Prompts for: AWS Account ID, AWS Region, Gemini API Key
+
+# 3. Monitor rollout
+kubectl get pods -w
+kubectl get ingress
+```
+
+> [!IMPORTANT]
+> Before running the deploy script, ensure your cluster has:
+> - NGINX Ingress Controller: `kubectl get pods -n ingress-nginx`
+> - Metrics Server: `kubectl get pods -n kube-system | grep metrics`
+> - Default StorageClass: `kubectl get storageclass`
+
+> [!TIP]
+> For a single-node kubeadm cluster without a CSI driver, install the local-path-provisioner:
+> ```bash
+> kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.30/deploy/local-path-storage.yaml
+> kubectl patch storageclass local-path -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+> ```
+
+### Post-Deployment Verification
+
+```bash
+# Check all pods are running
+kubectl get pods
+
+# Verify ingress is routing
+kubectl get ingress aether-ingress
+
+# Test backend health
+curl http://<NODE_IP>/api/health
+
+# Check HPA status
+kubectl get hpa
+```
+
 ---
 
 ## Key System Components
@@ -226,16 +414,21 @@ cd server && npm run dev
 - **Description**: Patient-facing app for health monitoring, AI consultation, and report digitization.
 
 ### Web Client
-- **Technologies**: React, Vite, TailwindCSS
+- **Technologies**: React, Vite, TailwindCSS, TypeScript
 - **Description**: Clinical dashboard for healthcare providers to review patient analytics and management.
 
 ### Backend API (Gateway)
-- **Technologies**: Node.js, Express, MongoDB
-- **Description**: Orchestration layer for security, OCR processing, and agentic communication.
+- **Technologies**: Node.js, Express, MongoDB, Redis
+- **Description**: Orchestration layer for security, OCR processing, caching, and agentic communication.
 
-### ML Predictor
-- **Technologies**: Python, Flask, Scikit-Learn
-- **Description**: Risk assessment for heart disease and diabetes using pre-trained models.
+### ML Intelligence Hub
+- **Technologies**: Python, Flask, Scikit-Learn, LangGraph, Sentence-Transformers
+- **Description**: Multi-agent RAG system with triage, knowledge retrieval, safety oversight, and risk prediction for heart disease and diabetes.
+
+### Data Layer
+- **MongoDB**: Primary data store for user records, chat history, and inference cache (L2).
+- **Qdrant**: Distributed vector database for high-throughput semantic search across medical knowledge.
+- **Redis**: In-cluster cache with AOF persistence for session data and hot-path caching.
 
 ---
 
@@ -243,15 +436,52 @@ cd server && npm run dev
 - **Zero-Knowledge Intelligence**: Local LLM processing (Ollama) for routine consultations.
 - **AES-256 Encryption**: Hardware-isolated encryption for all sensitive communication logs.
 - **Agentic Safety Guardrails**: Real-time cross-referencing against clinical guidelines to prevent dangerous recommendations.
+- **MongoDB Authentication**: Root credentials managed via Kubernetes Secrets — no default open access.
+- **Network Isolation**: All inter-service communication happens over ClusterIP (not exposed externally).
 
 ---
 
 ## Repository Structure
-- **/mobile**: Patient application (React Native).
-- **/client**: Dashboard application (React + Vite).
-- **/server**: Backend orchestration and security.
-- **/ml/agents**: Triage, Retrieval, and Safety agent source code.
-- **/ml/data/medical_corpus**: Source clinical guidelines for RAG.
+```
+ai-doctor-final/
+├── client/                  # Web Dashboard (React + Vite + TailwindCSS)
+│   ├── src/                 # React components, pages, hooks
+│   ├── Dockerfile           # Nginx-based production container
+│   └── nginx.conf           # Frontend reverse proxy config
+├── mobile/                  # Patient App (React Native + Expo)
+├── server/                  # Backend API Gateway (Node.js + Express)
+│   ├── controllers/         # Route handlers (chat, report, ML proxy)
+│   ├── services/            # Business logic (RAG, cache, intelligence)
+│   ├── utils/               # Helpers (encryption, cache manager)
+│   ├── routes/              # Express route definitions
+│   ├── models/              # Mongoose schemas
+│   └── Dockerfile           # Node.js production container
+├── ml/                      # ML Intelligence Hub (Python + Flask)
+│   ├── agents/              # Triage, Retrieval, Safety agent source code
+│   ├── data/medical_corpus/ # Source clinical guidelines for RAG
+│   ├── models/              # Pre-trained .pkl models (heart, diabetes)
+│   ├── ingestion_service.py # Corpus → ChromaDB ingestion pipeline
+│   ├── app.py               # Flask app entry point
+│   └── Dockerfile           # Python production container
+├── k8s/                     # Kubernetes manifests
+│   ├── backend-deployment.yaml
+│   ├── client-deployment.yaml
+│   ├── ml-deployment.yaml
+│   ├── ml-service.yaml
+│   ├── ml-job.yaml
+│   ├── mongo-deployment.yaml
+│   ├── qdrant-deployment.yaml
+│   ├── redis-deployment.yaml
+│   ├── ingress.yaml
+│   └── hpa.yaml
+├── scripts/                 # Automation scripts
+│   └── deploy_k8s.sh        # One-command K8s deployment pipeline
+├── docker-compose.yml       # Local/single-machine deployment
+├── security.md              # Security architecture documentation
+└── README.md                # ← You are here
+```
 
 ---
-*Building for a safer, smarter future of healthcare.*
+
+*Building for a safer, smarter future of healthcare.* ☸️🏥
+
