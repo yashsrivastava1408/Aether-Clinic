@@ -45,7 +45,8 @@ aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS 
 echo -e "${GREEN}📦 Checking / Creating ECR Repositories...${NC}"
 for repo in "aether-ml-service" "aether-backend" "aether-frontend"; do
     aws ecr describe-repositories --repository-names "$repo" --region "$AWS_REGION" >/dev/null 2>&1 || \
-    aws ecr create-repository --repository-name "$repo" --region "$AWS_REGION"
+    aws ecr create-repository --repository-name "$repo" --region "$AWS_REGION" >/dev/null 2>&1 || \
+    echo -e "${YELLOW}⚠️  Warning: Could not describe or create ECR repository '$repo'. If it already exists and you have push permissions, deployment will continue...${NC}"
 done
 
 # Build and Push
