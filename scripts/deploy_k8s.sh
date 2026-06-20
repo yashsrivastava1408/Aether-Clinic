@@ -59,7 +59,8 @@ docker build -t "${REGISTRY}/aether-backend:latest" ./server
 docker push "${REGISTRY}/aether-backend:latest"
 
 echo -e "${GREEN}🏗️  Building and pushing Frontend Client...${NC}"
-docker build --build-arg VITE_API_URL="" -t "${REGISTRY}/aether-frontend:latest" ./client
+PUBLIC_IP=$(curl -s ifconfig.me)
+docker build --build-arg VITE_API_URL="http://${PUBLIC_IP}" -t "${REGISTRY}/aether-frontend:latest" ./client
 docker push "${REGISTRY}/aether-frontend:latest"
 
 # Prepare Manifests with actual account details
