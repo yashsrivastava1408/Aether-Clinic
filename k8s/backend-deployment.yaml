@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aether-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: aether-backend
+  template:
+    metadata:
+      labels:
+        app: aether-backend
+    spec:
+      imagePullSecrets:
+        - name: ecr-registry-secret
+      containers:
+        - name: backend
+          image: YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_REGION.amazonaws.com/aether-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5050
+          env:
+            - name: PORT
+              value: "5050"
+            - name: NODE_ENV
+              value: "production"
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-credentials
+                  key: username
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-credentials
+                  key: password
+            - name: MONGO_URI
+              value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@mongodb:27017/ai_doctor_db?authSource=admin"
+            - name: ML_BASE_URL
+              value: "http://aether-ml-service:5001"
+            - name: INTELLIGENCE_BASE_URL
+              value: "http://aether-ml-service:5001"
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aether-secrets
+                  key: gemini-api-key
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aether-secrets
+                  key: encryption-key
+          volumeMounts:
+            - name: shared-feedback
+              mountPath: /app/shared
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+      volumes:
+        - name: shared-feedback
+          hostPath:
+            path: /var/lib/aether/shared
+            type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: aether-backend
+  ports:
+    - port: 5050
+      targetPort: 5050

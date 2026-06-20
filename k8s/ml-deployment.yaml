@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: aether-ml
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: aether-ml
@@ -12,17 +12,26 @@ spec:
       labels:
         app: aether-ml
     spec:
+      imagePullSecrets:
+        - name: ecr-registry-secret
       containers:
         - name: ml-risk-engine
-          image: aether-ml-risk
+          image: YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_REGION.amazonaws.com/aether-ml-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5001
+          volumeMounts:
+            - name: shared-feedback
+              mountPath: /app/shared
           resources:
             requests:
-              cpu: "250m"
-              memory: "256Mi"
-            limits:
               cpu: "500m"
               memory: "512Mi"
-              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+      volumes:
+        - name: shared-feedback
+          hostPath:
+            path: /var/lib/aether/shared
+            type: DirectoryOrCreate
