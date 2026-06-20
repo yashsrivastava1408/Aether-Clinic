@@ -34,7 +34,7 @@ if [ -z "$GEMINI_KEY" ]; then
 fi
 
 # Generate random 64-character hex key for encryption if not set
-ENCRYPTION_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+ENCRYPTION_KEY=$(openssl rand -hex 32)
 
 REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
@@ -83,7 +83,7 @@ kubectl create secret generic aether-secrets \
 
 # MongoDB credentials
 MONGO_USER="aether_admin"
-MONGO_PASS=$(node -e "console.log(require('crypto').randomBytes(24).toString('hex'))")
+MONGO_PASS=$(openssl rand -hex 24)
 echo -e "${YELLOW}📋 MongoDB credentials (save these):${NC}"
 echo -e "   Username: ${MONGO_USER}"
 echo -e "   Password: ${MONGO_PASS}"
