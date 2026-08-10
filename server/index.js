@@ -114,7 +114,19 @@ app.use(limiter);
 
 // 5. CORS
 app.use(cors({
-  origin: ["http://3.109.103.211", "http://3.109.103.211:5050", "http://localhost:5173", "http://localhost:5050"],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, or Postman)
+    if (!origin) return callback(null, true);
+    if (
+      origin.includes("vercel.app") ||
+      origin.includes("onrender.com") ||
+      origin.includes("localhost") ||
+      origin.includes("127.0.0.1")
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
   credentials: true
 }));
 app.use(express.json());
