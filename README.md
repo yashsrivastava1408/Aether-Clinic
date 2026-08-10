@@ -19,15 +19,13 @@ A comprehensive, privacy-first healthcare platform integrating React Native Mobi
 
 ## 📸 Screenshots & Demo
 
-| **Neural Consultation Interface** | **Cardiac Risk Analyzer** |
-| :---: | :---: |
-| ![Neural Consultation](docs/images/chat-interface.png) | ![Heart Risk Assessment](docs/images/heart-analyzer.png) |
-| *AI Medical Triage & Multi-Agent Consultation* | *Deep Learning Cardiac Biometric Scanning* |
+<img width="1708" height="974" alt="Screenshot 2026-08-11 at 2 50 15 AM" src="https://github.com/user-attachments/assets/bd8c32f1-888c-413d-8bf8-0fafdd2172e7" />
 
-| **Diabetes Risk Analyzer** | **Medical OCR & Report Analysis** |
-| :---: | :---: |
-| ![Diabetes Risk Assessment](docs/images/diabetes-analyzer.png) | ![OCR Medical Scan](docs/images/report-ocr.png) |
-| *Predictive Diabetes Risk Analytics* | *Automatic OCR Extraction & Lab Report Summarization* |
+<img width="1710" height="974" alt="Screenshot 2026-08-11 at 2 50 09 AM" src="https://github.com/user-attachments/assets/03c70753-bf3c-44d8-95f7-2e8359225d7a" />
+
+<img width="1709" height="916" alt="Screenshot 2026-08-11 at 2 50 33 AM" src="https://github.com/user-attachments/assets/6737a2a3-eedd-46a1-adbe-ebea8a3d5393" />
+
+
 
 ---
 
