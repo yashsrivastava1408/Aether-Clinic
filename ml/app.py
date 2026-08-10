@@ -96,29 +96,47 @@ def health():
 @app.route("/predict/heart", methods=["POST"])
 def predict_heart():
     """Heart disease risk prediction."""
-    data = request.json.get("features")
-    arr = np.array(data).reshape(1, -1)
-    prediction = int(heart_model.predict(arr)[0])
-    probability = float(heart_model.predict_proba(arr)[0][1])
-    return jsonify({
-        "prediction": prediction,
-        "risk_percentage": round(probability * 100, 2),
-        "risk_level": risk_level(probability)
-    })
+    try:
+        if heart_model is None:
+            return jsonify({"error": "Heart model not loaded"}), 500
+        data = request.json.get("features") if request.json else None
+        if not data:
+            return jsonify({"error": "No features provided"}), 400
+        arr = np.array(data, dtype=float).reshape(1, -1)
+        prediction = int(heart_model.predict(arr)[0])
+        probability = float(heart_model.predict_proba(arr)[0][1])
+        return jsonify({
+            "prediction": prediction,
+            "risk_percentage": round(probability * 100, 2),
+            "risk_level": risk_level(probability)
+        })
+    except Exception as e:
+        print("❌ Heart prediction error:", e)
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/predict/diabetes", methods=["POST"])
 def predict_diabetes():
     """Diabetes risk prediction."""
-    data = request.json.get("features")
-    arr = np.array(data).reshape(1, -1)
-    prediction = int(diabetes_model.predict(arr)[0])
-    probability = float(diabetes_model.predict_proba(arr)[0][1])
-    return jsonify({
-        "prediction": prediction,
-        "risk_percentage": round(probability * 100, 2),
-        "risk_level": risk_level(probability)
-    })
+    try:
+        if diabetes_model is None:
+            return jsonify({"error": "Diabetes model not loaded"}), 500
+        data = request.json.get("features") if request.json else None
+        if not data:
+            return jsonify({"error": "No features provided"}), 400
+        arr = np.array(data, dtype=float).reshape(1, -1)
+        prediction = int(diabetes_model.predict(arr)[0])
+        probability = float(diabetes_model.predict_proba(arr)[0][1])
+        return jsonify({
+            "prediction": prediction,
+            "risk_percentage": round(probability * 100, 2),
+            "risk_level": risk_level(probability)
+        })
+    except Exception as e:
+        print("❌ Diabetes prediction error:", e)
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 
 # ═══════════════════════════════════════════════════
