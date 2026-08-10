@@ -24,7 +24,7 @@ import CacheManager from '../utils/cacheManager.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Intelligence Hub configuration
-const INTELLIGENCE_BASE_URL = process.env.INTELLIGENCE_BASE_URL || 'http://localhost:5001';
+const INTELLIGENCE_BASE_URL = process.env.INTELLIGENCE_BASE_URL || process.env.ML_BASE_URL || 'http://localhost:5001';
 
 const FOOTER_MARKERS = [
     "MEDICAL LEGAL DISCLAIMER",
