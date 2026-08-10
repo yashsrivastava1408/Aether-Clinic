@@ -36,8 +36,19 @@ COLLECTION_NAME = "medical_knowledge"
 # =========================
 # Load ML models once at startup
 # =========================
-heart_model = joblib.load("models/heart_model.pkl")
-diabetes_model = joblib.load("models/diabetes_model.pkl")
+BASE_DIR = Path(__file__).resolve().parent
+
+try:
+    heart_model = joblib.load(BASE_DIR / "models" / "heart_model.pkl")
+except Exception as e:
+    print(f"Warning loading heart_model: {e}")
+    heart_model = None
+
+try:
+    diabetes_model = joblib.load(BASE_DIR / "models" / "diabetes_model.pkl")
+except Exception as e:
+    print(f"Warning loading diabetes_model: {e}")
+    diabetes_model = None
 
 
 # =========================
