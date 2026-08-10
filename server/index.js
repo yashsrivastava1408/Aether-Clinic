@@ -83,7 +83,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "https://accounts.google.com", "https://apis.google.com", "https://*.google.com", "https://*.googleapis.com", "https://*.gstatic.com"],
-      connectSrc: ["'self'", "http://3.109.103.211:5050", "ws://3.109.103.211:5050", "https://accounts.google.com", "https://oauth2.googleapis.com", "https://*.googleapis.com", "https://*.google.com"],
+      connectSrc: ["'self'", "https://*.onrender.com", "wss://*.onrender.com", "https://*.vercel.app", "http://localhost:5050", "ws://localhost:5050", "http://3.109.103.211:5050", "ws://3.109.103.211:5050", "https://accounts.google.com", "https://oauth2.googleapis.com", "https://*.googleapis.com", "https://*.google.com"],
       frameSrc: ["'self'", "https://accounts.google.com", "https://*.google.com"],
       imgSrc: ["'self'", "data:", "https:", "https://*.googleusercontent.com"],
       styleSrc: ["'self'", "https://fonts.googleapis.com", "https://accounts.google.com"],
