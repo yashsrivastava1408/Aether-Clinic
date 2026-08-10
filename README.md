@@ -5,6 +5,7 @@ A comprehensive, privacy-first healthcare platform integrating React Native Mobi
 ---
 
 ## Table of Contents
+- [📸 Screenshots & Demo](#-screenshots--demo)
 - [System Workflows](#detailed-system-workflows)
 - [High-Level Architecture](#high-level-architecture)
 - [Intelligence Hub (Multi-Agent RAG)](#intelligence-hub-multi-agent-rag)
@@ -13,6 +14,20 @@ A comprehensive, privacy-first healthcare platform integrating React Native Mobi
 - [Key System Components](#key-system-components)
 - [Security & Privacy Architecture](#security--privacy-architecture)
 - [Repository Structure](#repository-structure)
+
+---
+
+## 📸 Screenshots & Demo
+
+| **Neural Consultation Interface** | **Cardiac Risk Analyzer** |
+| :---: | :---: |
+| ![Neural Consultation](docs/images/chat-interface.png) | ![Heart Risk Assessment](docs/images/heart-analyzer.png) |
+| *AI Medical Triage & Multi-Agent Consultation* | *Deep Learning Cardiac Biometric Scanning* |
+
+| **Diabetes Risk Analyzer** | **Medical OCR & Report Analysis** |
+| :---: | :---: |
+| ![Diabetes Risk Assessment](docs/images/diabetes-analyzer.png) | ![OCR Medical Scan](docs/images/report-ocr.png) |
+| *Predictive Diabetes Risk Analytics* | *Automatic OCR Extraction & Lab Report Summarization* |
 
 ---
 
