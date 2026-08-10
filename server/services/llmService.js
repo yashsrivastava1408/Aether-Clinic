@@ -47,7 +47,19 @@ export const generateResponse = async (prompt, imageBase64 = null, options = {})
          const genAI = getGenAI();
          responseText = await generateGeminiResponse(prompt, null, genAI);
       } else {
-        responseText = await generateOllamaResponse(prompt, options);
+        try {
+          responseText = await generateOllamaResponse(prompt, options);
+        } catch (ollamaErr) {
+          console.warn("⚠️ Ollama unavailable. Falling back to Cloud LLM (Groq / Gemini)...");
+          if (process.env.GROQ_API_KEY) {
+            responseText = await generateGroqResponse(prompt, options);
+          } else if (process.env.GEMINI_API_KEY) {
+            const genAI = getGenAI();
+            responseText = await generateGeminiResponse(prompt, null, genAI);
+          } else {
+            throw ollamaErr;
+          }
+        }
       }
 
     // Store in cache
@@ -204,7 +216,10 @@ const generateGroqResponse = async (prompt, options = {}) => {
     return completion.choices[0]?.message?.content || "";
   } catch (error) {
     console.error("❌ Groq API Error:", error.message);
-    // Graceful fallback to local if Groq fails
+    if (process.env.GEMINI_API_KEY) {
+      const genAI = getGenAI();
+      return generateGeminiResponse(prompt, null, genAI);
+    }
     return generateOllamaResponse(prompt, options);
   }
 };
