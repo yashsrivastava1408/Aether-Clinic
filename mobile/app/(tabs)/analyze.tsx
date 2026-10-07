@@ -96,7 +96,7 @@ export default function AnalyzeScreen() {
                                 style={styles.removeButton}
                                 onPress={() => { setImage(null); setResult(null); }}
                             >
-                                <Text style={styles.removeButtonText}>✕</Text>
+                                <Text style={styles.removeButtonText}>×</Text>
                             </TouchableOpacity>
                         </View>
                     ) : (

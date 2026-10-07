@@ -30,7 +30,7 @@ router.get("/", requireReviewer, async (req, res) => {
     try {
         res.json(await listReviews());
     } catch (err) {
-        console.error("❌ REVIEW LIST ERROR:", err.message);
+        console.error("REVIEW LIST ERROR:", err.message);
         res.status(503).json({ error: "ASSISTANT_UNAVAILABLE" });
     }
 });
@@ -48,7 +48,7 @@ router.post("/:threadId", requireReviewer, async (req, res) => {
         } catch (err) {
             const status = err.response?.status;
             if (status === 400 || status === 404) return res.status(status).json(err.response.data);
-            console.error("❌ REVIEW SUBMIT ERROR:", err.message);
+            console.error("REVIEW SUBMIT ERROR:", err.message);
             return res.status(503).json({ error: "ASSISTANT_UNAVAILABLE" });
         }
 
@@ -56,7 +56,7 @@ router.post("/:threadId", requireReviewer, async (req, res) => {
         await recordAssistantReply(chat, result, { userId: chat.userId, memoryEnabled: !chat.memoryOff });
         res.json({ action: result.review?.action, sessionComplete: !!result.session_complete, mode: result.mode });
     } catch (err) {
-        console.error("❌ REVIEW ERROR:", err);
+        console.error("REVIEW ERROR:", err);
         res.status(500).json({ error: "SERVER_ERROR" });
     }
 });

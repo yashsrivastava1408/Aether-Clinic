@@ -233,7 +233,7 @@ def build_agent(llm):
                 providers.append(f"extract:{provider}")
                 source = "vision" if raw is not None else source
             except Exception as exc:  # noqa: BLE001 - fall back to the OCR text
-                print(f"⚠️ Report vision extraction failed: {type(exc).__name__}")
+                print(f"Report vision extraction failed: {type(exc).__name__}")
         if raw is None:
             if not text:
                 raise ReportUnavailable("the report image could not be read")
@@ -265,7 +265,7 @@ def build_agent(llm):
                 tier="premium", temperature=0.2, max_tokens=500,
             )
         except Exception as exc:  # noqa: BLE001 - the rule-written summary is used instead
-            print(f"⚠️ Report explanation skipped: {type(exc).__name__}")
+            print(f"Report explanation skipped: {type(exc).__name__}")
             return {}
         if not isinstance(raw, dict):
             return {}

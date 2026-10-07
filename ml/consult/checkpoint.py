@@ -61,7 +61,7 @@ def build_checkpointer():
         saver.serde = serde
         return saver, f"mongodb (db '{db_name}', AES-encrypted, {config.CHECKPOINT_TTL_S // 86400}-day TTL)"
     except Exception as exc:  # noqa: BLE001
-        print(f"⚠️ Checkpointer: MongoDB unavailable ({type(exc).__name__}); using memory.")
+        print(f"Checkpointer: MongoDB unavailable ({type(exc).__name__}); using memory.")
         return _memory(), "memory (MongoDB unreachable at startup)"
 
 

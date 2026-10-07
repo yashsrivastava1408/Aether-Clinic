@@ -165,7 +165,7 @@ class LLMRouter:
                 # very next call cannot help, so skip this provider for a while.
                 if any(part in name for part in ("Connection", "Timeout", "NotFound", "Authentication", "PermissionDenied")):
                     self._down_until[provider] = time.time() + config.LLM_COOLDOWN_S
-                print(f"⚠️ LLM provider '{provider}' failed ({name}); trying next.")
+                print(f"LLM provider '{provider}' failed ({name}); trying next.")
         raise LLMUnavailable("; ".join(errors) or "no LLM provider is configured")
 
     def text(self, messages: list, **kwargs) -> tuple[str, str]:

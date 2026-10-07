@@ -20,7 +20,7 @@ export const BentoCard = ({ title, subtitle, icon, color, onPress, size = 'small
     const translateY = useRef(new Animated.Value(50)).current;
     const rotate = useRef(new Animated.Value(0)).current;
 
-    // 🚀 Crazy Entrance Animation
+    // Crazy Entrance Animation
     useEffect(() => {
         Animated.sequence([
             Animated.delay(delay),

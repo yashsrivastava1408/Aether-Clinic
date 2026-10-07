@@ -1,17 +1,14 @@
-import React, { useState, Suspense, lazy } from "react";
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import React, { Suspense, lazy, useEffect } from "react";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import SplashScreen from "./components/SplashScreen";
-import HolographicCursor from "./components/HolographicCursor";
-import PageTransition from "./components/PageTransition";
-import SystemFooter from "./components/SystemFooter";
-import ThemeTransition from "./components/ThemeTransition";
+import Footer from "./components/Footer";
 import WelcomeScreen from "./components/WelcomeScreen";
+import { Spinner } from "./components/Icons";
 
 import { ThemeProvider } from "./context/ThemeContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
-// Lazy Load Pages for Performance
+// Pages are loaded when they are first opened
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Consultation = lazy(() => import("./pages/Consultation"));
 const About = lazy(() => import("./pages/About"));
@@ -22,84 +19,52 @@ const DiabetesRisk = lazy(() => import("./pages/DiabetesRisk"));
 const Settings = lazy(() => import("./pages/Settings"));
 const FollowUp = lazy(() => import("./pages/FollowUp"));
 const Review = lazy(() => import("./pages/Review"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
-// Loading Component
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-[#030303]">
-    <div className="flex flex-col items-center gap-4">
-      <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
-      <div className="text-emerald-500 font-mono text-sm animate-pulse">LOADING_MODULE...</div>
-    </div>
+  <div className="flex min-h-[50vh] items-center justify-center text-muted" role="status" aria-label="Loading">
+    <Spinner className="h-6 w-6" />
   </div>
 );
 
-// Main Content Wrapper to handle Routing
 const MainContent = () => {
-  const [showSplash, setShowSplash] = useState(true);
-  const { hasOnboarded } = useAuth();
+  const { hasOnboarded, isLoading } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
+  const isChat = location.pathname.startsWith("/chatbot");
 
-  // Hide splash screen callback
-  const handleSplashComplete = React.useCallback(() => {
-    setShowSplash(false);
-  }, []);
+  // Each page starts at the top
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
-  // Redirect to Dashboard on Refresh (Mount)
-  // If user refreshes on Consultation or Chatbot, force them back to Dashboard
-  React.useEffect(() => {
-    const path = location.pathname;
-    if (path.includes("/consultation") || path.includes("/chatbot")) {
-      console.log("🔄 Detected deep link/refresh on restricted route. Redirecting to Dashboard.");
-      navigate("/dashboard", { replace: true });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array = Runs ONLY on Mount (Initial Load/Refresh)
+  if (isLoading) return <PageLoader />;
+  if (!hasOnboarded) return <WelcomeScreen />;
 
   return (
-    <div className="bg-slate-50 dark:bg-[#030303] min-h-screen text-slate-900 dark:text-gray-100 font-sans transition-colors duration-500 app-container">
-      {/* Splash Screen - Overlays everything */}
-      {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
+    <div className="flex min-h-screen flex-col">
+      <Navbar />
 
-      <ThemeTransition />
+      <main className="flex-1">
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/consultation" element={<Consultation />} />
+            <Route path="/chatbot/:specialization" element={<Chatbot />} />
+            <Route path="/report" element={<ReportAnalyzer />} />
+            <Route path="/heart" element={<HeartRisk />} />
+            <Route path="/diabetes" element={<DiabetesRisk />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/followup/:token" element={<FollowUp />} />
+            <Route path="/review" element={<Review />} />
+            <Route path="/about" element={<About />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </main>
 
-      {/* Global Sci-Fi Cursor - Show whenever splash is done */}
-      {!showSplash && <HolographicCursor />}
-
-      {/* Only show app content if Splash IS DONE */}
-      {!showSplash && !hasOnboarded && (
-        <WelcomeScreen />
-      )}
-
-      {/* Hide Navbar during splash or welcome screen */}
-      {!showSplash && hasOnboarded && (
-        <>
-          <Navbar currentPath={location.pathname} />
-
-          <main className="pt-20">
-            <PageTransition key={location.pathname}>
-              <Suspense fallback={<PageLoader />}>
-                <Routes location={location}>
-                  <Route path="/" element={<Dashboard navigate={navigate} />} />
-                  <Route path="/dashboard" element={<Dashboard navigate={navigate} />} />
-                  <Route path="/consultation" element={<Consultation />} />
-
-                  <Route path="/chatbot/:specialization" element={<Chatbot />} />
-                  <Route path="/report" element={<ReportAnalyzer />} />
-                  <Route path="/heart" element={<HeartRisk />} />
-                  <Route path="/diabetes" element={<DiabetesRisk />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/followup/:token" element={<FollowUp />} />
-                  <Route path="/review" element={<Review />} />
-                  <Route path="/about" element={<About />} />
-                </Routes>
-              </Suspense>
-            </PageTransition>
-          </main>
-
-          <SystemFooter />
-        </>
-      )}
+      {/* The chat fills the screen, so it has no footer under it */}
+      {!isChat && <Footer />}
     </div>
   );
 };
@@ -107,11 +72,11 @@ const MainContent = () => {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <ThemeProvider>
+      <ThemeProvider>
+        <AuthProvider>
           <MainContent />
-        </ThemeProvider>
-      </AuthProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

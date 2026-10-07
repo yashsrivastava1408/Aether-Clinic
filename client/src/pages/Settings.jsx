@@ -5,13 +5,39 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import LegalModal from "../components/LegalModal";
 
+function Toggle({ checked, onChange, label }) {
+    return (
+        <button
+            role="switch"
+            aria-checked={checked}
+            aria-label={label}
+            onClick={onChange}
+            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? 'bg-brand' : 'bg-line'}`}
+        >
+            <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : ''}`} />
+        </button>
+    );
+}
+
+function Row({ title, text, children }) {
+    return (
+        <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+                <p className="text-sm font-medium text-ink">{title}</p>
+                {text && <p className="mt-0.5 text-sm leading-relaxed text-muted">{text}</p>}
+            </div>
+            {children}
+        </div>
+    );
+}
+
 export default function Settings() {
-    const { user, logout } = useAuth();
+    const { user, logout, showSignIn } = useAuth();
     const { theme, toggleTheme } = useTheme();
-    const [_notifications, _setNotifications] = useState(true); // Reserved for future use
     const [showLegal, setShowLegal] = useState(false);
     const [memoryOn, setMemoryOn] = useState(isMemoryEnabled());
     const [memoryEntries, setMemoryEntries] = useState(null);
+    const [memoryError, setMemoryError] = useState("");
 
     useEffect(() => {
         fetchMemory().then(setMemoryEntries).catch(() => setMemoryEntries(null));
@@ -24,201 +50,95 @@ export default function Settings() {
 
     const handleClearMemory = async () => {
         if (!window.confirm("Delete the saved summaries of your past consultations?")) return;
+        setMemoryError("");
         try {
             await clearMemory();
             setMemoryEntries([]);
         } catch (err) {
             console.error("Could not clear health memory", err);
+            setMemoryError("The saved summaries could not be deleted. Please try again.");
         }
     };
 
     return (
-        <div className={`min-h-screen pt-24 px-6 pb-12 transition-colors duration-300 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-            <div className="max-w-3xl mx-auto space-y-8">
+        <div className="page-narrow">
+            <h1 className="page-title">Settings</h1>
 
-                {/* Header */}
-                <div className="flex flex-col gap-1">
-                    <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-                    <p className="text-emerald-500 font-mono text-xs tracking-widest uppercase opacity-80">
-                        SYSTEM_PREFERENCES.CONFIG // v2.0.4
-                    </p>
-                </div>
+            <div className="mt-8 space-y-6">
 
-                <div className="grid gap-6">
-
-                    {/* 👤 Account Section */}
-                    <div className={`p-6 rounded-2xl border transition-all duration-300 ${theme === 'dark' ? 'bg-white/5 border-white/10 hover:border-emerald-500/30' : 'bg-white border-gray-200 shadow-sm hover:shadow-md'}`}>
-                        <h2 className="text-lg font-semibold mb-6 flex items-center gap-2 text-emerald-500">
-                            <span>👤</span> Account Profile
-                        </h2>
-
-                        <div className="flex items-center gap-5 mb-6">
-                            <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl border-2 ${theme === 'dark' ? 'bg-emerald-900/20 border-emerald-500/30 text-white' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
-                                {user?.avatar ? (
-                                    <img src={user.avatar} alt="Avatar" className="w-full h-full rounded-full object-cover" />
-                                ) : (
-                                    user?.name?.charAt(0).toUpperCase()
-                                )}
-                            </div>
-                            <div>
-                                <p className="font-bold text-lg">{user?.name}</p>
-                                <p className="text-sm opacity-60 font-mono">{user?.email}</p>
-                                <div className="mt-1 flex items-center gap-2">
-                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${theme === 'dark' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-emerald-100 border-emerald-200 text-emerald-700'}`}>
-                                        {user?.isGuest ? 'GUEST ACCESS' : 'VERIFIED USER'}
-                                    </span>
-                                </div>
+                {/* Account */}
+                <section className="card p-6">
+                    <h2 className="text-base font-semibold text-ink">Account</h2>
+                    <div className="mt-4 flex items-center justify-between gap-4">
+                        <div className="flex min-w-0 items-center gap-4">
+                            <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-soft text-lg font-semibold text-brand">
+                                {user?.avatar
+                                    ? <img src={user.avatar} alt="" className="h-full w-full object-cover" />
+                                    : user?.name?.charAt(0).toUpperCase()}
+                            </span>
+                            <div className="min-w-0">
+                                <p className="truncate font-medium text-ink">{user?.name}</p>
+                                <p className="truncate text-sm text-muted">{user?.isGuest ? 'Using MedNexus as a guest' : user?.email}</p>
                             </div>
                         </div>
+                        {user?.isGuest
+                            ? <button onClick={showSignIn} className="btn btn-primary shrink-0">Sign in</button>
+                            : <button onClick={logout} className="btn btn-secondary shrink-0">Sign out</button>}
+                    </div>
+                </section>
 
-                        <button
-                            onClick={logout}
-                            className="w-full sm:w-auto px-6 py-2.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition-all font-medium text-sm flex items-center justify-center gap-2"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                            Sign Out
+                {/* Appearance */}
+                <section className="card p-6">
+                    <h2 className="mb-4 text-base font-semibold text-ink">Appearance</h2>
+                    <Row title="Dark mode" text="Use a dark background across the app.">
+                        <Toggle checked={theme === 'dark'} onChange={toggleTheme} label="Dark mode" />
+                    </Row>
+                </section>
+
+                {/* Health memory */}
+                <section className="card p-6">
+                    <h2 className="mb-4 text-base font-semibold text-ink">Health memory</h2>
+                    <Row
+                        title="Remember past consultations"
+                        text="A short encrypted summary of each finished consultation is used as background next time."
+                    >
+                        <Toggle checked={memoryOn} onChange={toggleMemory} label="Remember past consultations" />
+                    </Row>
+
+                    {memoryEntries && memoryEntries.length > 0 && (
+                        <ul className="mt-4 divide-y divide-line border-y border-line text-sm">
+                            {memoryEntries.map((entry, i) => (
+                                <li key={i} className="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:gap-3">
+                                    <span className="shrink-0 tabular-nums text-muted">{entry.date}</span>
+                                    <span className="text-ink"><span className="font-medium">{entry.specialist}:</span> {entry.complaint}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+
+                    <div className="mt-4 flex items-center justify-between gap-4">
+                        <p className="text-sm text-muted">
+                            {memoryEntries === null ? "Saved summaries could not be loaded." : `${memoryEntries.length} saved ${memoryEntries.length === 1 ? "summary" : "summaries"}`}
+                        </p>
+                        <button onClick={handleClearMemory} disabled={!memoryEntries || memoryEntries.length === 0} className="btn btn-danger shrink-0">
+                            Delete all
                         </button>
                     </div>
+                    {memoryError && <p className="notice notice-danger mt-3" role="alert">{memoryError}</p>}
+                </section>
 
-                    {/* 🎨 Appearance & Experience */}
-                    <div className={`p-6 rounded-2xl border transition-all duration-300 ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-sm'}`}>
-                        <h2 className="text-lg font-semibold mb-6 flex items-center gap-2 text-blue-500">
-                            <span>🎨</span> Appearance
-                        </h2>
-
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="font-medium">Dark Mode</p>
-                                <p className="text-xs opacity-60">Toggle system-wide dark theme</p>
-                            </div>
-                            <button
-                                onClick={toggleTheme}
-                                className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 ${theme === 'dark' ? 'bg-blue-500' : 'bg-gray-300'}`}
-                            >
-                                <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${theme === 'dark' ? 'translate-x-7' : 'translate-x-0'}`} />
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* 🛡️ Security & Privacy */}
-                    <div className={`p-6 rounded-2xl border transition-all duration-300 ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-sm'}`}>
-                        <h2 className="text-lg font-semibold mb-6 flex items-center gap-2 text-purple-500">
-                            <span>🛡️</span> Security & Privacy
-                        </h2>
-
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between pb-4 border-b border-gray-500/10">
-                                <div>
-                                    <p className="font-medium">Encryption Status</p>
-                                    <p className="text-xs opacity-60">Data transmission security</p>
-                                </div>
-                                <div className="flex items-center gap-2 text-emerald-500 text-xs font-mono font-bold">
-                                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                                    AES-256 ACTIVE
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="font-medium">2FA & Recovery</p>
-                                    <p className="text-xs opacity-60">Managed via Google Account</p>
-                                </div>
-                                <span className={`px-2 py-1 rounded text-[10px] border ${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-gray-100 border-gray-200 text-gray-600'}`}>
-                                    EXTERNAL
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 🧠 Health Memory */}
-                    <div className={`p-6 rounded-2xl border transition-all duration-300 ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-sm'}`}>
-                        <h2 className="text-lg font-semibold mb-6 flex items-center gap-2 text-emerald-500">
-                            <span>🧠</span> Health Memory
-                        </h2>
-
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between pb-4 border-b border-gray-500/10">
-                                <div>
-                                    <p className="font-medium">Remember past consultations</p>
-                                    <p className="text-xs opacity-60">A short encrypted summary of each finished consultation is used as background next time</p>
-                                </div>
-                                <button
-                                    onClick={toggleMemory}
-                                    aria-label="Remember past consultations"
-                                    className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 ${memoryOn ? 'bg-emerald-500' : 'bg-gray-300'}`}
-                                >
-                                    <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${memoryOn ? 'translate-x-7' : 'translate-x-0'}`} />
-                                </button>
-                            </div>
-
-                            {memoryEntries && memoryEntries.length > 0 && (
-                                <ul className="space-y-1 text-sm">
-                                    {memoryEntries.map((entry, i) => (
-                                        <li key={i} className="opacity-80">
-                                            <span className="font-mono text-xs opacity-60">{entry.date}</span> · {entry.specialist}: {entry.complaint}
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-
-                            <div className="flex items-center justify-between">
-                                <p className="text-xs opacity-60">
-                                    {memoryEntries === null ? "Saved summaries could not be loaded" : `${memoryEntries.length} saved ${memoryEntries.length === 1 ? "summary" : "summaries"}`}
-                                </p>
-                                <button
-                                    onClick={handleClearMemory}
-                                    disabled={!memoryEntries || memoryEntries.length === 0}
-                                    className="px-4 py-2 text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors disabled:opacity-40"
-                                >
-                                    Delete all
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 🩺 Clinician tools */}
-                    <div className={`p-6 rounded-2xl border transition-all duration-300 ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-sm'}`}>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="font-medium">Clinician review queue</p>
-                                <p className="text-xs opacity-60">Approve or edit assessments before they are released (needs a reviewer key)</p>
-                            </div>
-                            <Link to="/review" className="px-4 py-2 text-xs font-medium bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 border border-blue-500/20 rounded-lg transition-colors">
-                                Open queue
-                            </Link>
-                        </div>
-                    </div>
-
-                    {/* ⚖️ Legal & Compliance */}
-                    <div className={`p-6 rounded-2xl border transition-all duration-300 ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-sm'}`}>
-                        <h2 className="text-lg font-semibold mb-6 flex items-center gap-2 text-yellow-500">
-                            <span>⚖️</span> Legal & Compliance
-                        </h2>
-
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="font-medium">Legal Protocols</p>
-                                <p className="text-xs opacity-60">Terms, Privacy, and Disclaimers</p>
-                            </div>
-                            <button
-                                onClick={() => setShowLegal(true)}
-                                className="px-4 py-2 text-xs font-medium bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 border border-yellow-500/20 rounded-lg transition-colors"
-                            >
-                                View Documents
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* 💻 System Info */}
-                    <div className="text-center pt-4 opacity-40">
-                        <p className="text-xs font-mono">MedNexus v2.1.0 (Stable)</p>
-                        <p className="text-[10px]">Build: 2026.01.16.RC4</p>
-                    </div>
-
-                </div>
+                {/* Clinician tools and legal */}
+                <section className="card space-y-5 p-6">
+                    <Row title="Clinician review queue" text="Approve or edit assessments before they are released. Needs a reviewer key.">
+                        <Link to="/review" className="btn btn-secondary shrink-0">Open queue</Link>
+                    </Row>
+                    <div className="border-t border-line" />
+                    <Row title="Terms and privacy" text="The medical disclaimer, how your data is handled and the terms of use.">
+                        <button onClick={() => setShowLegal(true)} className="btn btn-secondary shrink-0">View</button>
+                    </Row>
+                </section>
             </div>
 
-            {/* Legal Modal */}
             <LegalModal isOpen={showLegal} onClose={() => setShowLegal(false)} />
         </div>
     );

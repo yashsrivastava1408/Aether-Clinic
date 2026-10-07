@@ -80,7 +80,7 @@ def ingest(recreate: bool = False) -> int:
 
         chunks = load_chunks(config.CORPUS_DIR)
         if not chunks:
-            print(f"⚠️ Retrieval: no corpus files found in {config.CORPUS_DIR}")
+            print(f"Retrieval: no corpus files found in {config.CORPUS_DIR}")
             return 0
 
         vectors = embeddings.embed_documents([c["embed_text"] for c in chunks])
@@ -106,7 +106,7 @@ def ingest(recreate: bool = False) -> int:
         if stale:
             client.delete(name, points_selector=models.PointIdsList(points=stale), wait=True)
 
-        print(f"✅ Retrieval: indexed {len(points)} chunks into '{name}'")
+        print(f"Retrieval: indexed {len(points)} chunks into '{name}'")
         return len(points)
 
 

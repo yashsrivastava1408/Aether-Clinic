@@ -9,13 +9,13 @@ const router = express.Router();
 router.post('/login', async (req, res) => {
     try {
         const { email, name, picture, googleId, isGuest } = req.body;
-        console.log("👤 Login request:", email);
+        console.log("Login request:", email);
 
         let user = await User.findOne({ email });
 
         if (user) {
             // Update existing user
-            console.log("♻️ Existing User Logged In:", email);
+            console.log("Existing User Logged In:", email);
             user.name = name || user.name;
             user.picture = picture || user.picture;
             user.lastLogin = new Date();
@@ -30,16 +30,16 @@ router.post('/login', async (req, res) => {
                 isGuest: !!isGuest
             });
             await user.save();
-            console.log("✨ New User Created:", user.name, `(${email})`);
+            console.log("New User Created:", user.name, `(${email})`);
 
             // Send Welcome Email for new users (Non-blocking)
             if (email && !isGuest) {
-                console.log("📨 Triggering automated welcome email for:", email);
+                console.log("Triggering automated welcome email for:", email);
                 sendWelcomeEmail(email, user.name).catch(err =>
-                    console.error("📧 Background Email Error:", err)
+                    console.error("Background Email Error:", err)
                 );
             } else {
-                console.log("⏭️ Skipping email (Guest or Missing Email)");
+                console.log("Skipping email (Guest or Missing Email)");
             }
         }
 

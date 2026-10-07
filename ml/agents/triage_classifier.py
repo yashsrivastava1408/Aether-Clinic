@@ -94,13 +94,13 @@ def classify_query(query: str, specialization: str = "General Medicine") -> dict
     # === STEP 4: Urgency Assessment ===
     if is_emergency:
         urgency = "emergency"
-        routing_hint = f"🚨 EMERGENCY detected: '{emergency_match}'. Prioritizing safety protocols."
+        routing_hint = f"EMERGENCY detected: '{emergency_match}'. Prioritizing safety protocols."
     elif any(word in query_lower for word in ["severe", "sudden", "worst", "unbearable", "rapidly", "worsening"]):
         urgency = "urgent"
-        routing_hint = f"⚡ URGENT: Severity keywords detected. Category: {primary_category}"
+        routing_hint = f"URGENT: Severity keywords detected. Category: {primary_category}"
     else:
         urgency = "routine"
-        routing_hint = f"📋 ROUTINE: Classified as {primary_category}"
+        routing_hint = f"ROUTINE: Classified as {primary_category}"
 
     return {
         "category": primary_category,

@@ -27,7 +27,7 @@ export default function ProfileScreen() {
                 style={StyleSheet.absoluteFill}
             />
 
-            {/* 🕸️ BACKGROUND MESH */}
+            {/* BACKGROUND MESH */}
             <View style={styles.bgGrid} pointerEvents="none" />
 
             <SafeAreaView style={{ flex: 1 }}>
@@ -39,7 +39,7 @@ export default function ProfileScreen() {
                         <Text style={styles.pageSubtitle}>Biometric Profile Active</Text>
                     </View>
 
-                    {/* 🦸 HERO PROFILE */}
+                    {/* HERO PROFILE */}
                     <View style={styles.profileHeader}>
                         <LinearGradient
                             colors={['rgba(16, 185, 129, 0.2)', 'transparent']}
@@ -57,7 +57,7 @@ export default function ProfileScreen() {
                         )}
                     </View>
 
-                    {/* 📊 STATS GRID */}
+                    {/* STATS GRID */}
                     <View style={styles.statsGrid}>
                         <View style={styles.statCard}>
                             <Text style={styles.statLabel}>AGE</Text>
@@ -73,13 +73,13 @@ export default function ProfileScreen() {
                         </View>
                     </View>
 
-                    {/* ⚙️ MENU ITEMS */}
+                    {/* MENU ITEMS */}
                     <View style={styles.menuContainer}>
                         <MenuOption icon="document-text-outline" label="Medical Records" sub="Encrypted History" />
                         <MenuOption icon="fitness-outline" label="Vitals Log" sub="Last check: 2h ago" />
                         <MenuOption icon="settings-outline" label="Neural Settings" sub="Notifications, Privacy" />
 
-                        {/* ⚖️ LEGAL & SAFETY */}
+                        {/* LEGAL & SAFETY */}
                         <View style={styles.sectionSpacer}>
                             <Text style={styles.sectionTitle}>LEGAL & SAFETY</Text>
                         </View>

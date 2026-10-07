@@ -51,9 +51,9 @@ export async function analyzeReport(text, imageBase64 = null) {
 
     // FALLBACK: Return Mock Analysis so the user sees *something* working, rather than just "Failed".
     // This is crucial for demo/debug purposes if API keys are invalid.
-    console.warn("⚠️ Returning Fallback Mock Data due to AI Error.");
+    console.warn("Returning Fallback Mock Data due to AI Error.");
     return {
-      summary: "⚠️ AI Analysis Unavailable (Fallback Mode). This is a simulation based on typical values.",
+      summary: "AI Analysis Unavailable (Fallback Mode). This is a simulation based on typical values.",
       findings: [
         "System detected a potential connection issue with the AI Core.",
         "Report appears to be a standard clinical document.",

@@ -40,7 +40,7 @@ def _warm_up() -> None:
         from retrieval import store
         store.ensure_ready()
     except Exception as exc:  # noqa: BLE001
-        print(f"⚠️ Retrieval warm-up failed: {type(exc).__name__}: {exc}")
+        print(f"Retrieval warm-up failed: {type(exc).__name__}: {exc}")
 
 
 if os.getenv("SKIP_WARMUP", "").lower() not in ("1", "true"):
@@ -71,7 +71,7 @@ def _predict(problem: str):
     except risk_models.RiskInputError as e:
         return jsonify({"error": str(e)}), 400
     except Exception as e:
-        print(f"❌ {problem} prediction error:", e)
+        print(f"{problem} prediction error:", e)
         traceback.print_exc()
         return jsonify({"error": f"{problem.capitalize()} prediction failed"}), 500
 
@@ -128,7 +128,7 @@ def consult():
         from consult import get_service
         return jsonify(get_service().run(thread_id, payload))
     except Exception as e:
-        print(f"❌ Consult error: {type(e).__name__}: {e}")
+        print(f"Consult error: {type(e).__name__}: {e}")
         traceback.print_exc()
         return jsonify({"error": "Consultation failed"}), 500
 
@@ -147,7 +147,7 @@ def consult_stream():
             for item in get_service().stream(thread_id, payload):
                 yield f"event: {item['event']}\ndata: {json.dumps(item['data'], ensure_ascii=False)}\n\n"
         except Exception as e:  # noqa: BLE001
-            print(f"❌ Consult stream error: {type(e).__name__}: {e}")
+            print(f"Consult stream error: {type(e).__name__}: {e}")
             traceback.print_exc()
             yield f"event: error\ndata: {json.dumps({'error': 'Consultation failed'})}\n\n"
 
@@ -166,7 +166,7 @@ def consult_reviews():
         service = get_service()
         return jsonify({"review_mode": config.REVIEW_MODE, "pending": service.reviews.list()})
     except Exception as e:
-        print(f"❌ Review list error: {type(e).__name__}: {e}")
+        print(f"Review list error: {type(e).__name__}: {e}")
         return jsonify({"error": "Could not load the review queue"}), 500
 
 
@@ -188,7 +188,7 @@ def consult_review(thread_id):
     except KeyError:
         return jsonify({"error": "No review is pending for this consultation"}), 404
     except Exception as e:
-        print(f"❌ Review error: {type(e).__name__}: {e}")
+        print(f"Review error: {type(e).__name__}: {e}")
         traceback.print_exc()
         return jsonify({"error": "Review failed"}), 500
 
@@ -211,7 +211,7 @@ def report_analyze():
             return jsonify({"error": "REPORT_ANALYSIS_UNAVAILABLE",
                             "message": "The report could not be analysed right now. Please try again shortly."}), 503
     except Exception as e:
-        print(f"❌ Report analysis error: {type(e).__name__}: {e}")
+        print(f"Report analysis error: {type(e).__name__}: {e}")
         traceback.print_exc()
         return jsonify({"error": "Report analysis failed"}), 500
 
@@ -224,7 +224,7 @@ def consult_delete(thread_id):
         get_service().delete_thread(thread_id)
         return jsonify({"deleted": True})
     except Exception as e:
-        print(f"❌ Consult delete error: {type(e).__name__}: {e}")
+        print(f"Consult delete error: {type(e).__name__}: {e}")
         return jsonify({"deleted": False, "error": "Could not delete consultation state"}), 500
 
 
@@ -321,7 +321,7 @@ def intelligence_query():
             "has_context": len(results) > 0
         })
     except Exception as e:
-        print(f"❌ Intelligence Query Error: {str(e)}")
+        print(f"Intelligence Query Error: {str(e)}")
         traceback.print_exc()
         return jsonify({"error": "Retrieval failed", "context": "", "citations": [], "chunk_count": 0, "has_context": False}), 500
 
@@ -349,7 +349,7 @@ def intelligence_verify():
         )
         return jsonify(result)
     except Exception as e:
-        print(f"❌ Safety Verification Error: {str(e)}")
+        print(f"Safety Verification Error: {str(e)}")
         traceback.print_exc()
         from consult.nodes import UNAVAILABLE_REPLY
         return jsonify({
@@ -366,11 +366,11 @@ def intelligence_verify():
 # ═══════════════════════════════════════════════════
 if __name__ == "__main__":
     print("\n" + "═" * 60)
-    print("🏥 Aether Clinic — ML & Intelligence Service")
+    print("Aether Clinic — ML & Intelligence Service")
     print("═" * 60)
-    print("  📊 ML Models: Heart Disease, Diabetes")
-    print("  🧠 Consultation: LangGraph flow with hybrid Qdrant retrieval")
-    print("  🛡️ Safety: emergency screen, guardrail, fail-closed verification")
+    print("  ML Models: Heart Disease, Diabetes")
+    print("  Consultation: LangGraph flow with hybrid Qdrant retrieval")
+    print("  Safety: emergency screen, guardrail, fail-closed verification")
     print("═" * 60 + "\n")
 
     app.run(

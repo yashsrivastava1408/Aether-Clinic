@@ -61,7 +61,7 @@ accuracy = accuracy_score(y_test, y_pred)
 joblib.dump(best_model, "models/diabetes_model.pkl")
 
 print("\n" + "="*50)
-print(f"{Fore.GREEN}✅ TRAINING COMPLETE: DIABETES MODEL")
+print(f"{Fore.GREEN}TRAINING COMPLETE: DIABETES MODEL")
 print("-" * 50)
 print(f"{Fore.CYAN}Best Params: {Style.RESET_ALL}{grid.best_params_}")
 print(f"{Fore.YELLOW}Accuracy:    {Style.BRIGHT}{accuracy*100:.2f}%")

@@ -43,6 +43,6 @@ accuracy = accuracy_score(y_test, y_pred)
 # We won't overwrite the main model yet until we confirm it's better
 joblib.dump(best_model, "models/heart_model_gb.pkl")
 
-print("✅ Gradient Boosting Heart Model Trained")
+print("Gradient Boosting Heart Model Trained")
 print("Best Parameters:", grid.best_params_)
 print("Accuracy:", accuracy)

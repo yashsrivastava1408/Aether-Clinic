@@ -10,7 +10,7 @@ import { HolographicGlobe } from '@/components/explore/HolographicGlobe';
 import { router } from 'expo-router';
 
 // -----------------------------------------------------------------------------
-// 🔮 THEME & DATA
+// THEME & DATA
 // -----------------------------------------------------------------------------
 const THEME = {
   bg: '#050505',
@@ -40,13 +40,13 @@ export default function ExploreScreen() {
         style={StyleSheet.absoluteFill}
       />
 
-      {/* 🕸️ BACKGROUND MESH */}
+      {/* BACKGROUND MESH */}
       <View style={styles.bgGrid} pointerEvents="none" />
 
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll}>
 
-          {/* 🌍 GLOBAL SCANNER */}
+          {/* GLOBAL SCANNER */}
           <HolographicGlobe />
 
           <View style={styles.header}>
@@ -82,7 +82,7 @@ export default function ExploreScreen() {
             </ScrollView>
           </View>
 
-          {/* 📡 ACTIVE RADAR */}
+          {/* ACTIVE RADAR */}
           <View style={styles.sectionHeader}>
             <Ionicons name="radio" size={18} color={THEME.primary} style={{ marginRight: 8 }} />
             <Text style={styles.sectionTitle}>NEARBY_NODES</Text>
@@ -103,7 +103,7 @@ export default function ExploreScreen() {
             </LinearGradient>
           </TouchableOpacity>
 
-          {/* 👨‍⚕️ SPECIALISTS FEED */}
+          {/* SPECIALISTS FEED */}
           <View style={[styles.sectionHeader, { marginTop: 32 }]}>
             <Ionicons name="people" size={18} color="#f472b6" style={{ marginRight: 8 }} />
             <Text style={styles.sectionTitle}>TOP_SPECIALISTS</Text>

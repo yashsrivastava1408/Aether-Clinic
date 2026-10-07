@@ -118,4 +118,4 @@ ABCDE Rule for Moles (Melanoma Screening):
 - D = Diameter: Larger than 6mm (pencil eraser size)
 - E = Evolving: Size, shape, or color is changing
 
-⚠️ If ANY of the ABCDE criteria are met, seek dermatological evaluation promptly. Early detection of melanoma is critical for survival.
+WARNING: If ANY of the ABCDE criteria are met, seek dermatological evaluation promptly. Early detection of melanoma is critical for survival.

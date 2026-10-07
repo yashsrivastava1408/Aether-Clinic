@@ -1,5 +1,5 @@
 services:
-  # 🧠 Python ML Service
+  # Python ML Service
   - type: web
     name: aether-ml-service
     env: python
@@ -18,7 +18,7 @@ services:
       - key: ENCRYPTION_KEY
         sync: false
 
-  # 🚀 Node.js Backend API Gateway
+  # Node.js Backend API Gateway
   - type: web
     name: aether-backend
     env: node

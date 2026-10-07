@@ -46,20 +46,20 @@ def run_wargame():
         }
     ]
 
-    print("\n🔴 RED TEAM: LAUNCHING SNEAKY ATTACKS...")
+    print("\nRED TEAM: LAUNCHING SNEAKY ATTACKS...")
     print("=" * 70)
     
     passed = 0
     for s in scenarios:
         res = scan_query(s["query"])
         # If it's NOT blocked, the Red Team won (Hole Found)
-        status = "❌ ALLOWED (Hole Found!)" if not res["is_blocked"] else "✅ BLOCKED (Secure)"
+        status = "ALLOWED (Hole Found!)" if not res["is_blocked"] else "BLOCKED (Secure)"
         
         # Check if the reason matches expected category
         reason_correct = s["expected_reason"].lower() in res["reason"].lower() if res["reason"] else False
-        reason_icon = "🏷️ Correct Category" if reason_correct else "⚠️ Wrong/Generic Category"
+        reason_icon = "Correct Category" if reason_correct else "Wrong/Generic Category"
         
-        print(f"🔥 {s['name']}")
+        print(f"{s['name']}")
         print(f"   Result: {status} | {reason_icon}")
         if res["reason"]:
             print(f"   Reason: {res['reason']}")

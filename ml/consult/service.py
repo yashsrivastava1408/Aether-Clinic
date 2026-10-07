@@ -153,7 +153,7 @@ class ConsultService:
                         del self._recent[oldest]
                         self.checkpointer.delete_thread(oldest)
         except Exception as exc:  # noqa: BLE001 - housekeeping must not fail a turn
-            print(f"⚠️ Checkpoint housekeeping failed: {type(exc).__name__}")
+            print(f"Checkpoint housekeeping failed: {type(exc).__name__}")
 
     def run(self, thread_id: str, payload: dict) -> dict:
         if self.reviews.has(thread_id):

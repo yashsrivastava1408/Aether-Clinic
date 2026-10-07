@@ -5,19 +5,19 @@ A comprehensive, privacy-first healthcare platform integrating React Native Mobi
 ---
 
 ## Table of Contents
-- [📸 Screenshots & Demo](#-screenshots--demo)
+- [Screenshots & Demo](#screenshots--demo)
 - [System Workflows](#detailed-system-workflows)
 - [High-Level Architecture](#high-level-architecture)
 - [Intelligence Hub (LangGraph Consultation Flow)](#intelligence-hub-langgraph-consultation-flow)
-- [Advanced Scaling & Hardware-Aware AI](#advanced-scaling--hardware-aware-ai-)
-- [Kubernetes Deployment](#kubernetes-deployment-)
+- [Advanced Scaling & Hardware-Aware AI](#advanced-scaling--hardware-aware-ai)
+- [Kubernetes Deployment](#kubernetes-deployment)
 - [Key System Components](#key-system-components)
 - [Security & Privacy Architecture](#security--privacy-architecture)
 - [Repository Structure](#repository-structure)
 
 ---
 
-## 📸 Screenshots & Demo
+## Screenshots & Demo
 
 | **Neural Consultation Interface** | **Cardiac Risk Analyzer** |
 | :---: | :---: |
@@ -176,7 +176,7 @@ Full details, measured retrieval numbers and configuration: [docs/ARCHITECTURE.m
 
 ---
 
-## Advanced Scaling & Hardware-Aware AI 🧠🚀
+## Advanced Scaling & Hardware-Aware AI
 
 To ensure production-grade reliability and cost-efficiency, MedNexus implements a **Four-Layer Model Infrastructure** that dynamically adapts to the user's hardware and subscription status.
 
@@ -259,7 +259,7 @@ This starts MongoDB, Qdrant, ML Service, Backend, and Frontend in a single bridg
 
 ---
 
-## Kubernetes Deployment ☸️
+## Kubernetes Deployment
 
 MedNexus supports production-grade deployment on a Kubernetes cluster with AWS ECR as the container registry. The deployment is fully automated via a single shell script.
 
@@ -267,7 +267,7 @@ MedNexus supports production-grade deployment on a Kubernetes cluster with AWS E
 
 ```mermaid
 graph TB
-    Internet["🌐 Internet"] --> LB["☁️ AWS EC2 Public IP"]
+    Internet["Internet"] --> LB["AWS EC2 Public IP"]
     LB --> IC["Nginx Ingress Controller"]
     
     subgraph K8s["Kubernetes Cluster (kubeadm)"]
@@ -309,15 +309,15 @@ graph TB
 
 ```mermaid
 flowchart LR
-    A["🧑‍💻 Developer"] -->|"git push"| B["📦 Source Code"]
-    B --> C["🏗️ deploy_k8s.sh"]
+    A["Developer"] -->|"git push"| B["Source Code"]
+    B --> C["deploy_k8s.sh"]
     
-    C --> D["🔐 AWS ECR Login"]
-    D --> E["🐳 Build & Push\n3 Docker Images"]
-    E --> F["📝 Substitute\nPlaceholders"]
-    F --> G["🛡️ Create K8s Secrets\n• aether-secrets\n• mongo-credentials\n• ecr-registry-secret"]
-    G --> H["⛵ kubectl apply"]
-    H --> I["✅ Pods Running"]
+    C --> D["AWS ECR Login"]
+    D --> E["Build & Push\n3 Docker Images"]
+    E --> F["Substitute\nPlaceholders"]
+    F --> G["Create K8s Secrets\n• aether-secrets\n• mongo-credentials\n• ecr-registry-secret"]
+    G --> H["kubectl apply"]
+    H --> I["Pods Running"]
     
     style A fill:#e1f5fe
     style I fill:#c8e6c9
@@ -506,5 +506,5 @@ ai-doctor-final/
 
 ---
 
-*Building for a safer, smarter future of healthcare.* ☸️🏥
+*Building for a safer, smarter future of healthcare.*
 

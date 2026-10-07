@@ -5,14 +5,14 @@
 
 set -e
 
-echo "🚀 Starting Aether Clinic Setup..."
+echo "Starting Aether Clinic Setup..."
 
 # 1. Update system
 sudo apt-get update -y
 sudo apt-get upgrade -y
 
 # 2. Install Docker
-echo "📦 Installing Docker..."
+echo "Installing Docker..."
 sudo apt-get install -y ca-certificates curl gnupg lsb-release
 sudo mkdir -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
@@ -31,6 +31,6 @@ sudo usermod -aG docker $USER
 # git clone <your-repo-url>
 # cd ai-doctor-final
 
-echo "✅ Docker installed successfully!"
-echo "⚠️ IMPORTANT: Log out and log back in (or run 'newgrp docker') for permissions to take effect."
+echo "Docker installed successfully!"
+echo "IMPORTANT: Log out and log back in (or run 'newgrp docker') for permissions to take effect."
 echo "Then run: PUBLIC_IP=\$(curl -s ifconfig.me) docker compose up -d"

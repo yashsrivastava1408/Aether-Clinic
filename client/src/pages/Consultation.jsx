@@ -1,426 +1,145 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import LegalModal from "../components/LegalModal";
-import TiltCard from "../components/TiltCard";
-import VoiceVisualizer from "../components/VoiceVisualizer";
-import NeuralSyncSequence from "../components/NeuralSyncSequence";
+import api from "../utils/api";
 import { getUserId } from "../utils/user";
-import axios from "axios";
-import { useTheme } from "../context/ThemeContext";
+import { specialists } from "../data/specialists";
+import { ArrowRight, Close, Spinner } from "../components/Icons";
 
-// --- Assets / Icons ---
-// Reuse same icons as before
-const HeartIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-full w-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.5l1.318-1.182a4.5 4.5 0 116.364 6.364L12 20.25l-7.682-7.682a4.5 4.5 0 010-6.364z" />
-  </svg>
-);
-const BrainIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-full w-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6.249a1 1 0 011.62-.78l5.38 6.271a1 1 0 010 1.56l-5.38 6.271A1 1 0 019 19z" transform="rotate(90 12 12)" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.5 8.5a2.5 2.5 0 115 0" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.5 8.5a2.5 2.5 0 115 0" />
-  </svg>
-);
-const LungsIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-full w-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 15c-3-3-3-8 0-11s8-3 11 0c3 3 3 8 0 11l-5.5 5.5L6 15z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 15c3-3 3-8 0-11s-8-3-11 0c-3 3-3 8 0 11l5.5 5.5L18 15z" />
-  </svg>
-);
-const StomachIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-full w-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6C6 6 3 9 3 13c0 4 3 7 9 7s9-3 9-7c0-4-3-7-9-7z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 13a3 3 0 100-6 3 3 0 000 6z" />
-  </svg>
-);
-const BoneIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-full w-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5c-1.104 0-2 .896-2 2v10c0 1.104.896 2 2 2h6c1.104 0 2-.896 2-2V7c0-1.104-.896-2-2-2H9z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19a2 2 0 002 2h2a2 2 0 002-2" />
-  </svg>
-);
-
-const specialists = [
-  { id: 1, name: "Heart Specialist", role: "Cardiologist", description: "Check your heart health and rhythm.", accuracy: "99.9%", cases: "12,402", icon: <HeartIcon />, color: "rose" },
-  { id: 2, name: "Brain Specialist", role: "Neurologist", description: "Help with headaches and nerve issues.", accuracy: "99.7%", cases: "8,291", icon: <BrainIcon />, color: "violet" },
-  { id: 3, name: "Lung Specialist", role: "Pulmonologist", description: "Check your breathing and lungs.", accuracy: "99.5%", cases: "15,100", icon: <LungsIcon />, color: "cyan" },
-  { id: 4, name: "Stomach Specialist", role: "Gastroenterologist", description: "Help with digestion and stomach pain.", accuracy: "99.8%", cases: "9,855", icon: <StomachIcon />, color: "emerald" },
-  { id: 5, name: "Bone Specialist", role: "Orthopedist", description: "Check your bones and joints.", accuracy: "99.6%", cases: "11,203", icon: <BoneIcon />, color: "violet" },
+const TIERS = [
+  { id: "basic", label: "Private", hint: "Tries the clinic's own local model first, then a cloud model if it is not available." },
+  { id: "premium", label: "Fast", hint: "Uses a cloud model first for quicker replies." },
 ];
 
 export default function Consultation() {
-  // Use Ref for rotation to avoid re-renders on every scroll event
-  const rotationRef = useRef(0);
-  const carouselRef = useRef(null);
-  const rafRef = useRef(null);
-  const [loading, setLoading] = useState(true);
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
   const navigate = useNavigate();
+  const [tier, setTier] = useState("basic");
+  const [checking, setChecking] = useState("");       // name of the specialist being opened
+  const [pendingDoctor, setPendingDoctor] = useState(null); // specialist with an earlier consultation
 
-  // Modal State
-  const [showDisclaimer, setShowDisclaimer] = useState(false);
-  const [pendingDoctor, setPendingDoctor] = useState(null);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [isCheckingHistory, setIsCheckingHistory] = useState(false);
-  const [isPremium, setIsPremium] = useState(false);
-  const [animationKey, setAnimationKey] = useState(0);
-
-  const handlePremiumToggle = () => {
-    setIsPremium(!isPremium);
-    // Incrementing key cleanly restarts the CSS animations from scratch
-    setAnimationKey(prev => prev + 1);
-  };
-
-  useEffect(() => {
-    // Simulate Neural Link initialization
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Carousel Config
-  const ITEM_COUNT = specialists.length;
-  const ANGLE_PER_ITEM = 360 / ITEM_COUNT;
-  const RADIUS = 500;
-
-  useEffect(() => {
-    const handleWheel = (e) => {
-      // Prevent default page scroll behavior
-      e.preventDefault();
-
-      // Direct update logic
-      // e.deltaY is usually around 10-100. Lower divisor = faster spin.
-      const delta = e.deltaY * 0.1;
-      rotationRef.current -= delta;
-
-      // Use requestAnimationFrame for smooth visual update
-      if (!rafRef.current) {
-        rafRef.current = requestAnimationFrame(() => {
-          if (carouselRef.current) {
-            carouselRef.current.style.transform = `rotateY(${rotationRef.current}deg)`;
-          }
-          rafRef.current = null;
-        });
-      }
-    };
-
-    // Use passive: false to allow preventDefault()
-    window.addEventListener("wheel", handleWheel, { passive: false });
-    return () => {
-      window.removeEventListener("wheel", handleWheel);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    }
-  }, []);
-
-  const handleDoctorSelect = async (doctor) => {
-    console.log("🔥 Card clicked - Checking for existing session:", doctor?.name);
-
-    if (!doctor) return;
-
-    setIsCheckingHistory(true);
-    const userId = getUserId();
-
-    try {
-      // Check for existing history
-      // Ensure we encode the name to handle special chars like spaces/slashes
-      const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/api/chat/history/${userId}/${encodeURIComponent(doctor.name)}`);
-
-      const hasHistory = res.data.messages && res.data.messages.length > 0;
-      console.log(`📜 History check for ${doctor.name}: ${hasHistory ? 'FOUND' : 'EMPTY'}`);
-
-      if (hasHistory) {
-        // Get last active time from the last message
-        const lastMsg = res.data.messages[res.data.messages.length - 1];
-        const lastActive = lastMsg ? lastMsg.timestamp : null;
-
-        setPendingDoctor({ ...doctor, lastActive });
-        setShowHistoryModal(true);
-      } else {
-        // No history, go straight to chat
-        navigateToChat(doctor);
-      }
-
-    } catch (error) {
-      console.error("Failed to check history, proceeding to chat:", error);
-      // Fallback: just go to chat
-      navigateToChat(doctor);
-    } finally {
-      setIsCheckingHistory(false);
-    }
-  };
+  const historyUrl = (doctor) => `/api/chat/history/${getUserId()}/${encodeURIComponent(doctor.name)}`;
 
   const navigateToChat = (doctor) => {
     navigate(`/chatbot/${encodeURIComponent(doctor.name)}`, {
-      state: {
-        specializationName: doctor.name,
-        specializationRole: doctor.role,
-        tier: isPremium ? 'premium' : 'basic',
-        userRam: navigator.deviceMemory || 8 // Default to 8 if API not available
-      }
+      state: { specializationName: doctor.name, specializationRole: doctor.role, tier },
     });
   };
 
-  const handleContinue = () => {
-    console.log("Resuming session for:", pendingDoctor?.name);
-    if (pendingDoctor) {
-      navigateToChat(pendingDoctor);
+  // An earlier consultation with this specialist can be continued or replaced
+  const handleDoctorSelect = async (doctor) => {
+    if (checking) return;
+    setChecking(doctor.name);
+    try {
+      const res = await api.get(historyUrl(doctor));
+      const earlier = res.data.messages || [];
+      if (earlier.length > 0) {
+        setPendingDoctor({ ...doctor, lastActive: earlier[earlier.length - 1].timestamp, closed: !!res.data.sessionClosed });
+      } else {
+        navigateToChat(doctor);
+      }
+    } catch (error) {
+      console.error("Could not check for an earlier consultation:", error);
+      navigateToChat(doctor);
+    } finally {
+      setChecking("");
     }
-    setShowHistoryModal(false);
-    setPendingDoctor(null);
-  }
+  };
+
+  const closeModal = () => setPendingDoctor(null);
+
+  const handleContinue = () => {
+    navigateToChat(pendingDoctor);
+    closeModal();
+  };
 
   const handleNewChat = async () => {
-    console.log("Starting new session for:", pendingDoctor?.name);
-    if (!pendingDoctor) return;
-
-    const userId = getUserId();
     try {
-      await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/api/chat/history/${userId}/${encodeURIComponent(pendingDoctor.name)}`);
-      console.log("🗑️ History cleared.");
+      await api.delete(historyUrl(pendingDoctor));
     } catch (e) {
-      console.error("Failed to clear history", e);
+      console.error("Could not clear the earlier consultation", e);
     }
-
     navigateToChat(pendingDoctor);
-    setShowHistoryModal(false);
-    setPendingDoctor(null);
-  }
-
-
-  const getColorClass = (color) => {
-    if (isPremium) return 'text-cyan-400 border-cyan-500/50 bg-cyan-900/30 group-hover:bg-cyan-800/40 group-hover:border-cyan-400/80 shadow-[0_0_20px_rgba(6,182,212,0.5)]';
-    switch (color) {
-      case 'rose': return 'text-rose-500 border-rose-500/30 bg-rose-500/10 group-hover:bg-rose-500/20 group-hover:border-rose-500/50';
-      case 'violet': return 'text-violet-500 border-violet-500/30 bg-violet-500/10 group-hover:bg-violet-500/20 group-hover:border-violet-500/50';
-      case 'cyan': return 'text-cyan-500 border-cyan-500/30 bg-cyan-500/10 group-hover:bg-cyan-500/20 group-hover:border-cyan-500/50';
-      case 'emerald': return 'text-emerald-500 border-emerald-500/30 bg-emerald-500/10 group-hover:bg-emerald-500/20 group-hover:border-emerald-500/50';
-      case 'amber': return 'text-amber-500 border-amber-500/30 bg-amber-500/10 group-hover:bg-amber-500/20 group-hover:border-amber-500/50';
-      default: return 'text-gray-500';
-    }
+    closeModal();
   };
 
-  const getGlow = (color) => {
-    if (isPremium) return 'shadow-[0_0_30px_rgba(6,182,212,0.3)] group-hover:shadow-[0_0_50px_rgba(6,182,212,0.6)] border-cyan-500/50';
-    switch (color) {
-      case 'rose': return 'shadow-[0_0_20px_rgba(244,63,94,0.1)] group-hover:shadow-[0_0_30px_rgba(244,63,94,0.3)]';
-      case 'violet': return 'shadow-[0_0_20px_rgba(139,92,246,0.1)] group-hover:shadow-[0_0_30px_rgba(139,92,246,0.3)]';
-      case 'cyan': return 'shadow-[0_0_20px_rgba(6,182,212,0.1)] group-hover:shadow-[0_0_30px_rgba(6,182,212,0.3)]';
-      case 'emerald': return 'shadow-[0_0_20px_rgba(16,185,129,0.1)] group-hover:shadow-[0_0_30px_rgba(16,185,129,0.3)]';
-      case 'amber': return 'shadow-[0_0_20px_rgba(245,158,11,0.1)] group-hover:shadow-[0_0_30px_rgba(245,158,11,0.3)]';
-      default: return '';
-    }
-  };
+  const activeTier = TIERS.find((t) => t.id === tier);
 
   return (
-    <div
-      className={`h-screen w-full relative flex flex-col items-center justify-center transition-all duration-1000 ${isPremium ? 'bg-black' : (isDark ? 'bg-gradient-to-br from-[#0a0a0a] to-[#030303]' : 'bg-slate-50')}`}
-      style={{ perspective: "1500px", overflow: "hidden" }}
-    >
-      {/* Module Splash Screen Overhaul */}
-      {loading && (
-        <NeuralSyncSequence onComplete={() => setLoading(false)} />
-      )}
-
-      {/* Legal Disclaimer Gate */}
-      <LegalModal isOpen={showDisclaimer} onClose={() => setShowDisclaimer(false)} />
-
-      {/* History Selection Modal */}
-      {showHistoryModal && (
-        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className={`relative border p-8 rounded-2xl max-w-md w-full text-center shadow-[0_0_50px_rgba(16,185,129,0.2)] ${isDark ? 'bg-[#0f0f0f] border-emerald-500/30' : 'bg-white border-emerald-300'}`}>
-
-            {/* Close Button */}
-            <button
-              onClick={() => {
-                setShowHistoryModal(false);
-                setPendingDoctor(null);
-              }}
-              className={`absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 ${isDark ? 'hover:bg-white/10 text-gray-400' : 'text-slate-400'}`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-
-            <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Previous Session Detected</h3>
-            <p className={`text-sm mb-2 ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>
-              History found with {pendingDoctor?.name}.
-            </p>
-            {pendingDoctor?.lastActive && (
-              <p className="text-xs font-mono text-emerald-500 mb-6 uppercase tracking-wider">
-                LAST ACTIVE: {new Date(pendingDoctor.lastActive).toLocaleString()}
-              </p>
-            )}
-
-            <div className="flex gap-4 justify-center">
-              <button onClick={handleNewChat} className={`px-6 py-2 rounded-lg border transition-all text-sm font-mono uppercase ${isDark ? 'border-white/10 text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5' : 'border-slate-300 text-slate-500 hover:text-slate-900 hover:border-slate-400 hover:bg-slate-100'}`}>
-                Start New
-              </button>
-              <button onClick={handleContinue} className="px-6 py-2 rounded-lg bg-emerald-500/20 text-emerald-500 border border-emerald-500/50 hover:bg-emerald-500/30 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all text-sm font-mono uppercase">
-                Resume Session
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Transformation Animation Overlay */}
-      {animationKey > 0 && (
-        <div key={animationKey} className="absolute inset-0 z-[200] pointer-events-none flex items-center justify-center overflow-hidden mix-blend-screen">
-          {/* Scanline sweep */}
-          <div className={`absolute w-full h-[150%] bg-gradient-to-b from-transparent ${isPremium ? 'via-cyan-400/30' : 'via-emerald-400/30'} to-transparent animate-scan-line`} style={{ top: '-150%' }} />
-          
-          {/* Smooth Flash Effect */}
-          <div className={`absolute inset-0 bg-gradient-to-b ${isPremium ? 'from-cyan-500/20 to-transparent' : 'from-emerald-500/20 to-transparent'} animate-smooth-flash`} />
-          
-          {/* Ripple Expansion */}
-          <div className={`absolute w-32 h-32 rounded-full border-4 ${isPremium ? 'border-cyan-400 shadow-[0_0_80px_rgba(6,182,212,0.8)]' : 'border-emerald-400 shadow-[0_0_80px_rgba(16,185,129,0.8)]'} animate-smooth-ripple`} />
-        </div>
-      )}
-
-      {/* Background Grid */}
-      <div className={`absolute inset-0 pointer-events-none transition-all duration-1000 ${isPremium ? 'opacity-[0.15]' : (isDark ? 'opacity-[0.05]' : 'opacity-[0.03]')}`}
-        style={{
-          backgroundImage: `linear-gradient(${isPremium ? 'rgba(6,182,212,0.5)' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)')} 1px, transparent 1px),
-                                  linear-gradient(90deg, ${isPremium ? 'rgba(6,182,212,0.5)' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)')} 1px, transparent 1px)`,
-          backgroundSize: '40px 40px'
-        }}
-      />
-
-      {/* Floating Header */}
-      <div className="absolute top-24 left-1/2 -translate-x-1/2 text-center z-50 pointer-events-none">
-        
-        {/* PREMIUM TOGGLE ADDED HERE */}
-        <div className="pointer-events-auto mb-6 flex justify-center">
-          <button
-            onClick={handlePremiumToggle}
-            className={`relative flex items-center gap-3 px-6 py-2.5 rounded-full border overflow-hidden transition-all duration-500 hover:scale-105 active:scale-95 shadow-lg ${isPremium ? 'border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] bg-cyan-950/30' : 'border-white/10 bg-[#0a0a0a]/80 hover:bg-[#111]'}`}
-          >
-            <div className={`absolute inset-0 bg-gradient-to-r transition-opacity duration-500 ${isPremium ? 'from-cyan-500/20 to-transparent opacity-100' : 'opacity-0'}`} />
-            <div className="relative z-10 flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full shadow-[0_0_10px_currentColor] transition-colors duration-500 ${isPremium ? 'bg-cyan-400 text-cyan-400' : 'bg-emerald-500 text-emerald-500'}`} />
-              <span className={`text-[11px] font-mono tracking-widest uppercase transition-colors duration-500 ${isPremium ? 'text-cyan-300' : 'text-slate-400'}`}>
-                {isPremium ? 'ENGINE: GROQ (PRO)' : 'ENGINE: LOCAL'}
-              </span>
-            </div>
-            <div className={`relative z-10 px-2 py-0.5 rounded text-[9px] font-bold tracking-wider transition-all duration-500 ${isPremium ? 'bg-cyan-500 text-black' : 'bg-emerald-500/20 text-emerald-500'}`}>
-              {isPremium ? 'AETHER+' : 'STANDARD'}
-            </div>
-          </button>
+    <div className="page">
+      <header className="mb-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h1 className="page-title">Choose a specialist</h1>
+          <p className="page-lead">
+            Pick the area closest to your problem. If it turns out to belong elsewhere, the conversation is handed to the right specialist.
+          </p>
         </div>
 
-        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-mono tracking-widest uppercase mb-4 transition-colors duration-500 ${isPremium ? 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400' : (isDark ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-emerald-500/30 bg-white/80 text-emerald-600 shadow-sm')}`}>
-          <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isPremium ? 'bg-cyan-400' : 'bg-emerald-500'}`} />
-          Online
-        </div>
-        <h2 className={`text-4xl font-bold mb-2 transition-colors duration-500 ${isPremium ? 'text-cyan-300 drop-shadow-[0_0_15px_rgba(6,182,212,0.5)]' : (isDark ? 'text-white' : 'text-slate-900')}`}>Select a Doctor</h2>
-        <p className={`text-sm transition-colors duration-500 ${isPremium ? 'text-cyan-500/80 font-medium' : (isDark ? 'text-gray-500' : 'text-slate-500')}`}>Scroll to rotate • Click card to chat</p>
-
-        {/* Loading Indicator for History Check */}
-        {isCheckingHistory && (
-          <div className="mt-2 text-emerald-500 text-xs font-mono animate-pulse">
-            CONNECTING...
-          </div>
-        )}
-      </div>
-
-      {/* Central Hologram Core */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-        <div className="relative animate-pulse opacity-60 transition-all duration-1000">
-          <div className={`absolute inset-0 blur-[80px] rounded-full mix-blend-screen transition-all duration-1000 ${isPremium ? 'bg-cyan-500/30 scale-150' : (isDark ? 'bg-emerald-500/20' : 'bg-emerald-400/10')}`} />
-          <h1 className={`text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b tracking-tighter select-none transition-all duration-1000 ${isPremium ? 'from-cyan-200 via-cyan-400 to-transparent drop-shadow-[0_0_30px_rgba(6,182,212,0.8)]' : (isDark ? 'from-emerald-100/20 to-transparent' : 'from-slate-900/10 to-transparent')}`}>
-            {isPremium ? 'AETHER+' : 'HEALTH'}
-          </h1>
-          <div className={`text-lg md:text-xl font-mono tracking-[1.2em] text-center mt-[-10px] ml-[1.2em] select-none transition-all duration-1000 ${isPremium ? 'text-cyan-300 font-bold' : 'text-emerald-500/30'}`}>
-            {isPremium ? 'PREMIUM' : 'CLINIC'}
-          </div>
-        </div>
-      </div>
-
-      {/* 3D Carousel Container */}
-      <div
-        ref={carouselRef}
-        className="relative w-[300px] h-[400px] preserve-3d will-change-transform z-50"
-        style={{
-          transformStyle: "preserve-3d",
-          transform: `rotateY(0deg)` // Initial state
-        }}
-      >
-        {specialists.map((spec, index) => {
-          const angle = index * ANGLE_PER_ITEM;
-          return (
-            <div
-              key={spec.id}
-              className="absolute inset-0 w-full h-full will-change-transform"
-              style={{
-                transform: `rotateY(${angle}deg) translateZ(${RADIUS}px)`,
-                zIndex: 100 // Force high z-index for individual cards
-              }}
-              onClick={() => {
-                console.log("🟢 OUTER CONTAINER CLICKED:", spec.name);
-                handleDoctorSelect(spec);
-              }}
-            >
-              <div
-                onClick={(e) => {
-                  console.log("🔵 MIDDLE DIV CLICKED:", spec.name);
-                  e.stopPropagation(); // Prevent bubbling issues
-                  handleDoctorSelect(spec);
-                }}
-                onMouseDown={() => console.log("🟡 MOUSE DOWN:", spec.name)}
-                onMouseUp={() => console.log("🟠 MOUSE UP:", spec.name)}
-                className="w-full h-full cursor-pointer transition-all duration-300 hover:scale-105 pointer-events-auto relative"
-                style={{ zIndex: 200 }}
+        <div className="md:max-w-xs">
+          <p className="field-label" id="tier-label">Reply mode</p>
+          <div role="radiogroup" aria-labelledby="tier-label" className="inline-flex rounded-xl border border-line bg-surface p-1">
+            {TIERS.map((option) => (
+              <button
+                key={option.id}
+                role="radio"
+                aria-checked={tier === option.id}
+                onClick={() => setTier(option.id)}
+                className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${tier === option.id ? "bg-brand text-brand-ink" : "text-muted hover:text-ink"}`}
               >
-                <TiltCard
-                  className={`relative group w-full h-full backdrop-blur-md border rounded-2xl overflow-hidden transition-all duration-700 ${getGlow(spec.color)} ${isPremium ? (isDark ? 'bg-[#0d051c]/90 hover:bg-[#1a0d2e]/90' : 'bg-violet-100/90 hover:bg-violet-50/90') : (isDark ? 'bg-[#0a0a0a]/90 hover:bg-[#111111]/90' : 'bg-white/90 hover:bg-slate-50/90')}`}
-                  onClick={() => {
-                    console.log("🟣 TILT CARD CLICKED:", spec.name);
-                    handleDoctorSelect(spec);
-                  }}
-                >
-                  <div
-                    className="p-6 h-full flex flex-col"
-                    onClick={() => {
-                      console.log("🔴 INNER CONTENT CLICKED:", spec.name);
-                      handleDoctorSelect(spec);
-                    }}
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center p-2.5 border ${getColorClass(spec.color)}`}>
-                        {spec.icon}
-                      </div>
-                      <div className={`text-[10px] font-mono ${isDark ? 'text-white/30' : 'text-slate-400'}`}>ID_{String(spec.id).padStart(2, '0')}</div>
-                    </div>
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <p className="field-hint">{activeTier.hint}</p>
+        </div>
+      </header>
 
-                    <div className="flex-1">
-                      <h3 className={`text-xl font-bold mb-1 transition-colors duration-500 ${isPremium ? 'text-white' : (isDark ? 'text-white' : 'text-slate-900')}`}>{spec.name}</h3>
-                      <div className={`text-xs font-medium uppercase tracking-wider mb-2 transition-colors duration-500 ${isPremium ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]' : `text-${spec.color}-500/80`}`}>{spec.role}</div>
-                      <p className={`text-xs leading-relaxed line-clamp-3 transition-colors duration-500 ${isPremium ? 'text-slate-300' : (isDark ? 'text-gray-400' : 'text-slate-600')}`}>{spec.description}</p>
-                    </div>
-
-                    <div className={`pt-4 border-t flex justify-between items-end mt-2 transition-colors duration-500 ${isPremium ? 'border-cyan-500/30' : (isDark ? 'border-white/5' : 'border-slate-100')}`}>
-                      <div>
-                        <div className={`text-[9px] uppercase tracking-wider transition-colors duration-500 ${isPremium ? 'text-cyan-500/80' : (isDark ? 'text-gray-500' : 'text-slate-400')}`}>Accuracy</div>
-                        <div className={`text-sm font-mono font-bold transition-colors duration-500 ${isPremium ? 'text-cyan-300' : (isDark ? 'text-white' : 'text-slate-900')}`}>{spec.accuracy}</div>
-                      </div>
-                      <div className={`w-16 h-1 rounded-full overflow-hidden transition-colors duration-500 ${isPremium ? 'bg-cyan-950/80 shadow-[0_0_10px_rgba(6,182,212,0.2)]' : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}>
-                        <div className={`h-full transition-all duration-500 ${isPremium ? 'bg-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.8)]' : `bg-${spec.color}-500`} w-[${spec.accuracy.slice(0, -1)}%]`} />
-                      </div>
-                    </div>
-                  </div>
-                </TiltCard>
-              </div>
-            </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {specialists.map((doctor) => {
+          const Icon = doctor.icon;
+          return (
+            <button
+              key={doctor.name}
+              onClick={() => handleDoctorSelect(doctor)}
+              disabled={!!checking}
+              className="card group flex items-start gap-4 p-5 text-left transition-colors hover:border-brand disabled:cursor-wait"
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand">
+                <Icon />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-base font-semibold text-ink">{doctor.name}</span>
+                <span className="block text-xs font-medium uppercase tracking-wide text-muted">{doctor.role}</span>
+                <span className="mt-2 block text-sm leading-relaxed text-muted">{doctor.description}</span>
+              </span>
+              <span className="mt-1 text-muted group-hover:text-brand">
+                {checking === doctor.name ? <Spinner /> : <ArrowRight className="h-4 w-4" />}
+              </span>
+            </button>
           );
         })}
       </div>
 
-      {/* Floor Reflection Gradient */}
-      <div className={`absolute bottom-0 w-full h-[60%] bg-gradient-to-t z-40 pointer-events-none transition-all duration-1000 ${isPremium ? 'from-black via-[#000510]/90 to-transparent' : (isDark ? 'from-[#030303] via-[#030303]/80 to-transparent' : 'from-slate-50 via-slate-50/80 to-transparent')}`} />
+      {pendingDoctor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="history-title">
+          <div className="absolute inset-0 bg-black/60" onClick={closeModal} />
+          <div className="card fade-in relative w-full max-w-md p-6 shadow-xl">
+            <button onClick={closeModal} className="btn btn-ghost absolute right-3 top-3 px-2" aria-label="Close">
+              <Close />
+            </button>
+            <h2 id="history-title" className="pr-8 text-lg font-semibold text-ink">You have an earlier consultation</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted">
+              {pendingDoctor.closed
+                ? `Your consultation with the ${pendingDoctor.name} is finished. You can read it again or start a new one.`
+                : `You were talking to the ${pendingDoctor.name}. You can carry on or start again.`}
+              {pendingDoctor.lastActive && ` Last message: ${new Date(pendingDoctor.lastActive).toLocaleString()}.`}
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <button onClick={handleNewChat} className="btn btn-secondary flex-1">Start new</button>
+              <button onClick={handleContinue} className="btn btn-primary flex-1">{pendingDoctor.closed ? "Open it" : "Continue"}</button>
+            </div>
+            <p className="mt-3 text-xs text-muted">Starting new deletes the earlier messages.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

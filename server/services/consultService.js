@@ -123,7 +123,7 @@ export const deleteConsultThread = async (threadId) => {
     await axios.delete(`${CONSULT_BASE_URL}/api/consult/thread/${encodeURIComponent(threadId)}`, { timeout: 5000 });
     return true;
   } catch (error) {
-    console.warn(`⚠️ Could not delete consultation state (${error.message}). It will expire on its own.`);
+    console.warn(`Could not delete consultation state (${error.message}). It will expire on its own.`);
     return false;
   }
 };

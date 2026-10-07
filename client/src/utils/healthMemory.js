@@ -7,8 +7,8 @@
  */
 
 import { getUserId } from "./user";
+import { API_URL } from "./api";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5050";
 const KEY = "health_memory";
 
 export function isMemoryEnabled() {

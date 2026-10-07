@@ -228,7 +228,7 @@ def make_nodes(deps: Deps) -> dict[str, Callable]:
             )
             return {"image_findings": findings[:1500], "providers": state.get("providers", []) + [f"vision:{provider}"]}
         except Exception as exc:  # noqa: BLE001
-            print(f"⚠️ Vision step failed: {type(exc).__name__}")
+            print(f"Vision step failed: {type(exc).__name__}")
             return {"image_findings": "(The photo could not be analysed. Ask the user to describe what it shows.)"}
 
     @traced("analyze")
@@ -341,7 +341,7 @@ def make_nodes(deps: Deps) -> dict[str, Callable]:
                 found = deps.retrieve(query)
                 grade = deps.grade(found)
             except Exception as exc:  # noqa: BLE001 - answer without references rather than fail the turn
-                print(f"⚠️ Retrieval failed: {type(exc).__name__}: {exc}")
+                print(f"Retrieval failed: {type(exc).__name__}: {exc}")
                 found, grade = [], "none"
             log.append({"query": query, "grade": grade, "round": round_no,
                         "titles": sorted({d["title"] for d in found}) if grade != "none" else []})
@@ -381,7 +381,7 @@ def make_nodes(deps: Deps) -> dict[str, Callable]:
                 max_tokens=200, **_llm_kwargs(state),
             )
         except Exception as exc:  # noqa: BLE001 - refinement is optional
-            print(f"⚠️ Search refinement skipped: {type(exc).__name__}")
+            print(f"Search refinement skipped: {type(exc).__name__}")
             return {"search_queries": [], "research_gaps": []}
         tried = {entry["query"].lower() for entry in state.get("research_log", [])}
         queries = []
@@ -405,7 +405,7 @@ def make_nodes(deps: Deps) -> dict[str, Callable]:
                 tools=list(tools.values()), temperature=0.0, max_tokens=400, **_llm_kwargs(state),
             )
         except Exception as exc:  # noqa: BLE001 - tools are optional
-            print(f"⚠️ Risk tool step skipped: {type(exc).__name__}")
+            print(f"Risk tool step skipped: {type(exc).__name__}")
             return {}
         results = []
         for call in (getattr(reply, "tool_calls", None) or [])[:2]:
@@ -485,7 +485,7 @@ def make_nodes(deps: Deps) -> dict[str, Callable]:
                 feedback_examples=deps.feedback_examples(),
             )
         except Exception as exc:  # noqa: BLE001
-            print(f"❌ Safety check failed to run: {type(exc).__name__}: {exc}")
+            print(f"Safety check failed to run: {type(exc).__name__}: {exc}")
             return {"mode": "unavailable", "reply": UNAVAILABLE_REPLY,
                     "safety": {"is_safe": False, "score": 0.0, "violations": ["safety check unavailable"], "warnings": [], "grounded": None}}
 
@@ -533,7 +533,7 @@ def make_nodes(deps: Deps) -> dict[str, Callable]:
                                 "retry_feedback": "these statements are not supported by the clinical reference: "
                                                   + "; ".join(unsupported) + ". Remove them or stay general."}
             except Exception as exc:  # noqa: BLE001 - the judge is advisory; rule checks already passed
-                print(f"⚠️ Grounding check skipped: {type(exc).__name__}")
+                print(f"Grounding check skipped: {type(exc).__name__}")
         if grounded is False:
             warnings.append(GROUNDING_CAUTION)
 

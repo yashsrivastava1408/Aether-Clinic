@@ -14,7 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
-// 🚨 VERY IMPORTANT
+// VERY IMPORTANT
 SplashScreen.preventAutoHideAsync();
 
 export default function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
@@ -45,7 +45,7 @@ export default function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
     // ─────────────────────────────────────
 
     const startAnimations = () => {
-        // 📳 HAPTICS LOOP
+        // HAPTICS LOOP
         const pulseInterval = setInterval(() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }, 1600);
@@ -60,21 +60,21 @@ export default function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
             clearInterval(ringInterval);
         };
 
-        // 🌬 BREATHING CORE
+        // BREATHING CORE
         pulse.value = withRepeat(
             withTiming(1, { duration: 1600, easing: Easing.inOut(Easing.ease) }),
             -1,
             true
         );
 
-        // 💍 ENERGY RING
+        // ENERGY RING
         ring.value = withRepeat(
             withTiming(1, { duration: 2000, easing: Easing.out(Easing.ease) }),
             -1,
             false
         );
 
-        // 🚀 PORTAL EXPANSION → EXIT
+        // PORTAL EXPANSION → EXIT
         scale.value = withSequence(
             withTiming(1, { duration: 800, easing: Easing.out(Easing.exp) }),
             withDelay(
@@ -89,7 +89,7 @@ export default function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
             )
         );
 
-        // 🧠 TEXT REVEAL
+        // TEXT REVEAL
         textOpacity.value = withDelay(600, withTiming(1, { duration: 400 }));
     };
 
@@ -100,14 +100,14 @@ export default function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
         if (!layoutReady) {
             setLayoutReady(true);
 
-            // ✅ Hide native splash ONLY after JS layout exists
+            // Hide native splash ONLY after JS layout exists
             await SplashScreen.hideAsync();
 
             startAnimations();
         }
     };
 
-    // 🛟 SAFETY FALLBACK (never stuck)
+    // SAFETY FALLBACK (never stuck)
     useEffect(() => {
         const timeout = setTimeout(() => {
             safeFinish();

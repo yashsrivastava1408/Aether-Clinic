@@ -15,7 +15,7 @@ class JsonChatProxy {
             if (!fs.existsSync(this.filePath)) return [];
             return JSON.parse(fs.readFileSync(this.filePath, 'utf8') || "[]");
         } catch (e) {
-            console.error("❌ JsonChatProxy Read Error:", e);
+            console.error("JsonChatProxy Read Error:", e);
             return [];
         }
     }
@@ -24,7 +24,7 @@ class JsonChatProxy {
         try {
             fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf8');
         } catch (e) {
-            console.error("❌ JsonChatProxy Write Error:", e);
+            console.error("JsonChatProxy Write Error:", e);
         }
     }
 

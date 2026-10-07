@@ -10,15 +10,15 @@ let redisClient = null;
 if (process.env.REDIS_URL) {
   try {
     redisClient = createClient({ url: process.env.REDIS_URL });
-    redisClient.on('error', (err) => console.error('❌ Redis Client Error:', err.message));
+    redisClient.on('error', (err) => console.error('Redis Client Error:', err.message));
     redisClient.connect().then(() => {
-      console.log('✅ Connected to Redis successfully (L2 Cache active)');
+      console.log('Connected to Redis successfully (L2 Cache active)');
     }).catch(err => {
-      console.warn('⚠️ Redis connection failed. Caching will use in-memory and MongoDB fallback:', err.message);
+      console.warn('Redis connection failed. Caching will use in-memory and MongoDB fallback:', err.message);
       redisClient = null;
     });
   } catch (e) {
-    console.error('❌ Redis client initialization failed:', e.message);
+    console.error('Redis client initialization failed:', e.message);
   }
 }
 
@@ -43,7 +43,7 @@ class CacheManager {
     if (memoryCache.has(key)) {
       const cached = memoryCache.get(key);
       if (cached.expiresAt > now) {
-        console.log(`🎯 Cache HIT (Memory L1) [${type}]: ${key.substring(0, 8)}`);
+        console.log(`Cache HIT (Memory L1) [${type}]: ${key.substring(0, 8)}`);
         return cached.value;
       }
       memoryCache.delete(key);
@@ -54,14 +54,14 @@ class CacheManager {
       try {
         const cachedValue = await redisClient.get(key);
         if (cachedValue) {
-          console.log(`🎯 Cache HIT (Redis L2) [${type}]: ${key.substring(0, 8)}`);
+          console.log(`Cache HIT (Redis L2) [${type}]: ${key.substring(0, 8)}`);
           const parsed = JSON.parse(cachedValue);
           // Sync back to memory L1 for fast future lookups on this node
           memoryCache.set(key, { value: parsed.value, expiresAt: parsed.expiresAt });
           return parsed.value;
         }
       } catch (error) {
-        console.error('❌ Redis Get Error:', error.message);
+        console.error('Redis Get Error:', error.message);
       }
     }
 
@@ -70,7 +70,7 @@ class CacheManager {
       try {
         const cached = await Cache.findOne({ key, type });
         if (cached) {
-          console.log(`🎯 Cache HIT (MongoDB) [${type}]: ${key.substring(0, 8)}`);
+          console.log(`Cache HIT (MongoDB) [${type}]: ${key.substring(0, 8)}`);
           const expiresAtTime = cached.expiresAt.getTime();
           // Sync to memory L1
           memoryCache.set(key, { value: cached.value, expiresAt: expiresAtTime });
@@ -86,7 +86,7 @@ class CacheManager {
           return cached.value;
         }
       } catch (error) {
-        console.error('❌ Cache MongoDB Get Error:', error.message);
+        console.error('Cache MongoDB Get Error:', error.message);
       }
     }
     return null;
@@ -103,7 +103,7 @@ class CacheManager {
 
     // 1. Store in memory L1 (local to this node/pod)
     memoryCache.set(key, { value, expiresAt: expiresAtTime });
-    console.log(`💾 Cache SET (Memory L1) [${type}]: ${key.substring(0, 8)}`);
+    console.log(`Cache SET (Memory L1) [${type}]: ${key.substring(0, 8)}`);
 
     // 2. Store in Redis L2 (Shared distributed cache)
     if (redisClient && redisClient.isOpen) {
@@ -113,9 +113,9 @@ class CacheManager {
           JSON.stringify({ value, expiresAt: expiresAtTime }),
           { EX: ttlSeconds }
         );
-        console.log(`💾 Cache SET (Redis L2) [${type}]: ${key.substring(0, 8)}`);
+        console.log(`Cache SET (Redis L2) [${type}]: ${key.substring(0, 8)}`);
       } catch (error) {
-        console.error('❌ Redis Set Error:', error.message);
+        console.error('Redis Set Error:', error.message);
       }
     }
 
@@ -127,9 +127,9 @@ class CacheManager {
           { value, provider, expiresAt: expiresAtDate, type },
           { upsert: true, new: true }
         );
-        console.log(`💾 Cache SET (MongoDB) [${type}]: ${key.substring(0, 8)}`);
+        console.log(`Cache SET (MongoDB) [${type}]: ${key.substring(0, 8)}`);
       } catch (error) {
-        console.error('❌ Cache MongoDB Set Error:', error.message);
+        console.error('Cache MongoDB Set Error:', error.message);
       }
     }
   }

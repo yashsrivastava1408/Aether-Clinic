@@ -18,7 +18,7 @@ def get_embedder():
         with _lock:
             if _embedder is None:
                 from sentence_transformers import SentenceTransformer
-                print(f"📦 Retrieval: loading embedding model {config.EMBEDDING_MODEL}")
+                print(f"Retrieval: loading embedding model {config.EMBEDDING_MODEL}")
                 _embedder = SentenceTransformer(config.EMBEDDING_MODEL, device=config.EMBEDDING_DEVICE)
     return _embedder
 
@@ -29,7 +29,7 @@ def get_reranker():
         with _lock:
             if _reranker is None:
                 from sentence_transformers import CrossEncoder
-                print(f"📦 Retrieval: loading reranker {config.RERANK_MODEL}")
+                print(f"Retrieval: loading reranker {config.RERANK_MODEL}")
                 _reranker = CrossEncoder(config.RERANK_MODEL, device=config.EMBEDDING_DEVICE)
     return _reranker
 

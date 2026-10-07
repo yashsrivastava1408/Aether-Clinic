@@ -19,7 +19,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if store.is_embedded():
-        print("ℹ️ No QDRANT_URL / QDRANT_HOST set: the embedded index is built in memory "
+        print("No QDRANT_URL / QDRANT_HOST set: the embedded index is built in memory "
               "at service startup, so there is nothing to persist here. Running a dry build.")
     count = store.ingest(recreate=args.recreate)
     print(f"Done. {count} chunks in collection '{store.collection_name()}'.")

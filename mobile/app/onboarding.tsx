@@ -73,7 +73,7 @@ export default function OnboardingScreen() {
 
     return (
         <View style={styles.container}>
-            {/* 🌌 Background */}
+            {/* Background */}
             <LinearGradient
                 colors={['#000000', '#0a0a0a', '#051f15']}
                 style={StyleSheet.absoluteFill}

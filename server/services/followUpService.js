@@ -70,7 +70,7 @@ export const processDueFollowUps = async (send, now = new Date()) => {
             due.sentAt = new Date();
             sent += 1;
         } catch (err) {
-            console.warn(`⚠️ Follow-up email failed (attempt ${due.attempts}): ${err.message}`);
+            console.warn(`Follow-up email failed (attempt ${due.attempts}): ${err.message}`);
             // Try again on a later run, a limited number of times.
             due.status = due.attempts >= MAX_ATTEMPTS ? "failed" : "pending";
             if (due.status === "pending") due.dueAt = new Date(now.getTime() + 30 * 60 * 1000);
@@ -128,9 +128,9 @@ export const startFollowUpScheduler = ({ intervalMs = Number(process.env.FOLLOWU
         try {
             const sender = send || (await import("./emailService.js")).sendFollowUpEmail;
             const result = await processDueFollowUps(sender);
-            if (result.sent || result.failed) console.log(`📬 Follow-ups: ${result.sent} sent, ${result.failed} failed`);
+            if (result.sent || result.failed) console.log(`Follow-ups: ${result.sent} sent, ${result.failed} failed`);
         } catch (err) {
-            console.error("❌ Follow-up scheduler error:", err.message);
+            console.error("Follow-up scheduler error:", err.message);
         }
     };
     const timer = setInterval(tick, intervalMs);

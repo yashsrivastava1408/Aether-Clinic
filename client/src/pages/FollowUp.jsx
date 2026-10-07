@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
-import { useTheme } from "../context/ThemeContext";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import api from "../utils/api";
 import { getUserId } from "../utils/user";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5050";
+import { Spinner } from "../components/Icons";
 
 const CHOICES = [
-  { status: "better", label: "Better", tone: "emerald" },
-  { status: "same", label: "About the same", tone: "amber" },
-  { status: "worse", label: "Worse", tone: "red" },
+  { status: "better", label: "Better", tone: "border-ok/40 bg-ok-soft text-ok" },
+  { status: "same", label: "About the same", tone: "border-warn/40 bg-warn-soft text-warn" },
+  { status: "worse", label: "Worse", tone: "border-danger/40 bg-danger-soft text-danger" },
 ];
 
 /**
@@ -19,8 +17,6 @@ const CHOICES = [
 export default function FollowUp() {
   const { token } = useParams();
   const navigate = useNavigate();
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
   const [info, setInfo] = useState(null);
   const [note, setNote] = useState("");
   const [result, setResult] = useState(null);
@@ -28,7 +24,7 @@ export default function FollowUp() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    axios.get(`${API_URL}/api/followup/${token}`)
+    api.get(`/api/followup/${token}`)
       .then((res) => setInfo(res.data))
       .catch(() => setError("This check-in link is no longer valid."));
   }, [token]);
@@ -37,7 +33,7 @@ export default function FollowUp() {
     setBusy(true);
     setError("");
     try {
-      const res = await axios.post(`${API_URL}/api/followup/${token}/respond`, { status, note });
+      const res = await api.post(`/api/followup/${token}/respond`, { status, note });
       setResult(res.data);
     } catch (err) {
       setError(err.response?.data?.error === "ALREADY_ANSWERED" ? "You have already answered this check-in." : "Could not save your answer. Please try again.");
@@ -50,50 +46,49 @@ export default function FollowUp() {
     const { specialist, openingMessage } = result.next;
     // The earlier consultation is finished and locked; a new one replaces it.
     try {
-      await axios.delete(`${API_URL}/api/chat/history/${getUserId()}/${encodeURIComponent(specialist)}`);
+      await api.delete(`/api/chat/history/${getUserId()}/${encodeURIComponent(specialist)}`);
     } catch {
       // the chat page still works if there was nothing to clear
     }
     navigate(`/chatbot/${encodeURIComponent(specialist)}`, {
-      state: { specializationName: specialist, specializationRole: "Specialist", initialMessage: openingMessage, userRam: navigator.deviceMemory || 8 },
+      state: { specializationName: specialist, initialMessage: openingMessage },
     });
   };
 
-  const card = `p-6 rounded-2xl border ${isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-sm"}`;
-  const tones = {
-    emerald: "bg-emerald-500/10 text-emerald-500 border-emerald-500/30 hover:bg-emerald-500/20",
-    amber: "bg-amber-500/10 text-amber-500 border-amber-500/30 hover:bg-amber-500/20",
-    red: "bg-red-500/10 text-red-500 border-red-500/30 hover:bg-red-500/20",
-  };
-
   return (
-    <div className={`min-h-screen pt-24 px-6 pb-12 ${isDark ? "text-white" : "text-slate-900"}`}>
-      <div className="max-w-xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Check-in</h1>
-          <p className="text-emerald-500 font-mono text-xs tracking-widest uppercase opacity-80">How are you feeling?</p>
-        </div>
+    <div className="page-narrow max-w-xl">
+      <h1 className="page-title">Check-in</h1>
+      <p className="page-lead">How are you feeling since your consultation?</p>
 
-        {error && <div className="p-4 bg-red-500/10 border border-red-500/40 rounded-xl text-red-500 text-sm">{error}</div>}
+      <div className="mt-8 space-y-4">
+        {error && <p className="notice notice-danger" role="alert">{error}</p>}
+
+        {!info && !error && <div className="flex justify-center py-8 text-muted"><Spinner className="h-5 w-5" /></div>}
 
         {info && !result && info.status !== "answered" && (
-          <div className={card}>
-            <p className="text-sm opacity-70 mb-1">You spoke to our {info.specialist} about</p>
-            <p className="text-lg font-semibold mb-5">{info.complaint}</p>
-            <label htmlFor="followup-note" className="text-xs uppercase tracking-widest opacity-60">Anything to add? (optional)</label>
+          <div className="card p-6">
+            <p className="text-sm text-muted">You spoke to the {info.specialist} about</p>
+            <p className="mt-1 text-lg font-semibold text-ink">{info.complaint}</p>
+
+            <label htmlFor="followup-note" className="field-label mt-5">Anything to add? (optional)</label>
             <textarea
               id="followup-note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               maxLength={500}
               rows={3}
-              className={`w-full mt-2 mb-5 p-3 rounded-xl border text-sm outline-none ${isDark ? "bg-black/40 border-white/10" : "bg-slate-50 border-slate-300"}`}
+              className="input"
               placeholder="For example: the pain now goes down my leg"
             />
-            <div className="grid grid-cols-3 gap-3">
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
               {CHOICES.map((choice) => (
-                <button key={choice.status} disabled={busy} onClick={() => respond(choice.status)}
-                  className={`px-3 py-3 rounded-xl border text-sm font-medium transition-colors disabled:opacity-50 ${tones[choice.tone]}`}>
+                <button
+                  key={choice.status}
+                  disabled={busy}
+                  onClick={() => respond(choice.status)}
+                  className={`btn border ${choice.tone}`}
+                >
                   {choice.label}
                 </button>
               ))}
@@ -102,24 +97,22 @@ export default function FollowUp() {
         )}
 
         {info && !result && info.status === "answered" && (
-          <div className={card}>You have already answered this check-in. Thank you.</div>
+          <div className="card p-6 text-sm text-ink">You have already answered this check-in. Thank you.</div>
         )}
 
         {result && (
-          <div className={card}>
-            <p className="leading-relaxed mb-5">{result.message}</p>
-            {result.next ? (
-              <button onClick={startConsultation}
-                className="px-5 py-3 rounded-xl border text-sm font-medium bg-emerald-500/10 text-emerald-500 border-emerald-500/30 hover:bg-emerald-500/20">
-                Continue with the {result.next.specialist}
-              </button>
-            ) : (
-              <button onClick={() => navigate("/dashboard")}
-                className={`px-5 py-3 rounded-xl border text-sm font-medium ${isDark ? "border-white/10 hover:bg-white/5" : "border-slate-300 hover:bg-slate-50"}`}>
-                Back to dashboard
-              </button>
-            )}
-            {result.next && <p className="text-xs opacity-60 mt-3">This starts a new consultation. Your earlier one is replaced.</p>}
+          <div className="card p-6">
+            <p className="leading-relaxed text-ink">{result.message}</p>
+            <div className="mt-5">
+              {result.next ? (
+                <>
+                  <button onClick={startConsultation} className="btn btn-primary">Continue with the {result.next.specialist}</button>
+                  <p className="mt-3 text-xs text-muted">This starts a new consultation. Your earlier one is replaced.</p>
+                </>
+              ) : (
+                <Link to="/dashboard" className="btn btn-secondary">Back to home</Link>
+              )}
+            </div>
           </div>
         )}
       </div>

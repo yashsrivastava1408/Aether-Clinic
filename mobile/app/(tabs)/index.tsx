@@ -276,7 +276,7 @@ export default function HomeScreen() {
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
 
-      {/* 🌌 BACKGROUND LAYERS */}
+      {/* BACKGROUND LAYERS */}
       <View style={[StyleSheet.absoluteFill, { backgroundColor: '#000' }]} />
       <AuroraBackground />
       <AmbientFireflies />
@@ -302,18 +302,18 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* 🌑 SENTIENT CORE */}
+          {/* SENTIENT CORE */}
           <SentientCore />
 
-          {/* 📜 DAILY PROTOCOL */}
+          {/* DAILY PROTOCOL */}
           <DailyProtocol />
 
-          {/* 📂 PRIMARY COMMAND (ENHANCED) */}
+          {/* PRIMARY COMMAND (ENHANCED) */}
           <View style={styles.primaryCommand}>
             <AetherCommandCard />
           </View>
 
-          {/* 🛡️ TRUST PROTOCOL */}
+          {/* TRUST PROTOCOL */}
           <View style={styles.confidenceBox}>
             <Text style={styles.confidenceText}>
               "Dedicated to your well-being.

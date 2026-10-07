@@ -87,7 +87,7 @@ EMERGENCY_REPLIES: dict[str, str] = {
         "I'm an AI assistant and can't provide crisis care, but I can stay here while you contact one of these services."
     ),
     "cardiac": (
-        "🚨 Chest pain can be a sign of a heart attack and needs to be checked urgently.\n\n"
+        "Chest pain can be a sign of a heart attack and needs to be checked urgently.\n\n"
         "Call emergency services now:\n" + _NUMBERS + "\n\n"
         "While you wait:\n"
         "• Stop what you are doing and sit down, leaning slightly back\n"
@@ -97,7 +97,7 @@ EMERGENCY_REPLIES: dict[str, str] = {
         "Please do this even if the pain is easing. I'm an AI assistant and cannot assess this safely over chat."
     ),
     "stroke": (
-        "🚨 These can be signs of a stroke. Every minute matters.\n\n"
+        "These can be signs of a stroke. Every minute matters.\n\n"
         "Call emergency services now:\n" + _NUMBERS + "\n\n"
         "• Note the time the symptoms started and tell the ambulance crew\n"
         "• Do not eat, drink or take any medicine\n"
@@ -105,7 +105,7 @@ EMERGENCY_REPLIES: dict[str, str] = {
         "I'm an AI assistant and cannot assess this safely over chat."
     ),
     "breathing": (
-        "🚨 Trouble breathing is a medical emergency.\n\n"
+        "Trouble breathing is a medical emergency.\n\n"
         "Call emergency services now:\n" + _NUMBERS + "\n\n"
         "• Sit upright and loosen tight clothing\n"
         "• If you have a prescribed reliever inhaler, use it as your action plan says\n"
@@ -113,7 +113,7 @@ EMERGENCY_REPLIES: dict[str, str] = {
         "I'm an AI assistant and cannot assess this safely over chat."
     ),
     "anaphylaxis": (
-        "🚨 Swelling of the throat, tongue or lips can be a severe allergic reaction (anaphylaxis).\n\n"
+        "Swelling of the throat, tongue or lips can be a severe allergic reaction (anaphylaxis).\n\n"
         "Call emergency services now:\n" + _NUMBERS + "\n\n"
         "• If an adrenaline (epinephrine) auto-injector is available, use it straight away\n"
         "• Lie down with legs raised, or sit up if breathing is difficult\n"
@@ -121,7 +121,7 @@ EMERGENCY_REPLIES: dict[str, str] = {
         "I'm an AI assistant and cannot assess this safely over chat."
     ),
     "bleeding": (
-        "🚨 Heavy bleeding needs urgent care.\n\n"
+        "Heavy bleeding needs urgent care.\n\n"
         "Call emergency services now:\n" + _NUMBERS + "\n\n"
         "• Press firmly on the wound with a clean cloth and keep pressing\n"
         "• If possible, raise the injured area above the level of the heart\n"
@@ -129,7 +129,7 @@ EMERGENCY_REPLIES: dict[str, str] = {
         "I'm an AI assistant and cannot assess this safely over chat."
     ),
     "neuro": (
-        "🚨 These symptoms need emergency assessment.\n\n"
+        "These symptoms need emergency assessment.\n\n"
         "Call emergency services now:\n" + _NUMBERS + "\n\n"
         "• If someone is unconscious but breathing, lay them on their side\n"
         "• During a seizure, clear the space around them and do not put anything in their mouth\n"
@@ -137,7 +137,7 @@ EMERGENCY_REPLIES: dict[str, str] = {
         "I'm an AI assistant and cannot assess this safely over chat."
     ),
     "poisoning": (
-        "🚨 A possible overdose or poisoning needs urgent help.\n\n"
+        "A possible overdose or poisoning needs urgent help.\n\n"
         "Call emergency services or your poison helpline now:\n" + _NUMBERS + "\n"
         "• US Poison Control: 1-800-222-1222\n\n"
         "• Do not try to make yourself or the person vomit\n"
@@ -145,14 +145,14 @@ EMERGENCY_REPLIES: dict[str, str] = {
         "I'm an AI assistant and cannot assess this safely over chat."
     ),
     "dka": (
-        "🚨 These can be signs of diabetic ketoacidosis (DKA), which is life-threatening.\n\n"
+        "These can be signs of diabetic ketoacidosis (DKA), which is life-threatening.\n\n"
         "Go to the nearest emergency department or call emergency services now:\n" + _NUMBERS + "\n\n"
         "• Do not wait for symptoms to settle\n"
         "• Take your glucose readings and medicine list with you\n\n"
         "I'm an AI assistant and cannot assess this safely over chat."
     ),
     "general": (
-        "🚨 What you describe may be a medical emergency.\n\n"
+        "What you describe may be a medical emergency.\n\n"
         "Call emergency services now or go to the nearest emergency department:\n" + _NUMBERS + "\n\n"
         "I'm an AI assistant and cannot assess this safely over chat."
     ),

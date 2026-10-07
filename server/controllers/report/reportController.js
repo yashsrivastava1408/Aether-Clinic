@@ -12,14 +12,14 @@ export async function analyzeReportController(req, res) {
     const userId = req.body.userId || "demo-user";
 
     if (req.file) {
-      // ❌ Block PDFs (Tesseract can't read them)
+      // Block PDFs (Tesseract can't read them)
       if (req.file.mimetype === "application/pdf") {
         return res.status(400).json({
           error: "PDF not supported yet. Please upload an image (JPG/PNG)."
         });
       }
 
-      // ✅ OCR for images
+      // OCR for images
       // Read file into buffer first to avoid Tesseract worker path issues
       const fs = await import("fs/promises");
       const imageBuffer = await fs.readFile(req.file.path);
@@ -29,7 +29,7 @@ export async function analyzeReportController(req, res) {
       text = result.data.text;
       console.log("Extracted OCR Text length:", text.length, "Preview:", text.substring(0, 50));
 
-      // ✅ Extract Base64 for Vision analysis (reuse buffer)
+      // Extract Base64 for Vision analysis (reuse buffer)
       imageBase64 = imageBuffer.toString("base64");
       imageMime = req.file.mimetype;
 
@@ -50,12 +50,12 @@ export async function analyzeReportController(req, res) {
       analysis = await analyzeReportRemote({ text, imageBase64, imageMime });
     } catch (agentErr) {
       // No made-up analysis: if the agent cannot run, say so.
-      console.error("❌ REPORT AGENT ERROR:", agentErr.message);
+      console.error("REPORT AGENT ERROR:", agentErr.message);
       return res.status(503).json({
         error: "Report analysis is temporarily unavailable. Please try again shortly.",
       });
     }
-    console.log("✅ Report analysis complete (not stored on the server).");
+    console.log("Report analysis complete (not stored on the server).");
 
     res.json(analysis);
   } catch (err) {

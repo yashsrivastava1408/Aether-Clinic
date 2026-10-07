@@ -21,14 +21,14 @@ const connectDB = async (retries = 5) => {
   while (retries > 0) {
     try {
       await mongoose.connect(process.env.MONGO_URI);
-      console.log("✅ MongoDB Connected Successfully");
+      console.log("MongoDB Connected Successfully");
       return;
     } catch (err) {
       retries -= 1;
-      console.error(`❌ MongoDB Connection Error. Retries left: ${retries}`);
+      console.error(`MongoDB Connection Error. Retries left: ${retries}`);
       console.error(`Error Details: ${err.message}`);
       if (retries === 0) {
-        console.error("⚠️ COULD NOT CONNECT TO MONGODB. SYSTEM RUNNING IN JSON-FALLBACK MODE.");
+        console.error("COULD NOT CONNECT TO MONGODB. SYSTEM RUNNING IN JSON-FALLBACK MODE.");
       }
       // Wait for 5 seconds before retrying
       await new Promise(resolve => setTimeout(resolve, 5000));
@@ -147,7 +147,7 @@ app.use((req, res, next) => {
 
 // health check
 app.get("/", (req, res) => {
-  res.send("✅ AI Doctor Backend is running!");
+  res.send("AI Doctor Backend is running!");
 });
 
 // existing APIs
@@ -173,7 +173,7 @@ app.use((err, req, res, next) => {
 // server start
 const PORT = process.env.PORT || 5050;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
   // Sends due check-in emails. Idle until MongoDB is connected.
   if (process.env.FOLLOWUPS_ENABLED !== "false") startFollowUpScheduler();
 });

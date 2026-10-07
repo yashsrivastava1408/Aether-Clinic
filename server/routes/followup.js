@@ -32,7 +32,7 @@ router.post("/", async (req, res) => {
         });
         res.status(201).json({ message: "Check-in scheduled", dueAt: followUp.dueAt });
     } catch (err) {
-        console.error("❌ FOLLOW-UP CREATE ERROR:", err);
+        console.error("FOLLOW-UP CREATE ERROR:", err);
         res.status(500).json({ error: "SERVER_ERROR" });
     }
 });
@@ -45,7 +45,7 @@ router.get("/:token", async (req, res) => {
         if (!followUp || followUp.status === "cancelled") return res.status(404).json({ error: "FOLLOW_UP_NOT_FOUND" });
         res.json(describeFollowUp(followUp));
     } catch (err) {
-        console.error("❌ FOLLOW-UP READ ERROR:", err);
+        console.error("FOLLOW-UP READ ERROR:", err);
         res.status(500).json({ error: "SERVER_ERROR" });
     }
 });
@@ -61,7 +61,7 @@ router.post("/:token/respond", async (req, res) => {
         if (followUp.status === "answered") return res.status(409).json({ error: "ALREADY_ANSWERED" });
         res.json(await answerFollowUp(followUp, { status, note }));
     } catch (err) {
-        console.error("❌ FOLLOW-UP ANSWER ERROR:", err);
+        console.error("FOLLOW-UP ANSWER ERROR:", err);
         res.status(500).json({ error: "SERVER_ERROR" });
     }
 });
@@ -78,7 +78,7 @@ router.delete("/:token", async (req, res) => {
         }
         res.json({ message: "Check-in cancelled" });
     } catch (err) {
-        console.error("❌ FOLLOW-UP CANCEL ERROR:", err);
+        console.error("FOLLOW-UP CANCEL ERROR:", err);
         res.status(500).json({ error: "SERVER_ERROR" });
     }
 });

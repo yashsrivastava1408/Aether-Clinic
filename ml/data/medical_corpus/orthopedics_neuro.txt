@@ -104,7 +104,7 @@ Primary Headache Types:
 - Requires specialist management
 
 THUNDERCLAP HEADACHE - EMERGENCY:
-⚠️ Sudden, severe headache reaching maximum intensity within 60 seconds ("worst headache of my life") → CALL EMERGENCY SERVICES IMMEDIATELY
+WARNING: Sudden, severe headache reaching maximum intensity within 60 seconds ("worst headache of my life") → CALL EMERGENCY SERVICES IMMEDIATELY
 This may indicate subarachnoid hemorrhage, cerebral venous thrombosis, or other life-threatening conditions. Do NOT wait for symptoms to resolve.
 
 Secondary Headache Red Flags (SNNOOP10 Criteria):

@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import api from '../utils/api';
 
 const AuthContext = createContext({
     user: null,
@@ -11,72 +11,52 @@ const AuthContext = createContext({
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);
 
+// Usage limits, counted in characters sent and received
+const GUEST_DAILY_LIMIT = 10000;
+const USER_LIMIT = 100000;
+
+const INACTIVITY_LIMIT = 15 * 60 * 1000; // 15 minutes
+const ACTIVITY_EVENTS = ['mousemove', 'keypress', 'click', 'scroll'];
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [hasOnboarded, setHasOnboarded] = useState(false);
-
-    // Token Limits
-    const GUEST_DAILY_LIMIT = 10000;
-    const USER_LIMIT = 100000; // High limit for signed-in users
-
     const [tokenUsage, setTokenUsage] = useState(0);
-
-
-
-    // Auto-Logout Constants
-    const INACTIVITY_LIMIT = 15 * 60 * 1000; // 15 Minutes
-    let inactivityTimer;
+    const [signedOutForInactivity, setSignedOutForInactivity] = useState(false);
+    const inactivityTimer = useRef(null);
 
     useEffect(() => {
         loadUser();
-        setupActivityListeners();
-        return () => cleanupActivityListeners();
+
+        // Signed-in sessions end after 15 minutes without activity
+        const resetInactivityTimer = () => {
+            clearTimeout(inactivityTimer.current);
+            if (!localStorage.getItem('user_session')) return;
+            inactivityTimer.current = setTimeout(() => {
+                setSignedOutForInactivity(true);
+                logout();
+            }, INACTIVITY_LIMIT);
+        };
+
+        ACTIVITY_EVENTS.forEach(name => window.addEventListener(name, resetInactivityTimer, { passive: true }));
+        resetInactivityTimer();
+        return () => {
+            ACTIVITY_EVENTS.forEach(name => window.removeEventListener(name, resetInactivityTimer));
+            clearTimeout(inactivityTimer.current);
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const setupActivityListeners = () => {
-        window.addEventListener('mousemove', resetInactivityTimer);
-        window.addEventListener('keypress', resetInactivityTimer);
-        window.addEventListener('click', resetInactivityTimer);
-        window.addEventListener('scroll', resetInactivityTimer);
-        resetInactivityTimer();
-    };
-
-    const cleanupActivityListeners = () => {
-        window.removeEventListener('mousemove', resetInactivityTimer);
-        window.removeEventListener('keypress', resetInactivityTimer);
-        window.removeEventListener('click', resetInactivityTimer);
-        window.removeEventListener('scroll', resetInactivityTimer);
-        clearTimeout(inactivityTimer);
-    };
-
-    const resetInactivityTimer = () => {
-        if (inactivityTimer) clearTimeout(inactivityTimer);
-
-        // Only set timer if user is logged in (or guest session active)
-        const storedUser = localStorage.getItem('user_session'); // Direct check to avoid stale state
-        if (storedUser) {
-            inactivityTimer = setTimeout(() => {
-                console.log("Auto-logging out due to inactivity...");
-                logout();
-                alert("For your security, you have been logged out due to inactivity.");
-            }, INACTIVITY_LIMIT);
-        }
-    };
-
     const loadUser = async () => {
         try {
-            // Check onboarding status
-            const onboarded = localStorage.getItem('has_onboarded');
-            setHasOnboarded(onboarded === 'true');
+            setHasOnboarded(localStorage.getItem('has_onboarded') === 'true');
 
-            // Load Token Usage for Guest
+            // Guest usage resets 24 hours after the first message
             const savedUsage = localStorage.getItem('guest_token_usage');
             const resetTime = localStorage.getItem('guest_token_reset');
 
             if (resetTime && new Date() > new Date(resetTime)) {
-                // Reset if 24h passed
                 setTokenUsage(0);
                 localStorage.setItem('guest_token_usage', '0');
                 localStorage.removeItem('guest_token_reset');
@@ -84,25 +64,19 @@ export const AuthProvider = ({ children }) => {
                 setTokenUsage(savedUsage ? parseInt(savedUsage) : 0);
             }
 
-            // Check for existing session in localStorage
             const storedUser = localStorage.getItem('user_session');
 
             if (storedUser) {
                 setUser(JSON.parse(storedUser));
             } else {
-                // Persistent Guest ID
+                // Guests keep the same id in this browser
                 let guestId = localStorage.getItem('guest_id');
                 if (!guestId) {
                     guestId = 'guest-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 9);
                     localStorage.setItem('guest_id', guestId);
                 }
 
-                const guestUser = {
-                    id: guestId,
-                    isGuest: true,
-                    name: 'Guest User',
-                };
-                setUser(guestUser);
+                setUser({ id: guestId, isGuest: true, name: 'Guest' });
             }
         } catch (error) {
             console.error('Auth loading error:', error);
@@ -111,10 +85,9 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const checkTokenLimit = (amount) => {
-        const limit = user?.isGuest ? GUEST_DAILY_LIMIT : USER_LIMIT;
-        return (tokenUsage + amount) <= limit;
-    };
+    const usageLimit = user?.isGuest ? GUEST_DAILY_LIMIT : USER_LIMIT;
+
+    const checkTokenLimit = (amount) => (tokenUsage + amount) <= usageLimit;
 
     const consumeTokens = (amount) => {
         const newUsage = tokenUsage + amount;
@@ -123,7 +96,6 @@ export const AuthProvider = ({ children }) => {
         if (user?.isGuest) {
             localStorage.setItem('guest_token_usage', newUsage.toString());
 
-            // Set reset time if not set
             if (!localStorage.getItem('guest_token_reset')) {
                 const nextDay = new Date();
                 nextDay.setHours(nextDay.getHours() + 24);
@@ -135,61 +107,52 @@ export const AuthProvider = ({ children }) => {
     const continueAsGuest = () => {
         localStorage.setItem('has_onboarded', 'true');
         setHasOnboarded(true);
+        setSignedOutForInactivity(false);
     };
 
     const login = async (email, userData = null) => {
-        // MOCK LOGIN -> REAL DB SYNC
-        const mockUser = {
-            id: 'u-' + Date.now().toString(36), // ID will be updated by DB response ideally, but keep for simpler frontend state
+        const name = userData?.name || email.split('@')[0];
+        const sessionUser = {
+            id: 'u-' + Date.now().toString(36),
             isGuest: false,
-            name: userData?.name || email.split('@')[0],
-            email: email,
-            avatar: userData?.picture || 'https://ui-avatars.com/api/?name=' + email.split('@')[0] + '&background=10b981&color=fff'
+            name,
+            email,
+            avatar: userData?.picture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=0f766e&color=fff'
         };
 
-        // Sync with Backend
+        // Create or update the user on the server and keep its id
         try {
-            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/api/auth/login`, {
-                email: mockUser.email,
-                name: mockUser.name,
-                picture: mockUser.avatar,
+            const res = await api.post('/api/auth/login', {
+                email: sessionUser.email,
+                name: sessionUser.name,
+                picture: sessionUser.avatar,
                 isGuest: false
             });
-            console.log("✅ User synced with DB:", res.data.user);
-
-            // Use DB ID if available
-            if (res.data.user?._id) {
-                mockUser.dbId = res.data.user._id;
-            }
+            if (res.data.user?._id) sessionUser.dbId = res.data.user._id;
         } catch (error) {
-            console.error("❌ Failed to sync user with DB:", error);
+            console.error('Could not save the user on the server:', error);
         }
 
-        localStorage.setItem('user_session', JSON.stringify(mockUser));
+        localStorage.setItem('user_session', JSON.stringify(sessionUser));
         localStorage.setItem('has_onboarded', 'true');
-        setUser(mockUser);
+        setUser(sessionUser);
         setHasOnboarded(true);
-
-        // We don't need manual welcome email call anymore, login endpoint handles it for new users
-        // But keeping the log for debug
-        console.log("Login flow complete.");
+        setSignedOutForInactivity(false);
     };
 
+    // Signing out goes back to the welcome screen
     const logout = async () => {
         localStorage.removeItem('user_session');
-        // Optional: Reset onboarding on logout? 
-        // Typically logout -> goes to guest mode or login screen. 
-        // For this flow, let's keep them onboarded but in guest mode, 
-        // OR reset onboarding to show the choice screen again.
-        // Let's reset onboarding to show the choice screen again for clear demonstration.
         localStorage.removeItem('has_onboarded');
         setHasOnboarded(false);
-
         await loadUser();
     };
 
+    // The welcome screen, opened from inside the app by a guest who wants to sign in
+    const showSignIn = () => setHasOnboarded(false);
+
     return (
-        <AuthContext.Provider value={{ user, isLoading, hasOnboarded, login, logout, continueAsGuest, checkTokenLimit, consumeTokens, tokenUsage }}>
+        <AuthContext.Provider value={{ user, isLoading, hasOnboarded, login, logout, continueAsGuest, showSignIn, checkTokenLimit, consumeTokens, tokenUsage, usageLimit, signedOutForInactivity }}>
             {children}
         </AuthContext.Provider>
     );

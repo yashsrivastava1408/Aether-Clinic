@@ -1,10 +1,10 @@
-# 🧠 Aether ML: Consultation & Predictive Analytics Service
+# Aether ML: Consultation & Predictive Analytics Service
 
 **The Python microservice behind the chat consultation and the risk predictions.**
 
 ---
 
-## 🩺 Consultation Service
+## Consultation Service
 
 One chat turn is one run of a LangGraph state machine:
 
@@ -59,7 +59,7 @@ conversation state in memory.
 
 ---
 
-## 🤖 Risk Models
+## Risk Models
 
 The risk prediction endpoints do not use LLMs. They use classic machine-learning
 models trained on public datasets (Cleveland Heart, PIMA Diabetes). The same
@@ -78,7 +78,7 @@ graph TD
     Logic --> Output["JSON response (+ warnings for out-of-range values)"]
 ```
 
-## 📚 Available Models
+## Available Models
 
 | Model | Type | Holdout result | Features (in order) |
 | :--- | :--- | :--- | :--- |
@@ -91,7 +91,7 @@ graph TD
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 *   **Framework**: Flask (Python), gunicorn in production
 *   **Consultation**: LangGraph, langchain-openai (one client for Ollama, Groq and Gemini)

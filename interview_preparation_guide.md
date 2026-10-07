@@ -8,7 +8,7 @@ This guide is designed to help you confidently present **MedNexus (Aether Clinic
 
 **MedNexus (Aether Clinic)** is a high-performance, privacy-first, and security-hardened healthcare platform that enables patients to securely conduct AI-driven consultations, upload and digitize medical reports via OCR, and predict chronic disease risks (heart disease and diabetes). Clinicians use a web-based dashboard to manage patients, review chat histories, and inspect medical insights.
 
-### 🌟 The "Wow" Pitch (How to introduce it in 30 seconds)
+### The "Wow" Pitch (How to introduce it in 30 seconds)
 > *"I built a privacy-first healthcare AI system called MedNexus. A React Native app and a React dashboard talk to a Node.js gateway, and a Python service runs each consultation as a LangGraph state machine: it screens for emergencies before any model is called, collects the history with structured output, retrieves clinical protocols from Qdrant with hybrid search, and only shows a reply after it has passed fail-closed safety checks. Around that I built the agentic parts: a research agent that plans one search per problem and refines searches that find nothing, hand-off between specialist profiles, a lab-report agent whose range checks are rule-based tools, long-term patient memory, an opt-in follow-up agent, and a human-in-the-loop review step using LangGraph interrupts. Conversation state is checkpointed per session in MongoDB, AES-encrypted. I measured retrieval and emergency detection on gold sets instead of guessing, and the whole stack deploys to Kubernetes with autoscaling."*
 
 ---
@@ -121,8 +121,8 @@ The Python ML hub hosts pre-trained machine learning classifiers for heart disea
 
 ```
 ML Training Pipeline:
-[Raw Cleaned Data] ➔ [ColumnTransformer Preprocessing] ➔ [Candidate CV Evaluation] 
-                          ➔ [Probability Calibration] ➔ [Decision Threshold Tuning] ➔ [joblib Model Bundle]
+[Raw Cleaned Data] → [ColumnTransformer Preprocessing] → [Candidate CV Evaluation] 
+                          → [Probability Calibration] → [Decision Threshold Tuning] → [joblib Model Bundle]
 ```
 
 #### Preprocessing & Pipeline Construction
@@ -148,7 +148,7 @@ To use these models in clinical triage contexts, raw classifier predictions are 
 
 ## 5. Advanced Engineering Design Patterns (Interviewer "Wow" Factors)
 
-### 🚀 Hardware-Aware Dynamic Quantization
+### Hardware-Aware Dynamic Quantization
 In local-only or offline deployments, running heavy LLMs is impossible on standard devices. I designed a **Hardware-Aware Router**:
 *   The web frontend detects the client device's physical memory using the browser's `navigator.deviceMemory` API (and passes it in the chat request payload as `userRam`).
 *   The Python service's model router picks a local Ollama model from this value:
@@ -159,13 +159,13 @@ In local-only or offline deployments, running heavy LLMs is impossible on standa
 *   Every provider is called through its OpenAI-compatible endpoint, so one client class covers Ollama, Groq and Gemini. The order is Ollama → Groq → Gemini for the basic tier and Groq → Gemini → Ollama for premium. A provider that is unreachable or misconfigured is skipped for 60 seconds.
 *   *Story worth telling*: the previous Groq model (`llama-3.3-70b-versatile`) was retired by the provider and the premium tier silently fell back to Gemini. The first real end-to-end run caught it. Model names are now configuration, and a wrong one cools the provider down instead of failing every call.
 
-### 🧠 Long-Term Memory, Follow-Ups and Human in the Loop
+### Long-Term Memory, Follow-Ups and Human in the Loop
 *   **Patient memory**: when a consultation finishes, the graph returns a summary built only from the intake slots (what the user said, never model text). The gateway keeps the last ten per user, AES-encrypted, and sends a digest with later consultations as background. Users can switch it off and delete it.
 *   **Follow-up agent**: opt-in check-in two days after an assessment. A scheduler claims each due check-in atomically (`findOneAndUpdate`), so several replicas never email twice; failed sends are retried three times. The email has a link and no health details. Answering "worse" opens a new consultation that starts from the earlier complaint and goes through every safety step again.
 *   **Human in the loop**: LangGraph `interrupt()` pauses a verified assessment for a clinician. The paused state survives restarts because it is in the checkpointer, and resuming does not call the model again.
 *   **Why replies are not cached**: an earlier version cached model replies by prompt. Replies now depend on conversation state and the user's own data, so a cache would hand one person another person's answer. The cache module is no longer on any request path.
 
-### 🛡️ Resilience & Failover
+### Resilience & Failover
 In production, microservices can go offline. The rule here is: degrade where it is safe, refuse where it is not.
 *   **Database Fallback**: If MongoDB is down, the Node.js backend switches to a local JSON store (`chat_logs.json`) for transcripts.
 *   **Model Fallback**: If one model provider fails, the router tries the next. If none answers, intake still works with regex extraction and scripted questions, and emergencies and the guardrail work as normal. An assessment is declined rather than faked.
@@ -173,7 +173,7 @@ In production, microservices can go offline. The rule here is: degrade where it 
 *   **No unsafe fallback**: If the Python service is unreachable, the gateway returns a clear "temporarily unavailable" message. The older design fell back to a keyword lookup plus an unverified model call in Node; that path was removed because it skipped the safety checks.
 *   **Vector store**: One store (Qdrant). With a server configured the service uses it; otherwise it builds the same index in memory at startup. There is no second database to keep in sync.
 
-### ☸️ Production DevOps & Kubernetes Clustering
+### Production DevOps & Kubernetes Clustering
 The workspace includes a production deployment pipeline under `k8s/` and a unified orchestrator script `scripts/deploy_k8s.sh`.
 *   **Auto-Scaling**: Configured **Horizontal Pod Autoscalers (HPA)** for the Node.js gateway (1 to 10 replicas) and the Python ML service (1 to 5 replicas) based on CPU utilization crossing `75%`. ML replicas can scale freely because consultation state lives in MongoDB, not in the pod.
 *   **Persistent Storage**: Persistent Volume Claims (PVC) are wired for MongoDB, Redis (with Append-Only File persistence enabled), and Qdrant to ensure data persists across pod restarts.

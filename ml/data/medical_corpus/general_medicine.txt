@@ -10,8 +10,8 @@ Clinical Phases:
 3. Recovery Phase: Gradual reabsorption of fluid, improved well-being, return of appetite
 
 CRITICAL MEDICATION WARNING:
-⚠️ Do NOT take Aspirin, Ibuprofen, or any NSAID - these increase bleeding risk significantly
-✅ SAFE: Paracetamol (Acetaminophen) only - max 4g/day in adults, weight-based dosing in children
+WARNING: Do NOT take Aspirin, Ibuprofen, or any NSAID - these increase bleeding risk significantly
+SAFE: Paracetamol (Acetaminophen) only - max 4g/day in adults, weight-based dosing in children
 
 Warning Signs of Severe Dengue (Seek IMMEDIATE Emergency Care):
 - Severe abdominal pain or persistent vomiting

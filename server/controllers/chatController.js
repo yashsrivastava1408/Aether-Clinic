@@ -24,9 +24,10 @@ const sanitizeContext = (text) => {
   
   // Strip anything after any variation of the disclaimer
   const markers = [
-    "⚖️ MEDICAL LEGAL DISCLAIMER",
+    "\u2696\uFE0F MEDICAL LEGAL DISCLAIMER", // older stored replies carry the symbol
     "MEDICAL LEGAL DISCLAIMER",
-    "🛡️ SAFETY OVERSIGHT",
+    "\u{1F6E1}\uFE0F SAFETY OVERSIGHT",
+    "SAFETY OVERSIGHT",
     "---"
   ];
   
@@ -85,7 +86,7 @@ const prepareTurn = async (req) => {
   if (!chat.sessionId) chat.sessionId = crypto.randomUUID();
   chat.memoryOff = !memoryEnabled;
 
-  // 🚨 SESSION LOCK - Prevent chat after final report
+  // SESSION LOCK - Prevent chat after final report
   if (chat.sessionClosed) {
     return {
       error: {
@@ -175,14 +176,14 @@ export const recordAssistantReply = async (chat, result, { userId, memoryEnabled
   chat.pendingReview = !!result.pending_review;
   if (result.session_complete) {
     chat.sessionClosed = true;
-    console.log("🔒 SESSION CLOSED - Final report delivered");
+    console.log("SESSION CLOSED - Final report delivered");
   }
   chat.lastActive = new Date();
   await chat.save();
 
   if (result.memory_entry && memoryEnabled) {
     await addMemoryEntry(userId || chat.userId, result.memory_entry).catch((err) =>
-      console.warn("⚠️ Could not save consultation memory:", err.message));
+      console.warn("Could not save consultation memory:", err.message));
   }
   return reply;
 };
@@ -257,7 +258,7 @@ export const handleChat = async (req, res) => {
     try {
       result = await runConsult(turn.payload);
     } catch (consultErr) {
-      console.error("❌ CONSULT SERVICE ERROR:", consultErr.message);
+      console.error("CONSULT SERVICE ERROR:", consultErr.message);
       return res.status(503).json(UNAVAILABLE_BODY);
     }
 
@@ -265,7 +266,7 @@ export const handleChat = async (req, res) => {
     return res.status(status).json(body);
 
   } catch (err) {
-    console.error("❌ CHAT ERROR:", err);
+    console.error("CHAT ERROR:", err);
     return res.status(500).json({ error: "SERVER_ERROR" });
   } finally {
     removeUpload(req.file);
@@ -300,7 +301,7 @@ export const handleChatStream = async (req, res) => {
     try {
       result = await streamConsult(turn.payload, (step) => send("step", step));
     } catch (consultErr) {
-      console.error("❌ CONSULT SERVICE ERROR:", consultErr.message);
+      console.error("CONSULT SERVICE ERROR:", consultErr.message);
       send("error", UNAVAILABLE_BODY);
       return res.end();
     }
@@ -311,7 +312,7 @@ export const handleChatStream = async (req, res) => {
     return res.end();
 
   } catch (err) {
-    console.error("❌ CHAT STREAM ERROR:", err);
+    console.error("CHAT STREAM ERROR:", err);
     if (!started) return res.status(500).json({ error: "SERVER_ERROR" });
     send("error", { error: "SERVER_ERROR" });
     return res.end();
@@ -338,7 +339,7 @@ export const getChatHistory = async (req, res) => {
       pendingReview: chat.pendingReview || false
     });
   } catch (err) {
-    console.error("❌ GET HISTORY ERROR:", err);
+    console.error("GET HISTORY ERROR:", err);
     return res.status(500).json({ error: "SERVER_ERROR" });
   }
 };
@@ -348,7 +349,7 @@ export const getPatientMemory = async (req, res) => {
   try {
     res.json({ entries: await getMemory(req.params.userId) });
   } catch (err) {
-    console.error("❌ MEMORY READ ERROR:", err);
+    console.error("MEMORY READ ERROR:", err);
     return res.status(500).json({ error: "SERVER_ERROR" });
   }
 };
@@ -358,7 +359,7 @@ export const deletePatientMemory = async (req, res) => {
     await clearMemory(req.params.userId);
     res.json({ message: "Health memory cleared" });
   } catch (err) {
-    console.error("❌ MEMORY DELETE ERROR:", err);
+    console.error("MEMORY DELETE ERROR:", err);
     return res.status(500).json({ error: "SERVER_ERROR" });
   }
 };
@@ -375,7 +376,7 @@ export const deleteChat = async (req, res) => {
     const stateDeleted = chat?.sessionId ? await deleteConsultThread(chat.sessionId) : true;
     res.json({ message: "Chat deleted successfully", stateDeleted });
   } catch (err) {
-    console.error("❌ DELETE ERROR:", err);
+    console.error("DELETE ERROR:", err);
     return res.status(500).json({ error: "SERVER_ERROR" });
   }
 };
@@ -422,7 +423,7 @@ export const forceFinalReport = async (req, res) => {
         patient_memory: memory !== "off" ? memoryDigest(await getMemory(userId)) || null : null,
       });
     } catch (consultErr) {
-      console.error("❌ CONSULT SERVICE ERROR:", consultErr.message);
+      console.error("CONSULT SERVICE ERROR:", consultErr.message);
       return res.status(503).json(UNAVAILABLE_BODY);
     }
 
@@ -442,7 +443,7 @@ export const forceFinalReport = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("❌ FORCE FINAL ERROR:", err.message, err.stack);
+    console.error("FORCE FINAL ERROR:", err.message, err.stack);
     return res.status(500).json({ error: "SERVER_ERROR" });
   }
 };
@@ -498,11 +499,11 @@ export const handleFeedback = async (req, res) => {
     feedbackLogs.push(newEntry);
     fs.writeFileSync(FEEDBACK_LOGS_PATH, JSON.stringify(feedbackLogs, null, 2), "utf8");
 
-    console.log(`🛡️  FEEDBACK LOGGED: User ${userId} flagged response as ${type}`);
+    console.log(`FEEDBACK LOGGED: User ${userId} flagged response as ${type}`);
     res.json({ message: "Feedback recorded. Thank you for helping us improve." });
 
   } catch (err) {
-    console.error("❌ FEEDBACK ERROR:", err);
+    console.error("FEEDBACK ERROR:", err);
     res.status(500).json({ error: "FEEDBACK_STORAGE_FAILED" });
   }
 };

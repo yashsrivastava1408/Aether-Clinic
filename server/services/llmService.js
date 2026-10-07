@@ -50,7 +50,7 @@ export const generateResponse = async (prompt, imageBase64 = null, options = {})
         try {
           responseText = await generateOllamaResponse(prompt, options);
         } catch (ollamaErr) {
-          console.warn("⚠️ Ollama unavailable. Falling back to Cloud LLM (Groq / Gemini)...");
+          console.warn("Ollama unavailable. Falling back to Cloud LLM (Groq / Gemini)...");
           if (process.env.GROQ_API_KEY) {
             responseText = await generateGroqResponse(prompt, options);
           } else if (process.env.GEMINI_API_KEY) {
@@ -66,7 +66,7 @@ export const generateResponse = async (prompt, imageBase64 = null, options = {})
     await CacheManager.set(cacheKey, responseText, provider, 'llm');
     return responseText;
   } catch (error) {
-    console.error(`❌ LLM Service Error [${provider}]:`, error.message);
+    console.error(`LLM Service Error [${provider}]:`, error.message);
     throw error;
   }
 };
@@ -76,7 +76,7 @@ export const generateResponse = async (prompt, imageBase64 = null, options = {})
  * Uses the llama3.2 model which is optimized for speed/accuracy balance.
  */
 const generateOllamaResponse = async (prompt, options = {}) => {
-  console.log(`🐢 Standard Engine Active: Routing to Local Ollama`);
+  console.log(`Standard Engine Active: Routing to Local Ollama`);
   const ollamaHost = process.env.OLLAMA_HOST || "http://localhost:11434";
 
   // Default heavily tuned parameters for medical accuracy & safety
@@ -94,10 +94,10 @@ const generateOllamaResponse = async (prompt, options = {}) => {
 
   if (userRam < 4) {
     selectedModel = "llama3.2:1b"; // Ultra-light for low-end devices
-    console.log(`📉 Low RAM detected (${userRam}GB). Using light-weight 1B model.`);
+    console.log(`Low RAM detected (${userRam}GB). Using light-weight 1B model.`);
   } else if (userRam >= 16) {
     selectedModel = "llama3.2:3b-instruct-fp16"; // High-fidelity for pro workstations
-    console.log(`🚀 High RAM detected (${userRam}GB). Using full-precision 3B model.`);
+    console.log(`High RAM detected (${userRam}GB). Using full-precision 3B model.`);
   }
 
   try {
@@ -170,22 +170,22 @@ const generateGeminiResponse = async (prompt, imageBase64 = null, genAI) => {
         });
 
         const text = result.response.text();
-        console.log(`✅ Success with model: ${modelName}`);
+        console.log(`Success with model: ${modelName}`);
         return text;
       } else {
         const result = await model.generateContent(prompt);
         const text = result.response.text();
-        console.log(`✅ Success with model: ${modelName}`);
+        console.log(`Success with model: ${modelName}`);
         return text;
       }
     } catch (err) {
-      console.warn(`⚠️ Failed with model ${modelName}: ${err.message}`);
+      console.warn(`Failed with model ${modelName}: ${err.message}`);
       lastError = err;
       // Continue to next model
     }
   }
 
-  console.error(`❌ All Gemini model attempts failed.`);
+  console.error(`All Gemini model attempts failed.`);
   if (lastError) throw lastError;
   throw new Error("All Gemini models failed to generate response.");
 };
@@ -195,10 +195,10 @@ const generateGeminiResponse = async (prompt, imageBase64 = null, genAI) => {
  * Uses llama-3.3-70b-versatile for exceptional reasoning and speed.
  */
 const generateGroqResponse = async (prompt, options = {}) => {
-  console.log(`🚀 Premium Engine Active: Routing to Groq (llama-3.3-70b-versatile)`);
+  console.log(`Premium Engine Active: Routing to Groq (llama-3.3-70b-versatile)`);
   const groqApiKey = process.env.GROQ_API_KEY;
   if (!groqApiKey) {
-    console.warn("⚠️ GROQ_API_KEY missing. Falling back to Ollama.");
+    console.warn("GROQ_API_KEY missing. Falling back to Ollama.");
     return generateOllamaResponse(prompt, options);
   }
 
@@ -215,7 +215,7 @@ const generateGroqResponse = async (prompt, options = {}) => {
     
     return completion.choices[0]?.message?.content || "";
   } catch (error) {
-    console.error("❌ Groq API Error:", error.message);
+    console.error("Groq API Error:", error.message);
     if (process.env.GEMINI_API_KEY) {
       const genAI = getGenAI();
       return generateGeminiResponse(prompt, null, genAI);

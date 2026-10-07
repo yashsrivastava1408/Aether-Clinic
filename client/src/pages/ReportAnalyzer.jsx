@@ -1,23 +1,30 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import ScanningHUD from "../components/ScanningHUD";
-import BiometricPulse from "../components/BiometricPulse";
-import NeuralSyncSequence from "../components/NeuralSyncSequence";
-import DOMPurify from "dompurify";
-import { useTheme } from "../context/ThemeContext";
+import api, { errorMessage } from "../utils/api";
 import { saveReportDigest } from "../utils/reportContext";
+import { ArrowRight, FileText, Spinner, Upload } from "../components/Icons";
+
+const STATUS_STYLE = {
+  low: "border-warn/30 bg-warn-soft text-warn",
+  high: "border-danger/30 bg-danger-soft text-danger",
+  normal: "border-ok/30 bg-ok-soft text-ok",
+  unknown: "border-line bg-surface-2 text-muted",
+};
+
+const formatRange = (test) => {
+  const { range_low: low, range_high: high } = test;
+  if (low != null && high != null) return `${low} – ${high}`;
+  if (low != null) return `above ${low}`;
+  if (high != null) return `below ${high}`;
+  return "none available";
+};
 
 export default function ReportAnalyzer() {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [pageLoading, setPageLoading] = useState(true);
   const [error, setError] = useState("");
-  const [displayedResult, setDisplayedResult] = useState(null);
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
   const navigate = useNavigate();
 
   // Opens a consultation with the specialist the report agent suggested,
@@ -25,35 +32,21 @@ export default function ReportAnalyzer() {
   const discussWithSpecialist = () => {
     const { specialist, opening_message: openingMessage } = result.consult;
     navigate(`/chatbot/${encodeURIComponent(specialist)}`, {
-      state: { specializationName: specialist, specializationRole: "Specialist", initialMessage: openingMessage, userRam: navigator.deviceMemory || 8 },
+      state: { specializationName: specialist, initialMessage: openingMessage },
     });
   };
 
-  // Initial Page Loading
-  useEffect(() => {
-    // NeuralSyncSequence handles the transition internally via its progress
-    // but we can also use a fallback timeout if needed.
-  }, []);
-
-  // Result Reconstruction Effect
-  useEffect(() => {
-    if (result && !displayedResult) {
-      let timer = setTimeout(() => {
-        setDisplayedResult(result);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-    if (!result) setDisplayedResult(null);
-  }, [result, displayedResult]);
-
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
-    if (selected) {
-      setFile(selected);
-      setPreview(URL.createObjectURL(selected));
-      setResult(null);
-      setError("");
+    if (!selected) return;
+    if (!selected.type.startsWith("image/")) {
+      setError("Please choose a photo or screenshot (JPG or PNG). PDF files are not supported yet.");
+      return;
     }
+    setFile(selected);
+    setPreview(URL.createObjectURL(selected));
+    setResult(null);
+    setError("");
   };
 
   const handleAnalyze = async () => {
@@ -67,221 +60,141 @@ export default function ReportAnalyzer() {
     formData.append("report", file);
 
     try {
-      // Direct call to match server route, bypassing utils for speed
-      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/api/report/analyze`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await api.post("/api/report/analyze", formData);
       setResult(res.data);
       saveReportDigest(res.data); // lets a later consultation take this report into account
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || err.response?.data?.details || "SCANNING FAILED. SYSTEM ERROR.");
+      setError(errorMessage(err, "The report could not be analysed. Please try again."));
     } finally {
       setLoading(false);
     }
   };
 
+  const tests = result?.tests || [];
+
   return (
-    <div className={`min-h-screen pt-12 pb-12 px-6 relative transition-colors duration-500 ${isDark ? 'bg-[#030303] text-white' : 'bg-slate-50 text-slate-900'}`}>
-      {/* Initial Splash Overhaul */}
-      {pageLoading && (
-        <NeuralSyncSequence onComplete={() => setPageLoading(false)} />
-      )}
+    <div className="page">
+      <header className="mb-8">
+        <h1 className="page-title">Lab report</h1>
+        <p className="page-lead">
+          Upload a photo of a lab report. Each value is checked against its reference range and explained in plain language.
+          The report itself is not stored on the server.
+        </p>
+      </header>
 
-      {/* Background Ambience */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className={`absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent to-transparent ${isDark ? 'via-emerald-500/50' : 'via-emerald-400/30'}`} />
-        <div className={`absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[100px] ${isDark ? 'bg-emerald-500/5' : 'bg-emerald-400/10'}`} />
-      </div>
+      <div className="grid items-start gap-6 lg:grid-cols-5">
+        {/* Upload */}
+        <section className="card p-5 lg:col-span-2">
+          <label className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-line text-center transition-colors hover:border-brand ${preview ? "p-3" : "px-6 py-12"}`}>
+            {preview ? (
+              <img src={preview} alt="The report you chose" className="max-h-96 w-full rounded-lg object-contain" />
+            ) : (
+              <>
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-soft text-brand"><Upload /></span>
+                <span className="mt-3 text-sm font-medium text-ink">Choose a photo of your report</span>
+                <span className="mt-1 text-xs text-muted">JPG or PNG. A sharp, well-lit photo of the results page works best.</span>
+              </>
+            )}
+            <input type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
+          </label>
 
-      <div className="max-w-4xl mx-auto relative z-10">
+          {file && <p className="mt-3 truncate text-xs text-muted">{file.name} · choose the image to change it</p>}
 
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-mono mb-4 ${isDark ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-white border-emerald-200 text-emerald-600 shadow-sm'}`}>
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            OPTICAL DIAGNOSTIC SCANNER V4.2
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-800 mb-4 dark:from-white dark:via-emerald-100 dark:to-emerald-500">
-            Medical Report Analyzer
-          </h1>
-          <p className={`${isDark ? 'text-gray-400' : 'text-slate-600'} max-w-xl mx-auto`}>
-            Upload any medical document for instant AI-powered analysis of vitals, warnings, and health suggestions.
-          </p>
-        </div>
+          <button onClick={handleAnalyze} disabled={!file || loading} className="btn btn-primary mt-4 w-full">
+            {loading ? <><Spinner /> Reading the report</> : "Analyse report"}
+          </button>
+          {loading && <p className="mt-2 text-center text-xs text-muted">This can take up to a minute.</p>}
+        </section>
 
-        {/* Main Interface Grid */}
-        <div className="grid md:grid-cols-2 gap-8">
+        {/* Result */}
+        <section className="space-y-4 lg:col-span-3" aria-live="polite">
+          {error && <p className="notice notice-danger" role="alert">{error}</p>}
 
-          {/* Left: Scanner / Input */}
-          <div className="relative group">
-            <div className={`absolute -inset-1 bg-gradient-to-r rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 ${isDark ? 'from-emerald-500/20 to-cyan-500/20' : 'from-emerald-300/40 to-cyan-300/40'}`} />
-
-            <div className={`relative backdrop-blur-xl border rounded-2xl overflow-hidden flex flex-col ${isDark ? 'bg-black/50 border-white/10' : 'bg-white/80 border-slate-200 shadow-xl'}`}>
-
-              {/* TOP CONTROLS: Always visible */}
-              <div className={`p-4 border-b z-20 ${isDark ? 'bg-[#050505] border-white/5' : 'bg-slate-50 border-slate-200'}`}>
-                <button
-                  onClick={handleAnalyze}
-                  disabled={!file || loading}
-                  className="w-full relative overflow-hidden group/btn bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)]"
-                >
-                  <div className="relative z-10 flex items-center justify-center gap-2 text-sm">
-                    {loading ? (
-                      <>
-                        <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span>SCANNING...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>INITIATE SCAN SEQUENCE</span>
-                        <svg className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                        </svg>
-                      </>
-                    )}
-                  </div>
-                </button>
-              </div>
-
-              {/* Scanner Window */}
-              <div className={`relative h-[500px] border-b p-6 ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
-                {/* <ScanningHUD active={loading}> */}
-                <div className="relative w-full h-full">
-                  {loading && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-                      <div className="w-full h-1 bg-emerald-500 shadow-[0_0_15px_#10b981] animate-[scan_2s_ease-in-out_infinite]" />
-                    </div>
-                  )}
-                  {preview ? (
-                    <div className={`relative w-full h-full rounded-lg overflow-hidden border ${isDark ? 'border-emerald-500/30 bg-black/20' : 'border-emerald-200 bg-slate-50'}`}>
-                      <img src={preview} alt="Scan Target" className="w-full h-full object-contain opacity-80" />
-                      <div className="absolute inset-0 bg-[url('/assets/grid.svg')] opacity-20 pointer-events-none" />
-                    </div>
-                  ) : (
-                    <label className={`flex flex-col items-center justify-center w-full h-full border-2 border-dashed rounded-xl cursor-pointer transition-all group/upload ${isDark ? 'border-white/10 hover:border-emerald-500/50 hover:bg-emerald-500/5' : 'border-slate-300 hover:border-emerald-400 hover:bg-emerald-50'}`}>
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 group-hover/upload:scale-110 transition-transform ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
-                        <svg className={`w-6 h-6 ${isDark ? 'text-gray-400 group-hover/upload:text-emerald-400' : 'text-slate-400 group-hover/upload:text-emerald-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
-                      </div>
-                      <span className={`${isDark ? 'text-gray-400 group-hover/upload:text-white' : 'text-slate-500 group-hover/upload:text-slate-800'} text-sm font-medium`}>Upload Medical Report</span>
-                      <input type="file" className="hidden" onChange={handleFileChange} />
-                    </label>
-                  )}
-                </div>
-                {/* </ScanningHUD> */}
-              </div>
+          {!result && !error && (
+            <div className="card flex flex-col items-center px-6 py-14 text-center text-muted">
+              <FileText className="h-8 w-8" />
+              <p className="mt-3 text-sm">{loading ? "Reading the values in your report." : "Your results will appear here."}</p>
             </div>
-          </div>
+          )}
 
-          {/* Right: Analysis Results */}
-          <div className="space-y-4 h-[600px] overflow-y-auto pr-2 custom-scrollbar relative">
-
-            {/* DNA Helix Background */}
-            {loading && (
-              <div className="absolute inset-0 z-0 pointer-events-none opacity-20 overflow-hidden flex flex-col items-center">
-                {/* Simplified Loader Background to reduce crash risk */}
-                <div className="mt-20 scale-150 animate-pulse text-emerald-500 font-mono">
-                  PROCESSING NEURAL NETWORKS...
-                </div>
+          {result && (
+            <div className="fade-in space-y-4">
+              <div className="card p-5">
+                <h2 className="text-sm font-semibold text-ink">Summary</h2>
+                <p className="mt-2 text-sm leading-relaxed text-ink">{result.summary}</p>
               </div>
-            )}
 
-            {!result && !error && (
-              <div className={`h-full flex flex-col items-center justify-center text-center p-8 border border-dashed rounded-2xl ${isDark ? 'border-white/10 text-gray-600' : 'border-slate-300 text-slate-400'}`}>
-                <div className="w-12 h-12 mb-4 opacity-20">
-                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              {result.alerts?.length > 0 && (
+                <div className="notice notice-warn">
+                  <h2 className="font-semibold">Worth your attention</h2>
+                  <ul className="mt-2 list-disc space-y-1 pl-5">
+                    {result.alerts.map((alert, i) => <li key={i}>{alert}</li>)}
+                  </ul>
                 </div>
-                <p>Waiting for data stream...</p>
-              </div>
-            )}
+              )}
 
-            {error && (
-              <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-xl text-red-500 text-sm font-mono flex items-center gap-3">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                {error}
-              </div>
-            )}
+              {result.consult && (
+                <button onClick={discussWithSpecialist} className="btn btn-primary w-full justify-between">
+                  Discuss these results with the {result.consult.specialist}
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              )}
 
-            {displayedResult && (
-              <div className="space-y-6 animate-fade-in-up relative z-10 glitch-reveal">
-
-                {/* Summary Card */}
-                <div className={`p-6 rounded-2xl border backdrop-blur-md ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-                  <h3 className="text-emerald-500 text-xs font-bold uppercase tracking-widest mb-3">Diagnostic Summary</h3>
-                  <p className={`leading-relaxed font-light ${isDark ? 'text-gray-200' : 'text-slate-700'}`}>{DOMPurify.sanitize(result?.summary || "Analysis Complete")}</p>
-                </div>
-
-
-                {/* Grid for Lists */}
-                <div className="grid gap-4">
-
-                  {/* Alerts */}
-                  {result?.alerts?.length > 0 && (
-                    <div className="p-5 rounded-xl bg-red-500/10 border border-red-500/20">
-                      <h4 className="flex items-center gap-2 text-red-500 font-bold text-sm uppercase mb-3">
-                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                        Critical Alerts
-                      </h4>
-                      <ul className="space-y-2">
-                        {result.alerts?.map((alert, i) => (
-                          <li key={i} className={`flex items-start gap-2 text-sm ${isDark ? 'text-red-200' : 'text-red-700'}`}>
-                            <span className="mt-1.5 w-1 h-1 rounded-full bg-red-400" />
-                            {DOMPurify.sanitize(alert)}
-                          </li>
+              {tests.length > 0 ? (
+                <div className="card overflow-hidden">
+                  <h2 className="border-b border-line px-5 py-3 text-sm font-semibold text-ink">Values found</h2>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead className="text-xs uppercase tracking-wide text-muted">
+                        <tr>
+                          <th scope="col" className="px-5 py-2 font-medium">Test</th>
+                          <th scope="col" className="px-3 py-2 font-medium">Value</th>
+                          <th scope="col" className="px-3 py-2 font-medium">Range</th>
+                          <th scope="col" className="px-5 py-2 font-medium">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tests.map((test, i) => (
+                          <tr key={`${test.name}-${i}`} className="border-t border-line">
+                            <td className="px-5 py-2.5 font-medium text-ink">{test.name}</td>
+                            <td className="whitespace-nowrap px-3 py-2.5 tabular-nums text-ink">{test.value}{test.unit ? ` ${test.unit}` : ""}</td>
+                            <td className="whitespace-nowrap px-3 py-2.5 tabular-nums text-muted">{formatRange(test)}</td>
+                            <td className="px-5 py-2.5">
+                              <span className={`inline-block rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${STATUS_STYLE[test.status] || STATUS_STYLE.unknown}`}>
+                                {test.status === "unknown" ? "Not checked" : test.status}
+                              </span>
+                            </td>
+                          </tr>
                         ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Hand over to a consultation about the out-of-range values */}
-                  {result?.consult && (
-                    <button
-                      onClick={discussWithSpecialist}
-                      className={`w-full p-4 rounded-xl border text-sm font-medium text-left transition-colors ${isDark ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20' : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'}`}
-                    >
-                      Discuss these results with our {result.consult.specialist} →
-                    </button>
-                  )}
-
-                  {/* Findings */}
-                  <div className={`p-5 rounded-xl border ${isDark ? 'bg-blue-500/5 border-blue-500/10' : 'bg-blue-50 border-blue-100'}`}>
-                    <h4 className="text-blue-500 font-bold text-sm uppercase mb-3">Key Findings</h4>
-                    <ul className="space-y-2">
-                      {result?.findings?.map((item, i) => (
-                        <li key={i} className={`text-sm border-l-2 pl-3 ${isDark ? 'text-gray-300 border-blue-500/30' : 'text-slate-700 border-blue-300'}`}>
-                          {DOMPurify.sanitize(item)}
-                        </li>
-                      ))}
-                    </ul>
+                      </tbody>
+                    </table>
                   </div>
-
-                  {/* Suggestions */}
-                  <div className={`p-5 rounded-xl border ${isDark ? 'bg-emerald-500/5 border-emerald-500/10' : 'bg-emerald-50 border-emerald-100'}`}>
-                    <h4 className="text-emerald-500 font-bold text-sm uppercase mb-3">Recommended Actions</h4>
-                    <ul className="space-y-3">
-                      {result?.suggestions?.map((sug, i) => (
-                        <li key={i} className={`flex items-start gap-3 text-sm ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>
-                          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-700'}`}>
-                            {i + 1}
-                          </div>
-                          {DOMPurify.sanitize(sug)}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
                 </div>
-              </div>
-            )}
+              ) : result.findings?.length > 0 && (
+                <div className="card p-5">
+                  <h2 className="text-sm font-semibold text-ink">Findings</h2>
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink">
+                    {result.findings.map((item, i) => <li key={i}>{item}</li>)}
+                  </ul>
+                </div>
+              )}
 
-          </div>
+              {result.suggestions?.length > 0 && (
+                <div className="card p-5">
+                  <h2 className="text-sm font-semibold text-ink">Suggested next steps</h2>
+                  <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm leading-relaxed text-ink">
+                    {result.suggestions.map((suggestion, i) => <li key={i}>{suggestion}</li>)}
+                  </ol>
+                </div>
+              )}
 
-        </div>
+              <p className="text-xs leading-relaxed text-muted">
+                Values are read from the photo automatically and can be misread. Check them against your report, and ask your doctor what they mean for you.
+              </p>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

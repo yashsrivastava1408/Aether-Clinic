@@ -1,62 +1,47 @@
-# Aether Web: Clinical Dashboard
+# MedNexus web app
 
-A high-performance React web application for doctors and administrators to visualize patient population health.
+The React web app for MedNexus. It talks to the Express gateway in `server/` (default `http://localhost:5050`).
 
----
+## Run it
 
-## Dashboard Architecture
-
-The web client serves as the analytical powerhouse of the Aether ecosystem. Unlike the mobile app which focuses on individual care, the web client focuses on aggregate data and detailed medical views.
-
-### Component Hierarchy
-
-```mermaid
-graph TD
-    App --> AuthProvider
-    AuthProvider --> Layout
-    Layout --> Sidebar
-    Layout --> MainContent
-    
-    MainContent -->|Route: /| Dashboard["Overview Stats"]
-    MainContent -->|Route: /chat| DoctorChat["Specialist Interface"]
-    MainContent -->|Route: /risk| HeartRisk["Deep Risk Analysis"]
-    
-    HeartRisk --> FactorImpact["SHAP Value Visualization"]
-    HeartRisk --> ResultGauge["Probability Meter"]
+```bash
+npm install
+cp .env.example .env   # set VITE_API_URL if the gateway is not on localhost:5050
+npm run dev            # http://localhost:5173
 ```
 
----
+`npm run lint` checks the code and `npm run build` writes the production build to `dist/`.
 
-## Key Features
+## Pages
 
-### 1. Dynamic Factor Correlation (FactorImpact.jsx)
-Visualizes which specific health metrics (e.g., Age > 60, Cholesterol > 240) contributed most to a specific risk prediction. This explains the "Why" behind the AI's decision.
+| Address | File | What it does |
+| --- | --- | --- |
+| `/`, `/dashboard` | `pages/Dashboard.jsx` | Home page with links to each feature |
+| `/consultation` | `pages/Consultation.jsx` | Specialist picker and reply mode (private or fast) |
+| `/chatbot/:specialization` | `pages/Chatbot.jsx` | The consultation chat |
+| `/report` | `pages/ReportAnalyzer.jsx` | Lab report upload and results |
+| `/heart`, `/diabetes` | `pages/HeartRisk.jsx`, `pages/DiabetesRisk.jsx` | Risk forms (both use `components/RiskAssessment.jsx`) |
+| `/settings` | `pages/Settings.jsx` | Account, dark mode, health memory |
+| `/followup/:token` | `pages/FollowUp.jsx` | The page behind the emailed check-in link |
+| `/review` | `pages/Review.jsx` | Clinician review queue (needs the server's reviewer key) |
+| `/about` | `pages/About.jsx` | What the app is and how it is built |
 
-### 2. Specialist Chat Interface
-A dedicated chat view allowing doctors to simulate or review patient conversations with specific AI personas (Cardiologist, Neurologist).
+## How the chat works
 
-- **Live progress**: the chat calls `POST /api/chat/stream` (`src/utils/chatStream.js`) and shows each step as it happens ("Searching clinical protocols..."). The reply itself arrives once, after the server's safety checks.
-- **Numbered sources**: citations are shown as `[1] Protocol title`, matching the `(Source: [1])` markers in the reply.
+- **Live progress**: the chat calls `POST /api/chat/stream` (`src/utils/chatStream.js`) and shows each step as it happens. The reply arrives once, after the server's safety checks.
+- **Numbered sources**: citations are listed as `[1] Title` under the reply.
 - **Report context**: after a report is analysed, a short digest is kept in this browser only (`src/utils/reportContext.js`, 30 days) and sent with chat messages so the assessment can take it into account.
+- **Report to consultation**: when the report has out-of-range values, a button opens a chat with the suggested specialist and the values ready in the message box.
+- **Finished consultations**: a finished consultation is locked. The chat offers a new one and, for signed-in users, an emailed check-in.
+- **Clinician review**: while a clinician has the draft, the chat says so and checks for the result every 15 seconds.
+- **Consent**: the terms are accepted once per browser session before the first message.
 
-### 3. Agentic features in the UI
-- **Report → consultation**: when the report agent finds out-of-range values, the report page shows a button that opens a chat with the suggested specialist and the values ready in the message box.
-- **Check-in** (`/followup/:token`): the page behind the emailed link. "Better" ends it; "same" or "worse" continues into a new consultation.
-- **Health memory** (Settings): switch long-term memory on or off, see the saved summaries, delete them.
-- **Clinician review** (`/review`): the queue of assessments waiting for release, with approve, edit and reject. Needs the server's reviewer key.
-- **Waiting state**: while a clinician has the draft, the chat shows "awaiting clinician review" and checks for the result every 15 seconds.
+## Styling
 
-### 4. Holographic Data Cards
-Custom UI components (GlassCard, TiltCard) that present dense medical data in a readable, highly aesthetic format using TailwindCSS.
+Tailwind CSS v4. Colours are CSS variables in `src/index.css` with a light and a dark set; the `dark` class on `<html>` switches between them (`src/context/ThemeContext.jsx`). Use the token classes (`bg-surface`, `text-ink`, `text-muted`, `border-line`, `bg-brand`) and the shared classes (`card`, `btn btn-primary`, `input`, `notice notice-warn`) instead of fixed colours, so both themes stay in step.
 
----
+Icons are inline SVGs in `src/components/Icons.jsx`.
 
-## Technology Stack
+## Stack
 
-- **Core**: React 19 + Vite
-- **Styling**: TailwindCSS (CSS transitions)
-- **State Management**: React Context API
-- **Build Tool**: Vite (optimized for speed)
-
----
-*Optimized for Desktop and Tablet Viewports.*
+React 19, React Router 7, Vite 7, Tailwind CSS 4, axios.

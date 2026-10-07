@@ -57,8 +57,8 @@ jobs:
       - name: Generate Client CI Summary
         if: always()
         run: |
-          echo "## 🛡️ Aether Clinic: Interactive Client Report" >> $GITHUB_STEP_SUMMARY
-          echo "### 📊 Pipeline Flow" >> $GITHUB_STEP_SUMMARY
+          echo "## Aether Clinic: Interactive Client Report" >> $GITHUB_STEP_SUMMARY
+          echo "### Pipeline Flow" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`mermaid" >> $GITHUB_STEP_SUMMARY
           echo "graph TD;" >> $GITHUB_STEP_SUMMARY
           echo "  A[Checkout] --> B[Setup Node];" >> $GITHUB_STEP_SUMMARY
@@ -68,13 +68,13 @@ jobs:
           echo "  C --> F[Build App \`${{ steps.build.outcome }}\`];" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🚦 Module Status" >> $GITHUB_STEP_SUMMARY
+          echo "### Module Status" >> $GITHUB_STEP_SUMMARY
           echo "| Phase | Result |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| 📦 Install | ${{ steps.install.outcome == 'success' && '✅ **Passed**' || '❌ **Failed**' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🔒 Security | ${{ steps.audit.outcome == 'success' && '✅ **Secure**' || '⚠️ **Vulns Found**' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🧹 Lint | ${{ steps.lint.outcome == 'success' && '✅ **Clean**' || '❌ **Failed**' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🏗️ Build | ${{ steps.build.outcome == 'success' && '✅ **Compiled**' || '❌ **Failed**' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Install | ${{ steps.install.outcome == 'success' && '**Passed**' || '**Failed**' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security | ${{ steps.audit.outcome == 'success' && '**Secure**' || '**Vulns Found**' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ${{ steps.lint.outcome == 'success' && '**Clean**' || '**Failed**' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ steps.build.outcome == 'success' && '**Compiled**' || '**Failed**' }} |" >> $GITHUB_STEP_SUMMARY
 
 
   server-checks:
@@ -126,23 +126,23 @@ jobs:
           PID=$!
           sleep 5
           if ps -p $PID > /dev/null; then
-            echo "✅ Server started successfully"
+            echo "Server started successfully"
             kill $PID
           else
-            echo "❌ Server failed to start"
+            echo "Server failed to start"
             exit 1
           fi
 
       - name: Generate Server CI Summary
         if: always()
         run: |
-          echo "## ⚙️ Aether Clinic: Server Integration Report" >> $GITHUB_STEP_SUMMARY
+          echo "## Aether Clinic: Server Integration Report" >> $GITHUB_STEP_SUMMARY
           echo "| Phase | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| 📦 Modules | ${{ steps.install.outcome == 'success' && '✅ **Ready**' || '❌ **Error**' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🔒 Vulnerabilities | ${{ steps.audit.outcome == 'success' && '✅ **Clean**' || '⚠️ **Review Needed**' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🧪 Gateway Tests | ${{ steps.test.outcome == 'success' && '✅ **Passed**' || '❌ **Failed**' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🚀 Server Boot & DB Bind | ${{ steps.boot.outcome == 'success' && '✅ **Active**' || '❌ **Crash**' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Modules | ${{ steps.install.outcome == 'success' && '**Ready**' || '**Error**' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Vulnerabilities | ${{ steps.audit.outcome == 'success' && '**Clean**' || '**Review Needed**' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Gateway Tests | ${{ steps.test.outcome == 'success' && '**Passed**' || '**Failed**' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Server Boot & DB Bind | ${{ steps.boot.outcome == 'success' && '**Active**' || '**Crash**' }} |" >> $GITHUB_STEP_SUMMARY
 
 
   ml-checks:

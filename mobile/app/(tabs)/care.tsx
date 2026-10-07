@@ -11,7 +11,7 @@ import Svg, { Path } from 'react-native-svg';
 const { width } = Dimensions.get('window');
 
 // -----------------------------------------------------------------------------
-// 🔮 THEME
+// THEME
 // -----------------------------------------------------------------------------
 const THEME = {
     bg: '#050505',
@@ -21,7 +21,7 @@ const THEME = {
 };
 
 // -----------------------------------------------------------------------------
-// 〰️ WAVEFORM COMPONENT
+// WAVEFORM COMPONENT
 // -----------------------------------------------------------------------------
 const Waveform = () => {
     const [path, setPath] = useState('');
@@ -59,7 +59,7 @@ const Waveform = () => {
 };
 
 // -----------------------------------------------------------------------------
-// 🧬 DNA MARQUEE COMPONENT
+// DNA MARQUEE COMPONENT
 // -----------------------------------------------------------------------------
 const DNAMarquee = () => {
     const scrollX = useRef(new Animated.Value(0)).current;
@@ -108,7 +108,7 @@ export default function CareScreen() {
             <StatusBar barStyle="light-content" />
             <LinearGradient colors={[THEME.bg, '#000']} style={StyleSheet.absoluteFill} />
 
-            {/* 🕸️ BACKGROUND MESH */}
+            {/* BACKGROUND MESH */}
             <View style={styles.bgGrid} pointerEvents="none" />
 
             <SafeAreaView style={{ flex: 1 }}>
