@@ -3,12 +3,12 @@ import RiskAssessment from "../components/RiskAssessment";
 
 const yesNo = [{ value: 1, label: "Yes" }, { value: 0, label: "No" }];
 
-// In the order the heart model expects (ml/risk_models.py)
+// In the order the heart model expects (ml/risk_models.py); `group` only decides the heading a field sits under
 const fields = [
-  { label: "Age", unit: "years", placeholder: "e.g. 54", min: 0 },
-  { label: "Sex", options: [{ value: 1, label: "Male" }, { value: 0, label: "Female" }] },
+  { group: "About you", label: "Age", unit: "years", placeholder: "e.g. 54", min: 0 },
+  { group: "About you", label: "Sex", options: [{ value: 1, label: "Male" }, { value: 0, label: "Female" }] },
   {
-    label: "Chest pain type",
+    group: "Symptoms", label: "Chest pain type",
     options: [
       { value: 1, label: "Typical angina" },
       { value: 2, label: "Atypical angina" },
@@ -16,22 +16,22 @@ const fields = [
       { value: 4, label: "No chest pain" },
     ],
   },
-  { label: "Resting blood pressure", unit: "mm Hg", placeholder: "e.g. 130", min: 0, hint: "The upper (systolic) number." },
-  { label: "Cholesterol", unit: "mg/dL", placeholder: "e.g. 240", min: 0 },
-  { label: "Fasting blood sugar above 120 mg/dL", options: yesNo },
+  { group: "Blood pressure and blood tests", label: "Resting blood pressure", unit: "mm Hg", placeholder: "e.g. 130", min: 0, hint: "The upper (systolic) number." },
+  { group: "Blood pressure and blood tests", label: "Cholesterol", unit: "mg/dL", placeholder: "e.g. 240", min: 0 },
+  { group: "Blood pressure and blood tests", label: "Fasting blood sugar above 120 mg/dL", options: yesNo },
   {
-    label: "Resting ECG",
+    group: "ECG and stress test", label: "Resting ECG",
     options: [
       { value: 0, label: "Normal" },
       { value: 1, label: "ST-T wave abnormality" },
       { value: 2, label: "Left ventricular hypertrophy" },
     ],
   },
-  { label: "Maximum heart rate", unit: "beats per minute", placeholder: "e.g. 150", min: 0, hint: "The highest rate reached in an exercise test." },
-  { label: "Chest pain during exercise", options: yesNo },
-  { label: "ST depression (oldpeak)", placeholder: "e.g. 1.0", min: 0, step: "0.1", hint: "From an exercise ECG report. Use 0 if none." },
+  { group: "ECG and stress test", label: "Maximum heart rate", unit: "beats per minute", placeholder: "e.g. 150", min: 0, hint: "The highest rate reached in an exercise test." },
+  { group: "Symptoms", label: "Chest pain during exercise", options: yesNo },
+  { group: "ECG and stress test", label: "ST depression (oldpeak)", placeholder: "e.g. 1.0", min: 0, step: "0.1", hint: "From an exercise ECG report. Use 0 if none." },
   {
-    label: "Slope of the ST segment",
+    group: "ECG and stress test", label: "Slope of the ST segment",
     options: [
       { value: 1, label: "Upsloping" },
       { value: 2, label: "Flat" },
@@ -39,11 +39,11 @@ const fields = [
     ],
   },
   {
-    label: "Major vessels seen on fluoroscopy",
+    group: "ECG and stress test", label: "Major vessels seen on fluoroscopy",
     options: [0, 1, 2, 3].map((n) => ({ value: n, label: String(n) })),
   },
   {
-    label: "Thallium stress test",
+    group: "ECG and stress test", label: "Thallium stress test",
     options: [
       { value: 3, label: "Normal" },
       { value: 6, label: "Fixed defect" },

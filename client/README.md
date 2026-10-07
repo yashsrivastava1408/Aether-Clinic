@@ -36,9 +36,33 @@ npm run dev            # http://localhost:5173
 - **Clinician review**: while a clinician has the draft, the chat says so and checks for the result every 15 seconds.
 - **Consent**: the terms are accepted once per browser session before the first message.
 
-## Styling
+## Layout
 
-Tailwind CSS v4. Colours are CSS variables in `src/index.css` with a light and a dark set; the `dark` class on `<html>` switches between them (`src/context/ThemeContext.jsx`). Use the token classes (`bg-surface`, `text-ink`, `text-muted`, `border-line`, `bg-brand`) and the shared classes (`card`, `btn btn-primary`, `input`, `notice notice-warn`) instead of fixed colours, so both themes stay in step.
+`src/components/layout/AppShell.jsx` is the frame around every page: a sidebar on large screens (it can be narrowed to icons, and remembers that), a slide-in drawer on small ones, and a top bar with the page title and the theme switch. The chat page fills the screen and has no footer.
+
+Shared building blocks live in `src/components/ui/`:
+
+- `Modal.jsx`: the dialog used for the legal text, the earlier-consultation prompt and confirmations.
+- `Reveal.jsx`: fades a block in the first time it scrolls into view.
+- `CountUp.jsx`: counts a number up once (risk percentage, report tiles).
+
+`src/context/FeedbackContext.jsx` gives every page `toast("Saved")` for short messages and `await confirm({ title, text })` for yes/no questions. Use these instead of `alert` and `window.confirm`.
+
+## Styling and motion
+
+Tailwind CSS v4. Colours and shadows are CSS variables in `src/index.css` with a light and a dark set; the `dark` class on `<html>` switches between them (`src/context/ThemeContext.jsx`). Use the token classes (`bg-surface`, `text-ink`, `text-muted`, `border-line`, `bg-brand`) and the shared classes (`card`, `btn btn-primary`, `input`, `notice notice-warn`) instead of fixed colours, so both themes stay in step.
+
+Motion classes are in the same file:
+
+| Class | Use |
+| --- | --- |
+| `fade-in`, `page-enter` | A block or page fading up as it appears |
+| `stagger` | Children appear one after another; set `style={{ "--i": index }}` on each child |
+| `card-hover`, `icon-tile` | Lift and icon movement on cards that can be clicked |
+| `skeleton` | Shimmering placeholder while data loads |
+| `typing-dot`, `progress-indeterminate`, `pulse-ring` | Waiting states |
+
+All of it is switched off for people who ask their device to reduce motion.
 
 Icons are inline SVGs in `src/components/Icons.jsx`.
 

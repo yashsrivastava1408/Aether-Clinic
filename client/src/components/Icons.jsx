@@ -28,6 +28,15 @@ export const User = icon("M12 12a4 4 0 100-8 4 4 0 000 8z", "M5 20a7 7 0 0114 0"
 export const Settings = icon("M4 6h10", "M18 6h2", "M4 12h2", "M10 12h10", "M4 18h10", "M18 18h2", "M16 4v4", "M8 10v4", "M16 16v4");
 export const LogOut = icon("M10 4H5v16h5", "M15 8l4 4-4 4", "M19 12H9");
 
+export const Home = icon("M4 11l8-7 8 7", "M6 10v9h4v-5h4v5h4v-9");
+export const Search = icon("M11 18a7 7 0 100-14 7 7 0 000 14z", "M20 20l-3.5-3.5");
+export const Shield = icon("M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z", "M9 12l2 2 4-4");
+export const Clock = icon("M12 21a9 9 0 100-18 9 9 0 000 18z", "M12 7v5l3 2");
+export const ChevronLeft = icon("M14 6l-6 6 6 6");
+export const ChevronRight = icon("M10 6l6 6-6 6");
+export const Mail = icon("M4 6h16v12H4V6z", "M4 7l8 6 8-6");
+export const Refresh = icon("M20 11a8 8 0 10-2.3 5.7", "M20 5v6h-6");
+
 // Feature and specialist icons
 export const Chat = icon("M4 5h16v11H9l-5 4V5z");
 export const FileText = icon("M7 3h7l5 5v13H7V3z", "M14 3v5h5", "M10 13h6", "M10 17h6");

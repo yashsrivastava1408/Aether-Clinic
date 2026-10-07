@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import Reveal from "../components/ui/Reveal";
 import { ArrowRight } from "../components/Icons";
 
 const capabilities = [
@@ -58,19 +59,19 @@ export default function About() {
         and decide what care to seek. It is not a medical service.
       </p>
 
-      <section className="mt-10">
+      <Reveal as="section" className="mt-10">
         <h2 className="text-lg font-semibold text-ink">What it does</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {capabilities.map((item) => (
-            <div key={item.title} className="card p-5">
+            <div key={item.title} className="card card-hover p-5">
               <h3 className="text-base font-semibold text-ink">{item.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted">{item.text}</p>
             </div>
           ))}
         </div>
-      </section>
+      </Reveal>
 
-      <section className="mt-10">
+      <Reveal as="section" className="mt-10">
         <h2 className="text-lg font-semibold text-ink">How it is built</h2>
         <dl className="card mt-4 divide-y divide-line">
           {stack.map((row) => (
@@ -80,24 +81,24 @@ export default function About() {
             </div>
           ))}
         </dl>
-      </section>
+      </Reveal>
 
-      <section className="mt-10">
+      <Reveal as="section" className="mt-10">
         <h2 className="text-lg font-semibold text-ink">Common questions</h2>
         <div className="mt-4 space-y-3">
           {questions.map((item) => (
-            <details key={item.q} className="card group px-5 py-4">
+            <details key={item.q} className="card group px-5 py-4 transition-shadow open:shadow-raised">
               <summary className="flex list-none items-center justify-between gap-4 text-sm font-medium text-ink [&::-webkit-details-marker]:hidden">
                 {item.q}
                 <ArrowRight className="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-90" />
               </summary>
-              <p className="mt-3 text-sm leading-relaxed text-muted">{item.a}</p>
+              <p className="fade-in mt-3 text-sm leading-relaxed text-muted">{item.a}</p>
             </details>
           ))}
         </div>
-      </section>
+      </Reveal>
 
-      <section className="mt-10">
+      <Reveal as="section" className="mt-10">
         <h2 className="text-lg font-semibold text-ink">Who built it</h2>
         <div className="card mt-4 flex items-center gap-4 p-5">
           <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-soft text-lg font-semibold text-brand">YS</span>
@@ -108,7 +109,7 @@ export default function About() {
             </p>
           </div>
         </div>
-      </section>
+      </Reveal>
 
       <div className="mt-10">
         <Link to="/consultation" className="btn btn-primary">Start a consultation <ArrowRight /></Link>

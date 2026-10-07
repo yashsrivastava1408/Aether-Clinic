@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import api from "../utils/api";
+import { useFeedback } from "../context/FeedbackContext";
 
 const KEY_STORAGE = "reviewer_key";
 
@@ -15,6 +16,7 @@ export default function Review() {
   const [drafts, setDrafts] = useState({});
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
+  const { toast } = useFeedback();
 
   const load = useCallback(async (reviewerKey) => {
     setError("");
@@ -45,6 +47,7 @@ export default function Review() {
         { action, text: action === "edit" ? drafts[threadId] : "", reviewer },
         { headers: { "x-reviewer-key": key } });
       await load(key);
+      toast(action === "reject" ? "Assessment rejected. The patient is told to see a doctor in person." : "Assessment released to the patient.");
     } catch (err) {
       setError(err.response?.data?.error || "Could not save the decision.");
     } finally {
@@ -83,7 +86,7 @@ export default function Review() {
           const edited = draft.trim() !== "" && draft !== item.draft;
           const working = busy === item.thread_id;
           return (
-            <article key={item.thread_id} className="card space-y-5 p-5">
+            <article key={item.thread_id} className="card fade-in space-y-5 p-5">
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 <span className={`rounded-full border px-2.5 py-1 font-medium capitalize ${item.urgency === "routine" ? "border-ok/30 bg-ok-soft text-ok" : "border-danger/30 bg-danger-soft text-danger"}`}>
                   {item.urgency}

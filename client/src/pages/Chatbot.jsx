@@ -8,8 +8,9 @@ import { sendChatStream } from "../utils/chatStream";
 import { loadReportDigest } from "../utils/reportContext";
 import { isMemoryEnabled } from "../utils/healthMemory";
 import { useAuth } from "../context/AuthContext";
+import { useFeedback } from "../context/FeedbackContext";
 import { findSpecialist } from "../data/specialists";
-import { ArrowLeft, Camera, Close, Send, Spinner, Stethoscope, ThumbDown, ThumbUp } from "../components/Icons";
+import { ArrowLeft, Camera, Check, Close, Refresh, Send, Shield, Spinner, Stethoscope, ThumbDown, ThumbUp } from "../components/Icons";
 
 const CONSENT_KEY = "chat_consent";
 
@@ -69,6 +70,7 @@ export default function Chatbot() {
   const fileInputRef = useRef(null);
   const inputRef = useRef(null);
   const { user, checkTokenLimit, consumeTokens, tokenUsage, usageLimit } = useAuth();
+  const { toast, confirm } = useFeedback();
   const location = useLocation();
   const navigate = useNavigate();
   const { specialization } = useParams();
@@ -142,6 +144,7 @@ export default function Chatbot() {
         days: 2
       });
       setFollowUpState("scheduled");
+      toast(`Check-in scheduled. We will email ${user?.email} in 2 days.`);
     } catch (err) {
       console.warn("Check-in could not be scheduled", err);
       setFollowUpState("failed");
@@ -243,7 +246,12 @@ export default function Chatbot() {
 
   // Ends the questions early and asks for the assessment now
   const finishConsultation = async () => {
-    if (!window.confirm("End the consultation and get your summary now?")) return;
+    const agreed = await confirm({
+      title: "Finish the consultation?",
+      text: "The assistant stops asking questions and writes your summary now. After that this consultation is closed.",
+      confirmLabel: "Get my summary",
+    });
+    if (!agreed) return;
     setIsTyping(true);
     setError(null);
     try {
@@ -274,7 +282,13 @@ export default function Chatbot() {
 
   // A finished consultation is locked; starting again clears it on the server
   const startNewConsultation = async () => {
-    if (!window.confirm("Start a new consultation? The messages in this one will be deleted.")) return;
+    const agreed = await confirm({
+      title: "Start a new consultation?",
+      text: "The messages in this consultation will be deleted. This cannot be undone.",
+      confirmLabel: "Delete and start new",
+      tone: "danger",
+    });
+    if (!agreed) return;
     try {
       await api.delete(historyUrl);
       setMessages([]);
@@ -292,40 +306,56 @@ export default function Chatbot() {
   const canFinish = userTurns >= 2 && !sessionClosed && !pendingReview && !isTyping;
   const canAskFollowUp = sessionClosed && !pendingReview && !isTyping && user?.email && !user?.isGuest;
   const usagePercent = Math.min(100, Math.round((tokenUsage / usageLimit) * 100));
+  const SpecialistIcon = findSpecialist(activeDoctor.name)?.icon || Stethoscope;
+  const status = sessionClosed ? { label: "Finished", tone: "text-muted" }
+    : pendingReview ? { label: "With a clinician", tone: "text-warn" }
+      : { label: "In progress", tone: "text-ok" };
+  const context = [
+    { label: "Reply mode", value: isPremium ? "Fast" : "Private" },
+    { label: "Health memory", value: isMemoryEnabled() ? "On" : "Off", to: "/settings" },
+    { label: "Lab report", value: loadReportDigest() ? "Included" : "None", to: "/report" },
+  ];
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-4rem)] w-full max-w-3xl flex-col px-0 sm:px-6 sm:py-4">
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden border-line bg-surface sm:rounded-2xl sm:border">
+    <div className="mx-auto flex h-[calc(100dvh-4rem)] w-full max-w-6xl gap-6 px-0 sm:px-8 sm:pb-6 sm:pt-2">
+
+      {/* Conversation */}
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-line bg-surface shadow-soft sm:rounded-2xl sm:border">
 
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-line px-4 py-3">
           <button onClick={() => navigate("/consultation")} className="btn btn-ghost px-2" aria-label="Back to specialists">
             <ArrowLeft />
           </button>
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand"><SpecialistIcon /></span>
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-base font-semibold text-ink">{activeDoctor.name}</h1>
             <p className="truncate text-xs text-muted">{activeDoctor.role} · AI assistant, not a doctor</p>
           </div>
           {canFinish && (
-            <button onClick={finishConsultation} className="btn btn-secondary shrink-0 px-3 py-2 text-xs">
+            <button onClick={finishConsultation} className="btn btn-secondary fade-in shrink-0 px-3 py-2 text-xs xl:hidden">
               Finish and get summary
             </button>
           )}
         </div>
 
         {/* Messages */}
-        <div ref={listRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-5" aria-live="polite">
+        <div ref={listRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6" aria-live="polite">
           {hasConsented && !historyLoaded && (
-            <div className="flex justify-center py-8 text-muted"><Spinner className="h-5 w-5" /></div>
+            <div className="space-y-4" aria-label="Loading earlier messages">
+              <div className="skeleton ml-auto h-10 w-2/5" />
+              <div className="skeleton h-20 w-3/5" />
+              <div className="skeleton ml-auto h-10 w-1/3" />
+            </div>
           )}
 
           {historyLoaded && messages.length === 0 && (
-            <div className="mx-auto max-w-md py-8 text-center">
-              <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-brand-soft text-brand">
-                <Stethoscope />
+            <div className="fade-in mx-auto max-w-md py-10 text-center">
+              <span className="pulse-ring mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-soft text-brand">
+                <SpecialistIcon />
               </span>
-              <p className="mt-3 text-sm font-medium text-ink">Tell me what is bothering you.</p>
-              <p className="mt-1 text-sm leading-relaxed text-muted">
+              <p className="mt-4 text-base font-semibold text-ink">Tell me what is bothering you.</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted">
                 I will ask a few questions, then give you a short summary with possible causes, self-care and when to see a doctor.
                 You can also send one photo.
               </p>
@@ -335,9 +365,9 @@ export default function Chatbot() {
           {messages.map((msg, i) => {
             const isUser = msg.sender === "user";
             return (
-              <div key={i} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+              <div key={i} className={`message-in flex ${isUser ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${isUser
-                  ? "rounded-br-md bg-brand text-brand-ink"
+                  ? "rounded-br-md bg-brand text-brand-ink shadow-soft"
                   : "rounded-bl-md border border-line bg-surface-2 text-ink"}`}>
                   {msg.image && <img src={msg.image} alt="Photo you sent" className="mb-2 max-h-60 rounded-lg" />}
                   {isUser
@@ -362,10 +392,10 @@ export default function Chatbot() {
 
                   {!isUser && (
                     <div className="mt-3 flex items-center gap-1 border-t border-line pt-2 text-xs text-muted">
-                      <span className="mr-1">{msg.feedback ? "Thanks for the feedback" : "Was this helpful?"}</span>
+                      <span key={msg.feedback || "ask"} className="fade-in mr-1">{msg.feedback ? "Thanks for the feedback" : "Was this helpful?"}</span>
                       <button
                         onClick={() => handleFeedback(i, "up")}
-                        className={`rounded-md p-1.5 hover:bg-surface ${msg.feedback === "up" ? "text-ok" : ""}`}
+                        className={`rounded-md p-1.5 transition-transform hover:bg-surface active:scale-90 ${msg.feedback === "up" ? "scale-110 text-ok" : ""}`}
                         aria-label="Helpful"
                         aria-pressed={msg.feedback === "up"}
                       >
@@ -373,7 +403,7 @@ export default function Chatbot() {
                       </button>
                       <button
                         onClick={() => handleFeedback(i, "down")}
-                        className={`rounded-md p-1.5 hover:bg-surface ${msg.feedback === "down" ? "text-danger" : ""}`}
+                        className={`rounded-md p-1.5 transition-transform hover:bg-surface active:scale-90 ${msg.feedback === "down" ? "scale-110 text-danger" : ""}`}
                         aria-label="Not helpful"
                         aria-pressed={msg.feedback === "down"}
                       >
@@ -387,24 +417,31 @@ export default function Chatbot() {
           })}
 
           {isTyping && (
-            <div className="flex items-center gap-2 text-sm text-muted">
-              <Spinner /> {stepLabel || "Thinking"}
+            <div className="message-in flex justify-start" role="status">
+              <div className="flex items-center gap-3 rounded-2xl rounded-bl-md border border-line bg-surface-2 px-4 py-3 text-sm text-muted">
+                <span className="flex gap-1" aria-hidden="true">
+                  <span className="typing-dot h-1.5 w-1.5 rounded-full bg-brand" />
+                  <span className="typing-dot h-1.5 w-1.5 rounded-full bg-brand" />
+                  <span className="typing-dot h-1.5 w-1.5 rounded-full bg-brand" />
+                </span>
+                <span key={stepLabel} className="fade-in">{stepLabel || "Thinking"}</span>
+              </div>
             </div>
           )}
 
           {pendingReview && !isTyping && (
-            <p className="notice notice-warn">A clinician is checking your assessment. It will appear here once it is approved.</p>
+            <p className="notice notice-warn fade-in">A clinician is checking your assessment. It will appear here once it is approved.</p>
           )}
         </div>
 
-        {error && <p className="notice notice-danger mx-4 mb-3" role="alert">{error}</p>}
+        {error && <p className="notice notice-danger fade-in mx-4 mb-3" role="alert">{error}</p>}
 
         {/* Composer, or what comes after a finished consultation */}
         {sessionClosed ? (
-          <div className="space-y-3 border-t border-line px-4 py-4">
-            <p className="text-sm text-muted">This consultation is finished.</p>
+          <div className="fade-in space-y-3 border-t border-line px-4 py-4 sm:px-6">
+            <p className="flex items-center gap-2 text-sm text-muted"><Check className="h-4 w-4 text-ok" /> This consultation is finished.</p>
             <div className="flex flex-wrap items-center gap-3">
-              <button onClick={startNewConsultation} className="btn btn-primary">Start a new consultation</button>
+              <button onClick={startNewConsultation} className="btn btn-primary"><Refresh className="h-4 w-4" /> Start a new consultation</button>
               {canAskFollowUp && followUpState !== "scheduled" && (
                 <button onClick={requestFollowUp} disabled={followUpState === "saving"} className="btn btn-secondary">
                   {followUpState === "failed" ? "Could not schedule. Try again" : "Email me a check-in in 2 days"}
@@ -416,13 +453,13 @@ export default function Chatbot() {
             </div>
           </div>
         ) : (
-          <div className="border-t border-line px-4 py-3">
+          <div className="border-t border-line px-4 py-3 sm:px-6">
             {imagePreview && (
-              <div className="relative mb-3 inline-block">
+              <div className="fade-in relative mb-3 inline-block">
                 <img src={imagePreview} alt="Photo to send" className="h-20 w-20 rounded-lg border border-line object-cover" />
                 <button
                   onClick={removeImage}
-                  className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-line bg-surface text-ink"
+                  className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-line bg-surface text-ink shadow-soft"
                   aria-label="Remove photo"
                 >
                   <Close className="h-3.5 w-3.5" />
@@ -452,21 +489,20 @@ export default function Chatbot() {
                 className="btn btn-primary px-3"
                 aria-label="Send"
               >
-                <Send />
+                {isTyping ? <Spinner className="h-5 w-5" /> : <Send />}
               </button>
             </div>
 
-            <p className="mt-2 text-xs text-muted">
-              {user?.isGuest ? "Guest usage today" : "Usage"}: {usagePercent}% · For emergencies, call your local emergency number.
-            </p>
+            <p className="mt-2 text-xs text-muted">Enter to send, Shift and Enter for a new line. For emergencies, call your local emergency number.</p>
           </div>
         )}
 
         {/* Terms the user accepts before the first message */}
         {!hasConsented && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center overflow-y-auto bg-bg/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="consent-title">
-            <div className="card w-full max-w-md p-6 shadow-xl">
-              <h2 id="consent-title" className="text-lg font-semibold text-ink">Before you start</h2>
+          <div className="backdrop-in absolute inset-0 z-10 flex items-center justify-center overflow-y-auto bg-bg/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="consent-title">
+            <div className="modal-in w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-float">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-soft text-brand"><Shield /></span>
+              <h2 id="consent-title" className="mt-4 text-lg font-semibold text-ink">Before you start</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted">
                 By continuing you agree to MedNexus processing the health information you share here, in line with India's DPDP Act, 2023.
               </p>
@@ -488,6 +524,49 @@ export default function Chatbot() {
 
         <LegalModal isOpen={isLegalOpen} onClose={() => setIsLegalOpen(false)} />
       </div>
+
+      {/* Details, wide screens */}
+      <aside className="stagger hidden w-72 shrink-0 flex-col gap-4 overflow-y-auto xl:flex" aria-label="About this consultation">
+        <div className="card p-5" style={{ "--i": 1 }}>
+          <p className="section-title">This consultation</p>
+          <p className={`mt-3 flex items-center gap-2 text-sm font-medium ${status.tone}`}>
+            <span className={`h-2 w-2 rounded-full bg-current ${status.label === "In progress" ? "pulse-ring" : ""}`} /> {status.label}
+          </p>
+          <dl className="mt-4 space-y-2.5 text-sm">
+            {context.map((row) => (
+              <div key={row.label} className="flex items-center justify-between gap-3">
+                <dt className="text-muted">{row.label}</dt>
+                <dd className="font-medium text-ink">
+                  {row.to ? <Link to={row.to} className="hover:text-brand hover:underline">{row.value}</Link> : row.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <div className="mt-4">
+            <div className="flex justify-between text-xs text-muted">
+              <span>{user?.isGuest ? "Guest usage today" : "Usage"}</span>
+              <span className="tabular-nums">{usagePercent}%</span>
+            </div>
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface-2">
+              <div className="h-full rounded-full bg-brand transition-[width] duration-700 ease-out" style={{ width: `${usagePercent}%` }} />
+            </div>
+          </div>
+        </div>
+
+        <div className="card space-y-2 p-5" style={{ "--i": 2 }}>
+          <p className="section-title mb-3">Actions</p>
+          <button onClick={finishConsultation} disabled={!canFinish} className="btn btn-secondary w-full">Finish and get summary</button>
+          <button onClick={startNewConsultation} disabled={messages.length === 0 || isTyping} className="btn btn-ghost w-full">Start over</button>
+          {!canFinish && !sessionClosed && !pendingReview && (
+            <p className="text-xs leading-relaxed text-muted">You can ask for the summary after answering two questions.</p>
+          )}
+        </div>
+
+        <div className="notice notice-warn" style={{ "--i": 3 }}>
+          <p className="font-semibold">In an emergency</p>
+          <p className="mt-1">Do not wait for a reply here. Call your local emergency number or go to the nearest hospital.</p>
+        </div>
+      </aside>
     </div>
   );
 }

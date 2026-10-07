@@ -1,12 +1,12 @@
 import React, { Suspense, lazy, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
+import AppShell from "./components/layout/AppShell";
 import WelcomeScreen from "./components/WelcomeScreen";
 import { Spinner } from "./components/Icons";
 
 import { ThemeProvider } from "./context/ThemeContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { FeedbackProvider } from "./context/FeedbackContext";
 
 // Pages are loaded when they are first opened
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -41,31 +41,25 @@ const MainContent = () => {
   if (!hasOnboarded) return <WelcomeScreen />;
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
-
-      <main className="flex-1">
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/consultation" element={<Consultation />} />
-            <Route path="/chatbot/:specialization" element={<Chatbot />} />
-            <Route path="/report" element={<ReportAnalyzer />} />
-            <Route path="/heart" element={<HeartRisk />} />
-            <Route path="/diabetes" element={<DiabetesRisk />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/followup/:token" element={<FollowUp />} />
-            <Route path="/review" element={<Review />} />
-            <Route path="/about" element={<About />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </main>
-
-      {/* The chat fills the screen, so it has no footer under it */}
-      {!isChat && <Footer />}
-    </div>
+    // The chat fills the screen, so it has no footer under it
+    <AppShell fullHeight={isChat}>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/consultation" element={<Consultation />} />
+          <Route path="/chatbot/:specialization" element={<Chatbot />} />
+          <Route path="/report" element={<ReportAnalyzer />} />
+          <Route path="/heart" element={<HeartRisk />} />
+          <Route path="/diabetes" element={<DiabetesRisk />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/followup/:token" element={<FollowUp />} />
+          <Route path="/review" element={<Review />} />
+          <Route path="/about" element={<About />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </AppShell>
   );
 };
 
@@ -74,7 +68,9 @@ export default function App() {
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <MainContent />
+          <FeedbackProvider>
+            <MainContent />
+          </FeedbackProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

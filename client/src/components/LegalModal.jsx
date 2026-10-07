@@ -1,6 +1,5 @@
-import React, { useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { Close } from './Icons';
+import React from 'react';
+import Modal from './ui/Modal';
 
 const sections = [
     {
@@ -25,44 +24,23 @@ const sections = [
     },
 ];
 
-const LegalModal = ({ isOpen, onClose }) => {
-    useEffect(() => {
-        if (!isOpen) return undefined;
-        const onKey = (e) => { if (e.key === 'Escape') onClose(); };
-        document.addEventListener('keydown', onKey);
-        return () => document.removeEventListener('keydown', onKey);
-    }, [isOpen, onClose]);
-
-    if (!isOpen) return null;
-
-    return createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="legal-title">
-            <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-
-            <div className="card fade-in relative flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden shadow-xl">
-                <div className="flex items-center justify-between border-b border-line px-6 py-4">
-                    <h3 id="legal-title" className="text-base font-semibold text-ink">Terms, privacy and safety</h3>
-                    <button onClick={onClose} className="btn btn-ghost px-2" aria-label="Close">
-                        <Close />
-                    </button>
+const LegalModal = ({ isOpen, onClose }) => (
+    <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Terms, privacy and safety"
+        size="max-w-lg"
+        footer={<button onClick={onClose} className="btn btn-primary">Close</button>}
+    >
+        <div className="space-y-5">
+            {sections.map((section) => (
+                <div key={section.title}>
+                    <h3 className="text-sm font-semibold text-ink">{section.title}</h3>
+                    <p className="mt-1 text-sm leading-relaxed text-muted">{section.text}</p>
                 </div>
-
-                <div className="space-y-5 overflow-y-auto px-6 py-5">
-                    {sections.map((section) => (
-                        <div key={section.title}>
-                            <h4 className="text-sm font-semibold text-ink">{section.title}</h4>
-                            <p className="mt-1 text-sm leading-relaxed text-muted">{section.text}</p>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="flex justify-end border-t border-line px-6 py-4">
-                    <button onClick={onClose} className="btn btn-primary">Close</button>
-                </div>
-            </div>
-        </div>,
-        document.body
-    );
-};
+            ))}
+        </div>
+    </Modal>
+);
 
 export default LegalModal;

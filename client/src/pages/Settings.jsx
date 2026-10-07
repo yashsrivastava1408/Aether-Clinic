@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { clearMemory, fetchMemory, isMemoryEnabled, setMemoryEnabled } from "../utils/healthMemory";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { useFeedback } from "../context/FeedbackContext";
 import LegalModal from "../components/LegalModal";
 
 function Toggle({ checked, onChange, label }) {
@@ -14,7 +15,7 @@ function Toggle({ checked, onChange, label }) {
             onClick={onChange}
             className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? 'bg-brand' : 'bg-line'}`}
         >
-            <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : ''}`} />
+            <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-300 ease-out ${checked ? 'translate-x-5' : ''}`} />
         </button>
     );
 }
@@ -34,9 +35,10 @@ function Row({ title, text, children }) {
 export default function Settings() {
     const { user, logout, showSignIn } = useAuth();
     const { theme, toggleTheme } = useTheme();
+    const { toast, confirm } = useFeedback();
     const [showLegal, setShowLegal] = useState(false);
     const [memoryOn, setMemoryOn] = useState(isMemoryEnabled());
-    const [memoryEntries, setMemoryEntries] = useState(null);
+    const [memoryEntries, setMemoryEntries] = useState(undefined); // undefined while loading, null when it failed
     const [memoryError, setMemoryError] = useState("");
 
     useEffect(() => {
@@ -46,14 +48,22 @@ export default function Settings() {
     const toggleMemory = () => {
         setMemoryEnabled(!memoryOn);
         setMemoryOn(!memoryOn);
+        toast(memoryOn ? "Health memory is off. New consultations will not be remembered." : "Health memory is on.", "info");
     };
 
     const handleClearMemory = async () => {
-        if (!window.confirm("Delete the saved summaries of your past consultations?")) return;
+        const agreed = await confirm({
+            title: "Delete saved summaries?",
+            text: "The saved summaries of your past consultations will be deleted. This cannot be undone.",
+            confirmLabel: "Delete all",
+            tone: "danger",
+        });
+        if (!agreed) return;
         setMemoryError("");
         try {
             await clearMemory();
             setMemoryEntries([]);
+            toast("Saved summaries deleted.");
         } catch (err) {
             console.error("Could not clear health memory", err);
             setMemoryError("The saved summaries could not be deleted. Please try again.");
@@ -64,10 +74,10 @@ export default function Settings() {
         <div className="page-narrow">
             <h1 className="page-title">Settings</h1>
 
-            <div className="mt-8 space-y-6">
+            <div className="stagger mt-8 space-y-6">
 
                 {/* Account */}
-                <section className="card p-6">
+                <section className="card p-6" style={{ "--i": 0 }}>
                     <h2 className="text-base font-semibold text-ink">Account</h2>
                     <div className="mt-4 flex items-center justify-between gap-4">
                         <div className="flex min-w-0 items-center gap-4">
@@ -88,7 +98,7 @@ export default function Settings() {
                 </section>
 
                 {/* Appearance */}
-                <section className="card p-6">
+                <section className="card p-6" style={{ "--i": 1 }}>
                     <h2 className="mb-4 text-base font-semibold text-ink">Appearance</h2>
                     <Row title="Dark mode" text="Use a dark background across the app.">
                         <Toggle checked={theme === 'dark'} onChange={toggleTheme} label="Dark mode" />
@@ -96,7 +106,7 @@ export default function Settings() {
                 </section>
 
                 {/* Health memory */}
-                <section className="card p-6">
+                <section className="card p-6" style={{ "--i": 2 }}>
                     <h2 className="mb-4 text-base font-semibold text-ink">Health memory</h2>
                     <Row
                         title="Remember past consultations"
@@ -104,6 +114,13 @@ export default function Settings() {
                     >
                         <Toggle checked={memoryOn} onChange={toggleMemory} label="Remember past consultations" />
                     </Row>
+
+                    {memoryEntries === undefined && (
+                        <div className="mt-4 space-y-2" aria-hidden="true">
+                            <div className="skeleton h-4 w-3/4" />
+                            <div className="skeleton h-4 w-1/2" />
+                        </div>
+                    )}
 
                     {memoryEntries && memoryEntries.length > 0 && (
                         <ul className="mt-4 divide-y divide-line border-y border-line text-sm">
@@ -118,7 +135,7 @@ export default function Settings() {
 
                     <div className="mt-4 flex items-center justify-between gap-4">
                         <p className="text-sm text-muted">
-                            {memoryEntries === null ? "Saved summaries could not be loaded." : `${memoryEntries.length} saved ${memoryEntries.length === 1 ? "summary" : "summaries"}`}
+                            {memoryEntries === undefined ? "Loading saved summaries" : memoryEntries === null ? "Saved summaries could not be loaded." : `${memoryEntries.length} saved ${memoryEntries.length === 1 ? "summary" : "summaries"}`}
                         </p>
                         <button onClick={handleClearMemory} disabled={!memoryEntries || memoryEntries.length === 0} className="btn btn-danger shrink-0">
                             Delete all
@@ -128,7 +145,7 @@ export default function Settings() {
                 </section>
 
                 {/* Clinician tools and legal */}
-                <section className="card space-y-5 p-6">
+                <section className="card space-y-5 p-6" style={{ "--i": 3 }}>
                     <Row title="Clinician review queue" text="Approve or edit assessments before they are released. Needs a reviewer key.">
                         <Link to="/review" className="btn btn-secondary shrink-0">Open queue</Link>
                     </Row>
