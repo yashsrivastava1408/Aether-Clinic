@@ -1,11 +1,10 @@
 import Tesseract from "tesseract.js";
-import { analyzeReport } from "../../services/reportAnalyzer.js";
-import { encrypt } from "../../utils/encryption.js";
-import Report from "../../models/Report.js";
+import { analyzeReportRemote } from "../../services/consultService.js";
 
 export async function analyzeReportController(req, res) {
   try {
     let imageBase64 = null;
+    let imageMime = null;
     let text = "";
 
     // We assume userId comes in body or we use a demo ID if missing (since no auth middleware yet)
@@ -32,6 +31,7 @@ export async function analyzeReportController(req, res) {
 
       // ✅ Extract Base64 for Vision analysis (reuse buffer)
       imageBase64 = imageBuffer.toString("base64");
+      imageMime = req.file.mimetype;
 
       // Cleanup temp file
       try {
@@ -43,26 +43,24 @@ export async function analyzeReportController(req, res) {
       text = req.body.text;
     }
 
-    console.log("Sending text and image to AI Analyzer...");
-    const analysis = await analyzeReport(text, imageBase64);
-    // console.log("AI Analysis Result:", JSON.stringify(analysis, null, 2));
-
-    // --- MONGODB SAVE DISABLED (File-based mode) ---
-    // const encryptedAnalysis = encrypt(JSON.stringify(analysis));
-    // const encryptedSummary = encrypt(analysis.summary || "No summary");
-    // const newReport = new Report({
-    //   userId,
-    //   summary: encryptedSummary,
-    //   encryptedAnalysis: encryptedAnalysis
-    // });
-    // await newReport.save();
-    console.log("✅ Report analysis complete (not saved - file mode).");
-    // -------------------------------
+    // The Python report agent extracts the values, checks them against their
+    // ranges with a rule-based tool, explains them and verifies the wording.
+    let analysis;
+    try {
+      analysis = await analyzeReportRemote({ text, imageBase64, imageMime });
+    } catch (agentErr) {
+      // No made-up analysis: if the agent cannot run, say so.
+      console.error("❌ REPORT AGENT ERROR:", agentErr.message);
+      return res.status(503).json({
+        error: "Report analysis is temporarily unavailable. Please try again shortly.",
+      });
+    }
+    console.log("✅ Report analysis complete (not stored on the server).");
 
     res.json(analysis);
   } catch (err) {
 
     console.error("REPORT CONTROLLER ERROR FULL TRACE:", err);
-    res.status(500).json({ error: "Report analysis failed", details: err.message });
+    res.status(500).json({ error: "Report analysis failed" });
   }
 }

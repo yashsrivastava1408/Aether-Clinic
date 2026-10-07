@@ -15,7 +15,7 @@ services:
 
   # 🔍 VECTOR DB: Qdrant for Distributed RAG
   qdrant:
-    image: qdrant/qdrant:latest
+    image: qdrant/qdrant:v1.16.1
     container_name: aether-qdrant
     ports:
       - "6333:6333"
@@ -35,16 +35,26 @@ services:
       - "5001:5001"
     environment:
       - FLASK_ENV=production
-      - CHROMA_DB_PATH=/app/chroma_db
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
+      # Conversation state (encrypted with the same key the backend uses)
+      - MONGO_URI=mongodb://mongodb:27017/ai_doctor_db
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      # LLM providers: local Ollama on the host first, then hosted fallbacks
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://host.docker.internal:11434}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      # Clinician review before release: off | urgent | all
+      - REVIEW_MODE=${REVIEW_MODE:-off}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
-      - ./ml/chroma_db:/app/chroma_db
       - feedback-data:/app/shared # Shared volume for Flywheel logs
     networks:
       - aether-network
     depends_on:
       - qdrant
+      - mongodb
     restart: always
 
   # 🚀 BACKEND: Node.js API Gateway
@@ -62,6 +72,11 @@ services:
       - INTELLIGENCE_BASE_URL=http://ml-service:5001
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      # Link target for check-in emails, and the key for the clinician review queue
+      - APP_URL=http://${PUBLIC_IP:-localhost}
+      - REVIEWER_KEY=${REVIEWER_KEY:-}
+      - EMAIL_USER=${EMAIL_USER:-}
+      - EMAIL_PASS=${EMAIL_PASS:-}
     depends_on:
       - mongodb
       - ml-service

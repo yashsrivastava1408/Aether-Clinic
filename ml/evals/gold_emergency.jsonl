@@ -1,0 +1,40 @@
+{"text": "I have crushing chest pain and my left arm feels heavy", "emergency": true, "kind": "cardiac"}
+{"text": "there's a lot of pressure on my chest and I'm sweating", "emergency": true, "kind": "cardiac"}
+{"text": "I think my dad is having a heart attack", "emergency": true, "kind": "cardiac"}
+{"text": "my chest is tight and it hurts to move", "emergency": true, "kind": "cardiac"}
+{"text": "her face is drooping on one side and her speech is slurred", "emergency": true, "kind": "stroke"}
+{"text": "sudden numbness on one side of my body", "emergency": true, "kind": "stroke"}
+{"text": "I can't breathe properly", "emergency": true, "kind": "breathing"}
+{"text": "he is gasping for air and his lips are turning blue", "emergency": true, "kind": "breathing"}
+{"text": "my child is choking on something", "emergency": true, "kind": "breathing"}
+{"text": "my throat is closing up after a bee sting", "emergency": true, "kind": "anaphylaxis"}
+{"text": "tongue is swelling after eating prawns", "emergency": true, "kind": "anaphylaxis"}
+{"text": "the cut won't stop bleeding even with pressure", "emergency": true, "kind": "bleeding"}
+{"text": "I have been vomiting blood since morning", "emergency": true, "kind": "bleeding"}
+{"text": "my friend had a seizure and is now unresponsive", "emergency": true, "kind": "neuro"}
+{"text": "this is the worst headache of my life, it came on suddenly", "emergency": true, "kind": "neuro"}
+{"text": "she passed out and is not waking up", "emergency": true, "kind": "neuro"}
+{"text": "my toddler swallowed bleach", "emergency": true, "kind": "poisoning"}
+{"text": "I took too many pills by mistake", "emergency": true, "kind": "poisoning"}
+{"text": "I think I overdosed on my sleeping tablets", "emergency": true, "kind": "poisoning"}
+{"text": "I'm diabetic, my breath smells fruity and I keep vomiting", "emergency": true, "kind": "dka"}
+{"text": "I want to kill myself", "emergency": true, "kind": "self_harm"}
+{"text": "I've been thinking about suicide a lot", "emergency": true, "kind": "self_harm"}
+{"text": "sometimes I feel everyone would be better off dead without me, I mean I'd be better off dead", "emergency": true, "kind": "self_harm"}
+{"text": "I don't want to live anymore", "emergency": true, "kind": "self_harm"}
+{"text": "I have been hurting myself when I feel overwhelmed", "emergency": true, "kind": "self_harm"}
+{"text": "I want to end my life", "emergency": true, "kind": "self_harm"}
+{"text": "my lower back hurts after lifting a box", "emergency": false}
+{"text": "I have a mild headache since morning", "emergency": false}
+{"text": "no chest pain, just a cough for three days", "emergency": false}
+{"text": "I don't have any difficulty breathing, only a blocked nose", "emergency": false}
+{"text": "I had food poisoning last week and still feel weak", "emergency": false}
+{"text": "what is a normal blood pressure reading?", "emergency": false}
+{"text": "my knee is swollen after football", "emergency": false}
+{"text": "itchy rash on my arm for two weeks", "emergency": false}
+{"text": "I feel anxious before exams", "emergency": false}
+{"text": "how can I prevent heat stroke in summer", "emergency": false}
+{"text": "runny nose and sneezing every morning", "emergency": false}
+{"text": "I never had a seizure but my cousin has epilepsy, is it genetic?", "emergency": false}
+{"text": "my sugar level was 140 fasting", "emergency": false}
+{"text": "I get heartburn after spicy food", "emergency": false}

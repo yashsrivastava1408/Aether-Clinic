@@ -28,8 +28,9 @@ dist/
 **/.env.*
 !**/.env.example
 
-# Chat logs (contains user data)
+# Chat logs and consultation memory (contain user data)
 **/chat_logs.json
+**/patient_memory.json
 
 # Winston logs
 *.log

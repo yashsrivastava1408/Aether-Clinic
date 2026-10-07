@@ -84,3 +84,45 @@ export const sendWelcomeEmail = async (toEmail, userName) => {
         return { success: false, message: 'Failed to send email', error };
     }
 };
+
+/**
+ * Check-in email for the follow-up agent. It deliberately contains no health
+ * details: only that a check-in is ready, and a link.
+ * Throws when the email cannot be sent, so the scheduler can retry.
+ */
+export const sendFollowUpEmail = async ({ to, link }) => {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        throw new Error("email credentials are not configured");
+    }
+    await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to,
+        subject: "Your Aether Clinic check-in",
+        text: `Hello,\n\nYou asked us to check in after your recent consultation. How are you feeling?\n\nAnswer here: ${link}\n\nIf you feel very unwell, contact a doctor or your local emergency number instead of waiting.\n\nAether Clinic`,
+        html: `
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #f8fafc; background-color: #0f172a; max-width: 600px; margin: 0 auto; border-radius: 16px; overflow: hidden; border: 1px solid #1e293b;">
+                <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 32px 20px; text-align: center;">
+                    <h1 style="margin: 0; font-size: 24px; letter-spacing: 2px; text-transform: uppercase;">Aether Clinic</h1>
+                </div>
+                <div style="padding: 32px 24px;">
+                    <h2 style="color: #ffffff; font-weight: 600; margin-bottom: 16px;">How are you feeling?</h2>
+                    <p style="line-height: 1.6; color: #94a3b8; font-size: 16px;">
+                        You asked us to check in after your recent consultation. It takes a few seconds to answer.
+                    </p>
+                    <div style="text-align: center; margin: 32px 0;">
+                        <a href="${link}" style="display: inline-block; padding: 14px 32px; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px;">
+                            Answer the check-in
+                        </a>
+                    </div>
+                    <p style="font-size: 13px; color: #94a3b8; line-height: 1.5;">
+                        If you feel very unwell, contact a doctor or your local emergency number instead of waiting.
+                    </p>
+                    <hr style="border: 0; border-top: 1px solid #334155; margin: 24px 0;">
+                    <p style="font-size: 12px; color: #64748b; text-align: center; line-height: 1.5;">
+                        You received this because you asked for a check-in. This email contains no health information.
+                    </p>
+                </div>
+            </div>
+        `,
+    });
+};

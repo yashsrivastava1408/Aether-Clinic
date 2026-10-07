@@ -12,9 +12,16 @@ spec:
         - name: ml-risk-engine
           image: YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_REGION.amazonaws.com/aether-ml-service:latest
           imagePullPolicy: IfNotPresent
+          # Indexes the medical corpus into Qdrant. Safe to run again: chunk ids are stable.
+          command: ["python", "-m", "retrieval.ingest"]
+          env:
+            - name: QDRANT_HOST
+              value: "qdrant"
+            - name: QDRANT_PORT
+              value: "6333"
           resources:
             requests:
-              cpu: "250m"
+              cpu: "100m"
               memory: "256Mi"
             limits:
               cpu: "500m"

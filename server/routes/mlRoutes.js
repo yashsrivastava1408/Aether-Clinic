@@ -16,6 +16,8 @@ router.post("/heart", async (req, res) => {
     res.json(response.data);
   } catch (error) {
     console.error(error.message);
+    // Bad input is the caller's to fix; pass the reason through.
+    if (error.response?.status === 400) return res.status(400).json(error.response.data);
     res.status(500).json({ error: "ML service unavailable" });
   }
 });
@@ -31,6 +33,8 @@ router.post("/diabetes", async (req, res) => {
     res.json(response.data);
   } catch (error) {
     console.error(error.message);
+    // Bad input is the caller's to fix; pass the reason through.
+    if (error.response?.status === 400) return res.status(400).json(error.response.data);
     res.status(500).json({ error: "ML service unavailable" });
   }
 });

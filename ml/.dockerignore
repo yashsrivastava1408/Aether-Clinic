@@ -8,4 +8,7 @@ node_modules
 .git
 .gitignore
 *.log
-data/
+chroma_db
+tests
+evals/results.json
+.pytest_cache

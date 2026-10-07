@@ -1,0 +1,48 @@
+{"query": "crushing pressure in the middle of my chest that spreads to my left arm and jaw, I'm sweating a lot", "expected": "Acute Coronary Syndrome - Emergency Triage Protocol"}
+{"query": "squeezing chest discomfort for 30 minutes at rest with nausea", "expected": "Acute Coronary Syndrome - Emergency Triage Protocol"}
+{"query": "what should someone do while waiting for the ambulance if they think it is a heart attack", "expected": "Acute Coronary Syndrome - Emergency Triage Protocol"}
+{"query": "my BP reading was 150 over 95 this morning, is that high", "expected": "Hypertension Management - Primary Care Protocol"}
+{"query": "how can I bring my blood pressure down without tablets, what diet helps", "expected": "Hypertension Management - Primary Care Protocol"}
+{"query": "what counts as stage 2 hypertension", "expected": "Hypertension Management - Primary Care Protocol"}
+{"query": "ankles are swollen, I get breathless lying flat and gained 3 kg in a week", "expected": "Heart Failure - Recognition and Monitoring"}
+{"query": "what does a reduced ejection fraction mean", "expected": "Heart Failure - Recognition and Monitoring"}
+{"query": "high fever for three days, pain behind the eyes, body ache and a rash after mosquito bites", "expected": "Dengue Fever - Clinical Management Protocol"}
+{"query": "can I take ibuprofen for dengue fever", "expected": "Dengue Fever - Clinical Management Protocol"}
+{"query": "platelet count is dropping after viral fever with bleeding gums", "expected": "Dengue Fever - Clinical Management Protocol"}
+{"query": "runny nose, sore throat and sneezing since two days", "expected": "Common Upper Respiratory Tract Infections"}
+{"query": "is this a cold or the flu, how do I tell the difference", "expected": "Common Upper Respiratory Tract Infections"}
+{"query": "blocked nose and mild cough, do I need antibiotics", "expected": "Common Upper Respiratory Tract Infections"}
+{"query": "vomiting and loose motions since last night after eating street food", "expected": "Food Poisoning and Acute Gastroenteritis"}
+{"query": "how to make oral rehydration solution at home for diarrhea", "expected": "Food Poisoning and Acute Gastroenteritis"}
+{"query": "stomach cramps and watery stools, when is dehydration dangerous", "expected": "Food Poisoning and Acute Gastroenteritis"}
+{"query": "always thirsty, peeing a lot and tired, fasting sugar was 140", "expected": "Type 2 Diabetes Mellitus - Comprehensive Management"}
+{"query": "what HbA1c value means diabetes", "expected": "Type 2 Diabetes Mellitus - Comprehensive Management"}
+{"query": "feet care and diet tips for someone with type 2 diabetes", "expected": "Type 2 Diabetes Mellitus - Comprehensive Management"}
+{"query": "diabetic with fruity smelling breath, deep fast breathing and vomiting", "expected": "Diabetic Ketoacidosis (DKA) - Emergency Recognition"}
+{"query": "very high blood sugar with ketones in urine and confusion", "expected": "Diabetic Ketoacidosis (DKA) - Emergency Recognition"}
+{"query": "I am 26 weeks pregnant and my glucose tolerance test came back high", "expected": "Gestational Diabetes - Screening and Self-Care"}
+{"query": "sugar levels during pregnancy, what should I eat", "expected": "Gestational Diabetes - Screening and Self-Care"}
+{"query": "lower back hurts after lifting a heavy box yesterday", "expected": "Low Back Pain - Assessment and Self-Care"}
+{"query": "back pain with numbness in the groin and trouble passing urine", "expected": "Low Back Pain - Assessment and Self-Care"}
+{"query": "stiff sore lumbar area from sitting at a desk all day, any stretches", "expected": "Low Back Pain - Assessment and Self-Care"}
+{"query": "twisted my ankle playing football, it is swollen", "expected": "Common Musculoskeletal Injuries - RICE Protocol"}
+{"query": "should I use ice or heat on a sprain", "expected": "Common Musculoskeletal Injuries - RICE Protocol"}
+{"query": "pulled a muscle in my thigh while running", "expected": "Common Musculoskeletal Injuries - RICE Protocol"}
+{"query": "throbbing pain on one side of my head with nausea and light hurts my eyes", "expected": "Headache Classification and Triage"}
+{"query": "sudden worst headache of my life that came on in seconds", "expected": "Headache Classification and Triage"}
+{"query": "tight band feeling around my forehead after a stressful day", "expected": "Headache Classification and Triage"}
+{"query": "heart racing, shaking and feeling like I am going to die for ten minutes then it passes", "expected": "Anxiety and Panic Attacks - Recognition and Self-Management"}
+{"query": "breathing exercises to calm down when I feel panicky", "expected": "Anxiety and Panic Attacks - Recognition and Self-Management"}
+{"query": "I worry constantly about everything and can't relax", "expected": "Anxiety and Panic Attacks - Recognition and Self-Management"}
+{"query": "no interest in anything for weeks, sleeping too much and feeling hopeless", "expected": "Depression - Screening and Self-Care"}
+{"query": "what does a PHQ-9 score of 16 mean", "expected": "Depression - Screening and Self-Care"}
+{"query": "feeling low and empty most days, what can I do myself", "expected": "Depression - Screening and Self-Care"}
+{"query": "wheezing and chest tightness at night, my blue inhaler is not lasting", "expected": "Asthma - Self-Management and Action Plans"}
+{"query": "what is the yellow zone on a peak flow action plan", "expected": "Asthma - Self-Management and Action Plans"}
+{"query": "cough and breathlessness triggered by dust and cold air", "expected": "Asthma - Self-Management and Action Plans"}
+{"query": "lips and throat swelling with hives after eating peanuts", "expected": "Allergic Reactions and Anaphylaxis"}
+{"query": "how to use an adrenaline auto-injector", "expected": "Allergic Reactions and Anaphylaxis"}
+{"query": "itchy eyes and sneezing every spring", "expected": "Allergic Reactions and Anaphylaxis"}
+{"query": "red itchy scaly patches on my elbows", "expected": "Skin Conditions - Primary Assessment Guide"}
+{"query": "a mole that changed colour and has an irregular border", "expected": "Skin Conditions - Primary Assessment Guide"}
+{"query": "dry itchy rash in the folds of my arms that keeps coming back", "expected": "Skin Conditions - Primary Assessment Guide"}

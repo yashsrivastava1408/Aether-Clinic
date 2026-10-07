@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { clearMemory, fetchMemory, isMemoryEnabled, setMemoryEnabled } from "../utils/healthMemory";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import LegalModal from "../components/LegalModal";
@@ -8,6 +10,27 @@ export default function Settings() {
     const { theme, toggleTheme } = useTheme();
     const [_notifications, _setNotifications] = useState(true); // Reserved for future use
     const [showLegal, setShowLegal] = useState(false);
+    const [memoryOn, setMemoryOn] = useState(isMemoryEnabled());
+    const [memoryEntries, setMemoryEntries] = useState(null);
+
+    useEffect(() => {
+        fetchMemory().then(setMemoryEntries).catch(() => setMemoryEntries(null));
+    }, []);
+
+    const toggleMemory = () => {
+        setMemoryEnabled(!memoryOn);
+        setMemoryOn(!memoryOn);
+    };
+
+    const handleClearMemory = async () => {
+        if (!window.confirm("Delete the saved summaries of your past consultations?")) return;
+        try {
+            await clearMemory();
+            setMemoryEntries([]);
+        } catch (err) {
+            console.error("Could not clear health memory", err);
+        }
+    };
 
     return (
         <div className={`min-h-screen pt-24 px-6 pb-12 transition-colors duration-300 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
@@ -104,6 +127,65 @@ export default function Settings() {
                                     EXTERNAL
                                 </span>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* 🧠 Health Memory */}
+                    <div className={`p-6 rounded-2xl border transition-all duration-300 ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-sm'}`}>
+                        <h2 className="text-lg font-semibold mb-6 flex items-center gap-2 text-emerald-500">
+                            <span>🧠</span> Health Memory
+                        </h2>
+
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between pb-4 border-b border-gray-500/10">
+                                <div>
+                                    <p className="font-medium">Remember past consultations</p>
+                                    <p className="text-xs opacity-60">A short encrypted summary of each finished consultation is used as background next time</p>
+                                </div>
+                                <button
+                                    onClick={toggleMemory}
+                                    aria-label="Remember past consultations"
+                                    className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 ${memoryOn ? 'bg-emerald-500' : 'bg-gray-300'}`}
+                                >
+                                    <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${memoryOn ? 'translate-x-7' : 'translate-x-0'}`} />
+                                </button>
+                            </div>
+
+                            {memoryEntries && memoryEntries.length > 0 && (
+                                <ul className="space-y-1 text-sm">
+                                    {memoryEntries.map((entry, i) => (
+                                        <li key={i} className="opacity-80">
+                                            <span className="font-mono text-xs opacity-60">{entry.date}</span> · {entry.specialist}: {entry.complaint}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+
+                            <div className="flex items-center justify-between">
+                                <p className="text-xs opacity-60">
+                                    {memoryEntries === null ? "Saved summaries could not be loaded" : `${memoryEntries.length} saved ${memoryEntries.length === 1 ? "summary" : "summaries"}`}
+                                </p>
+                                <button
+                                    onClick={handleClearMemory}
+                                    disabled={!memoryEntries || memoryEntries.length === 0}
+                                    className="px-4 py-2 text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors disabled:opacity-40"
+                                >
+                                    Delete all
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 🩺 Clinician tools */}
+                    <div className={`p-6 rounded-2xl border transition-all duration-300 ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-sm'}`}>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="font-medium">Clinician review queue</p>
+                                <p className="text-xs opacity-60">Approve or edit assessments before they are released (needs a reviewer key)</p>
+                            </div>
+                            <Link to="/review" className="px-4 py-2 text-xs font-medium bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 border border-blue-500/20 rounded-lg transition-colors">
+                                Open queue
+                            </Link>
                         </div>
                     </div>
 

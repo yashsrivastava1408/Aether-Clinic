@@ -147,34 +147,48 @@ def _strip_internal_artifacts(text: str) -> str:
     return cleaned.strip()
 
 
-def verify_response(
+SAFE_REFUSAL = (
+    "I can’t help with unsafe, harmful, or privacy-violating requests. "
+    "Please ask for general medical guidance, symptom triage, or emergency next steps."
+)
+
+EMERGENCY_ALERT = (
+    "🚨 EMERGENCY ALERT: Based on your symptoms, please seek IMMEDIATE emergency medical care. "
+    "Call emergency services (e.g., 102 or 108 in India, 911 in US) or go to the nearest emergency room."
+)
+
+
+def check_response(
     ai_response: str,
-    retrieved_context: str,
     user_query: str,
     urgency: str = "routine",
-    feedback_examples: list = None
+    retrieved_context: str = "",
+    feedback_examples: list = None,
 ) -> dict:
     """
-    Verifies an AI response against safety rules, retrieved medical protocols,
-    and past negative feedback (Flywheel).
+    Rule checks on a drafted reply. Does not rewrite the text.
 
-    Args:
-        ai_response: The AI-generated response text
-        retrieved_context: The medical protocol context that was fed to the AI
-        user_query: The original user query
-        urgency: Urgency level from Triage Classifier
-        feedback_examples: List of past 'Thumbs Down' cases to avoid repeating mistakes
+    Returns:
+        {
+          "violations": [...],  # the draft must not be shown
+          "warnings":   [...],  # safety lines that must accompany the reply
+          "cleaned":    str     # draft with footers / internal labels stripped
+        }
+
+    A mandatory warning is triggered by the user's own words.
+    `retrieved_context` is only considered when passed explicitly (the legacy
+    /verify endpoint does this); the consult graph leaves it empty so that a
+    loosely related protocol cannot attach an unrelated warning.
     """
-    response_lower = ai_response.lower()
+    response_lower = (ai_response or "").lower()
     response_normalized = _normalize_text(ai_response)
-    query_lower = user_query.lower()
+    query_lower = (user_query or "").lower()
     query_normalized = _normalize_text(user_query)
     context_lower = (retrieved_context or "").lower()
     context_normalized = _normalize_text(retrieved_context or "")
 
     warnings_added = []
     violations_found = []
-    modified_response = _strip_internal_artifacts(ai_response)
 
     # === CHECK 0: Feedback Flywheel (Learn from past mistakes) ===
     if feedback_examples:
@@ -205,8 +219,11 @@ def verify_response(
 
     # === CHECK 3: Mandatory Warnings ===
     for trigger, rule in MANDATORY_WARNINGS.items():
-        # Check if the trigger topic is relevant (in query or context)
-        if trigger in query_lower or trigger in query_normalized or trigger in context_lower or trigger in context_normalized:
+        # Check if the trigger topic is relevant (in the query or explicit context)
+        if (
+            trigger in query_lower or trigger in query_normalized
+            or trigger in context_lower or trigger in context_normalized
+        ):
             # Check if the AI included the mandatory safety info
             has_safety_content = any(
                 check_word in response_lower
@@ -218,23 +235,54 @@ def verify_response(
 
     # === CHECK 4: Emergency Response Verification ===
     if urgency == "emergency":
-        emergency_phrases = ["emergency", "911", "102", "108", "hospital", "immediate"]
+        emergency_phrases = ["emergency", "911", "102", "108", "112", "hospital", "immediate"]
         has_emergency_direction = any(phrase in response_lower for phrase in emergency_phrases)
 
         if not has_emergency_direction:
-            warnings_added.append(
-                "🚨 EMERGENCY ALERT: Based on your symptoms, please seek IMMEDIATE emergency medical care. "
-                "Call emergency services (e.g., 102 or 108 in India, 911 in US) or go to the nearest emergency room."
-            )
+            warnings_added.append(EMERGENCY_ALERT)
+
+    return {
+        "violations": violations_found,
+        "warnings": warnings_added,
+        "cleaned": _strip_internal_artifacts(ai_response),
+    }
+
+
+def verify_response(
+    ai_response: str,
+    retrieved_context: str,
+    user_query: str,
+    urgency: str = "routine",
+    feedback_examples: list = None
+) -> dict:
+    """
+    Verifies an AI response against safety rules, retrieved medical protocols,
+    and past negative feedback (Flywheel), and returns the amended text with
+    the legal footer. Kept for the /api/intelligence/verify endpoint; the
+    consult graph calls `check_response` directly.
+
+    Args:
+        ai_response: The AI-generated response text
+        retrieved_context: The medical protocol context that was fed to the AI
+        user_query: The original user query
+        urgency: Urgency level from Triage Classifier
+        feedback_examples: List of past 'Thumbs Down' cases to avoid repeating mistakes
+    """
+    checked = check_response(
+        ai_response=ai_response,
+        user_query=user_query,
+        urgency=urgency,
+        retrieved_context=retrieved_context,
+        feedback_examples=feedback_examples,
+    )
+    warnings_added = checked["warnings"]
+    violations_found = checked["violations"]
 
     # === APPLY MODIFICATIONS ===
     if violations_found:
-        modified_response = (
-            "I can’t help with unsafe, harmful, or privacy-violating requests. "
-            "Please ask for general medical guidance, symptom triage, or emergency next steps."
-        )
+        modified_response = SAFE_REFUSAL
     else:
-        modified_response = _strip_internal_artifacts(ai_response)
+        modified_response = checked["cleaned"]
 
     # Guard against cumulative growth: 
     # If the response already seems to have a safety block, don't add more dividers

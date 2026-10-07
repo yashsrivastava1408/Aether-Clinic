@@ -1,0 +1,58 @@
+{
+  "config": {
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "sparse_weight": 0.3,
+    "rerank": false,
+    "top_k": 4,
+    "rel_cutoff": 0.7,
+    "grade_strong": 0.35,
+    "grade_weak": 0.22
+  },
+  "retrieval": {
+    "queries": 48,
+    "hit@1": 0.958,
+    "hit@3": 1.0,
+    "mrr": 0.979,
+    "expected_protocol_in_context": 1.0,
+    "top1_misses": [
+      {
+        "query": "what should someone do while waiting for the ambulance if they think it is a heart attack",
+        "got": "Anxiety and Panic Attacks - Recognition and Self-Management",
+        "rank": 2
+      },
+      {
+        "query": "is this a cold or the flu, how do I tell the difference",
+        "got": "Headache Classification and Triage",
+        "rank": 2
+      }
+    ]
+  },
+  "research": {
+    "messages": 8,
+    "both_protocols_single_search": 0.75,
+    "both_protocols_planned_searches": 1.0
+  },
+  "grading": {
+    "on_topic": {
+      "strong": 47,
+      "weak": 1,
+      "none": 0
+    },
+    "off_topic": {
+      "strong": 0,
+      "weak": 0,
+      "none": 8
+    },
+    "on_topic_kept": 1.0,
+    "off_topic_rejected": 1.0
+  },
+  "emergency": {
+    "must_trigger": 26,
+    "recall": 1.0,
+    "missed": [],
+    "wrong_kind": [],
+    "must_not_trigger": 14,
+    "false_alarm_rate": 0.0,
+    "false_alarms": []
+  }
+}

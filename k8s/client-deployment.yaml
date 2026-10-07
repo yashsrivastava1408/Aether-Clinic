@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: aether-client
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: aether-client
@@ -22,8 +22,8 @@ spec:
             - containerPort: 80
           resources:
             requests:
-              cpu: "250m"
-              memory: "256Mi"
+              cpu: "50m"
+              memory: "64Mi"
             limits:
               cpu: "500m"
               memory: "512Mi"

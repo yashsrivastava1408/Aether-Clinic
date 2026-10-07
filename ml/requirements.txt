@@ -1,21 +1,23 @@
 flask==3.0.2
+flask-cors==5.0.1
+gunicorn==21.2.0
 numpy==1.26.4
 pandas==2.2.2
 scikit-learn==1.6.1
 joblib==1.4.2
-gunicorn==21.2.0
 
-# ML / RAG
+# Retrieval: dense embeddings + Qdrant (dense and sparse vectors)
 sentence-transformers==3.4.1
-chromadb==0.6.3
+qdrant-client==1.16.1
 
-# LangChain stack
-langchain==0.3.20
-langchain-community==0.3.19
-langchain-core==0.3.51
+# Consultation graph
 langgraph==0.3.21
+langchain-core==0.3.86
+langchain-openai==0.3.35          # one client for Ollama, Groq and Gemini (OpenAI-compatible endpoints)
 
-# Vector DB Clients
-qdrant-client==1.8.2
+# Saved conversation state (MongoDB, AES-encrypted)
+langgraph-checkpoint-mongodb==0.2.1
+pycryptodome==3.24.0
 
-flask-cors==5.0.1
+# Tests
+pytest==8.4.2

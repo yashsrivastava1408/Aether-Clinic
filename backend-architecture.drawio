@@ -43,7 +43,7 @@
           <mxGeometry x="820" y="280" width="290" height="80" as="geometry"/>
         </mxCell>
 
-        <mxCell id="chat_controller" value="Chat Controller\nSession gating + RAG lookup + prompt assembly\nEncrypt/decrypt chat text" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#ffffff;" vertex="1" parent="1">
+        <mxCell id="chat_controller" value="Chat Controller\nValidation + session lock + consult call\nEncrypt/decrypt chat text" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#ffffff;" vertex="1" parent="1">
           <mxGeometry x="500" y="390" width="290" height="120" as="geometry"/>
         </mxCell>
 
@@ -51,11 +51,11 @@
           <mxGeometry x="820" y="390" width="290" height="120" as="geometry"/>
         </mxCell>
 
-        <mxCell id="llm_service" value="LLM Service\nRouting: Ollama (text) / Gemini (vision/report)" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#fff2cc;" vertex="1" parent="1">
+        <mxCell id="llm_service" value="LLM Service\nGemini for report analysis only" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#fff2cc;" vertex="1" parent="1">
           <mxGeometry x="500" y="540" width="290" height="90" as="geometry"/>
         </mxCell>
 
-        <mxCell id="rag_service" value="RAG Service\nmedical_knowledge.json keyword retrieval" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#fff2cc;" vertex="1" parent="1">
+        <mxCell id="rag_service" value="Consult Service Client\nPOST /api/consult(/stream) to Python" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#fff2cc;" vertex="1" parent="1">
           <mxGeometry x="820" y="540" width="290" height="90" as="geometry"/>
         </mxCell>
 
@@ -75,7 +75,7 @@
           <mxGeometry x="1260" y="260" width="280" height="90" as="geometry"/>
         </mxCell>
 
-        <mxCell id="knowledge_json" value="medical_knowledge.json\nRAG knowledge base" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#ffffff;strokeColor=#b85450;" vertex="1" parent="1">
+        <mxCell id="knowledge_json" value="Python Consult Graph\nLangGraph + Qdrant retrieval" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#ffffff;strokeColor=#b85450;" vertex="1" parent="1">
           <mxGeometry x="1570" y="260" width="270" height="90" as="geometry"/>
         </mxCell>
 
@@ -83,7 +83,7 @@
           <mxGeometry x="1220" y="560" width="660" height="300" as="geometry"/>
         </mxCell>
 
-        <mxCell id="ollama" value="Ollama Local LLM\nllama3.2\ntext chat triage" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#9673a6;fillColor=#ffffff;" vertex="1" parent="1">
+        <mxCell id="ollama" value="Ollama Local LLM\nllama3.2\ncalled by the consult graph" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#9673a6;fillColor=#ffffff;" vertex="1" parent="1">
           <mxGeometry x="1260" y="620" width="190" height="90" as="geometry"/>
         </mxCell>
 

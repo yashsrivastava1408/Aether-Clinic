@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon --ignore chat_logs.json index.js"
+    "dev": "nodemon --ignore chat_logs.json index.js",
+    "test": "node --test tests/chat.test.js tests/followup.test.js"
   },
   "keywords": [],
   "author": "",

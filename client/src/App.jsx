@@ -20,6 +20,8 @@ const ReportAnalyzer = lazy(() => import("./pages/ReportAnalyzer"));
 const HeartRisk = lazy(() => import("./pages/HeartRisk"));
 const DiabetesRisk = lazy(() => import("./pages/DiabetesRisk"));
 const Settings = lazy(() => import("./pages/Settings"));
+const FollowUp = lazy(() => import("./pages/FollowUp"));
+const Review = lazy(() => import("./pages/Review"));
 
 // Loading Component
 const PageLoader = () => (
@@ -87,6 +89,8 @@ const MainContent = () => {
                   <Route path="/heart" element={<HeartRisk />} />
                   <Route path="/diabetes" element={<DiabetesRisk />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/followup/:token" element={<FollowUp />} />
+                  <Route path="/review" element={<Review />} />
                   <Route path="/about" element={<About />} />
                 </Routes>
               </Suspense>

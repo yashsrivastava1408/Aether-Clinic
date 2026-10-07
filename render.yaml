@@ -4,11 +4,18 @@ services:
     name: aether-ml-service
     env: python
     buildCommand: cd ml && pip install -r requirements.txt
-    startCommand: cd ml && gunicorn app:app --bind 0.0.0.0:$PORT
+    startCommand: cd ml && gunicorn app:app --bind 0.0.0.0:$PORT --worker-class gthread --workers 1 --threads 8 --timeout 180
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.0
       - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      # Conversation state: same database and key as the backend
+      - key: MONGO_URI
+        sync: false
+      - key: ENCRYPTION_KEY
         sync: false
 
   # 🚀 Node.js Backend API Gateway

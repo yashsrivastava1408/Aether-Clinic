@@ -1,20 +1,17 @@
-import { generateResponse } from "../services/llmService.js";
 import { encrypt, decrypt } from "../utils/encryption.js";
+import crypto from "crypto";
 import fs from "fs";
 import path from "path";
-import { getVisionPrompt } from "../services/prompts/visionPrompt.js";
-import { getTextPrompt } from "../services/prompts/textPrompt.js";
-import { retrieveIntelligence, verifyResponse, retrieveContext } from "../services/ragService.js";
+import { runConsult, streamConsult, deleteConsultThread } from "../services/consultService.js";
 import Chat from "../models/Chat.js";
 import { chatDB } from "../utils/jsonDB.js";
+import { getMemory, addMemoryEntry, clearMemory, memoryDigest } from "../utils/memoryStore.js";
 import mongoose from "mongoose";
-
-const CHAT_LOGS_PATH = path.resolve("chat_logs.json");
 
 /**
  * DATABASE SELECTOR: Uses MongoDB if connected, falls back to JSON for WiFi-restricted environments.
  */
-const getDB = () => {
+export const getDB = () => {
   return mongoose.connection.readyState === 1 ? Chat : chatDB;
 };
 
@@ -43,343 +40,283 @@ const sanitizeContext = (text) => {
     .trim();
 };
 
+const HISTORY_MESSAGES_SENT = 10;
+const MAX_REPORT_SUMMARY_CHARS = 3000;
+
+const UNAVAILABLE_BODY = {
+  error: "ASSISTANT_UNAVAILABLE",
+  message: "The medical assistant is temporarily unavailable. Please try again in a moment. " +
+    "If this is an emergency, call your local emergency number.",
+};
+
+const removeUpload = (file) => {
+  if (!file) return;
+  fs.promises.unlink(file.path).catch(() => { });
+};
 
 /**
- * FACT EXTRACTION - MEDICAL SIGNALS ONLY
- * Conversational words removed to prevent false positives
+ * Everything that happens before the consultation runs: validation, loading
+ * the chat, the session lock, and building the request for the Python service.
+ * Returns { error: { status, body } } when the request cannot proceed.
  */
-function extractFacts(messages) {
-  const text = messages.join(" ").toLowerCase();
+const prepareTurn = async (req) => {
+  const { message = "", specialization = "General Medicine", userId, tier = "basic", userRam = 8, reportSummary = "", memory = "on" } = req.body || {};
+  const text = String(message || "").trim();
+  const memoryEnabled = memory !== "off";
+
+  if (!userId) return { error: { status: 400, body: { error: "USER_ID_MISSING" } } };
+  if (!text && !req.file) return { error: { status: 400, body: { error: "MESSAGE_MISSING" } } };
+
+  /* ================== CHAT SESSION ================== */
+  const db = getDB();
+  let chat = await db.findOne({ userId, specialist: specialization });
+
+  if (!chat) {
+    chat = await db.create({
+      userId,
+      specialist: specialization,
+      sessionId: crypto.randomUUID(),
+      messages: [],
+      sessionClosed: false,
+      lastActive: new Date()
+    });
+  }
+  // Chats created before consultations had their own state get an id now.
+  if (!chat.sessionId) chat.sessionId = crypto.randomUUID();
+  chat.memoryOff = !memoryEnabled;
+
+  // 🚨 SESSION LOCK - Prevent chat after final report
+  if (chat.sessionClosed) {
+    return {
+      error: {
+        status: 403,
+        body: {
+          error: "SESSION_COMPLETE",
+          message: "This consultation is complete. Please start a new session for a fresh assessment."
+        }
+      }
+    };
+  }
+
+  // A drafted assessment is with a clinician; nothing new runs until they decide.
+  if (chat.pendingReview) {
+    return {
+      error: {
+        status: 409,
+        body: {
+          error: "REVIEW_PENDING",
+          message: "Your assessment is being checked by a clinician. It will appear here once it is approved."
+        }
+      }
+    };
+  }
+
+  // Image limit enforcement
+  if (req.file && chat.messages.some(m => m.image)) {
+    return {
+      error: {
+        status: 403,
+        body: { error: "IMAGE_LIMIT_REACHED", message: "Only one image per session is allowed." }
+      }
+    };
+  }
+
+  /* ================== IMAGE HANDLING ================== */
+  let imageBase64 = null;
+  if (req.file) {
+    imageBase64 = (await fs.promises.readFile(req.file.path)).toString("base64");
+  }
+
+  // The Python service keeps its own conversation state. This transcript is
+  // only used to rebuild that state if it has been lost (restart, expiry).
+  const history = chat.messages.slice(-HISTORY_MESSAGES_SENT).map(m => ({
+    role: m.sender === "user" ? "user" : "assistant",
+    content: sanitizeContext(decrypt(m.text)),
+  })).filter(m => m.content);
+
+  // Summaries of this user's earlier consultations (never the transcripts).
+  const patientMemory = memoryEnabled ? memoryDigest(await getMemory(userId)) : "";
 
   return {
-    // Location: anatomical terms or general pain indicators
-    location: /(back|left|right|side|upper|lower|spine|shoulder|chest|arm|neck|hand|finger|wrist|knee|leg|foot|ankle|head|abdomen|stomach|pain|hurt|ache|sore|muscle|bone|nerve)/i.test(text),
-
-    // Duration: time indicators
-    duration: /(since|yesterday|today|day|hour|week|month|ago|for|past|started|began|now|currently)/i.test(text),
-
-    // Pattern: quality descriptors
-    pattern: /(constant|intermittent|comes?|goes?|occasional|sharp|dull|throbbing|ache|aching|burning|stabbing|tingling|numb|worse|better|improving|heavy|tight)/i.test(text),
-
-    // Trigger: activities/contexts
-    trigger: /(when|after|during|exercise|movement|lifting|rest|sleep|breathing|sitting|standing|walking|eating|bending|twisting|accident|injury|fall|hit)/i.test(text),
+    chat,
+    text,
+    userId,
+    memoryEnabled,
+    imageBase64,
+    imageMime: req.file?.mimetype || null,
+    payload: {
+      thread_id: chat.sessionId,
+      message: text,
+      specialization,
+      tier,
+      user_ram: Number(userRam) || 8,
+      image_b64: imageBase64,
+      image_mime: req.file?.mimetype || null,
+      history,
+      report_summary: String(reportSummary || "").slice(0, MAX_REPORT_SUMMARY_CHARS) || null,
+      patient_memory: patientMemory || null,
+    },
   };
-}
+};
 
 /**
- * CONCLUSION REQUEST DETECTION
- * User explicitly asking for assessment
+ * The text shown to the user: when the conversation was just handed to
+ * another specialist, the hand-off note comes first.
  */
-function isAskingForConclusion(message) {
-  if (!message) return false;
-
-  const patterns = [
-    /what (is|could|might|can) (it|this|the problem)/i,
-    /(summary|conclusion|report|diagnosis|assessment)/i,
-    /what('s| is) (wrong|the issue|my problem)/i,
-    /(should i|do i need to|can i|must i) (see|visit|go to|consult)/i,
-    /is (it|this) (serious|bad|dangerous|normal|okay)/i,
-  ];
-  return patterns.some(p => p.test(message));
-}
+const replyText = (result) => (result.handoff_note ? `${result.handoff_note}\n\n${result.reply}` : result.reply);
 
 /**
- * NEGATIVE CONFIRMATION DETECTION
- * User signaling they have nothing more to add
+ * Saves the outcome of a finished consultation step to the chat document:
+ * the assistant message, the session lock, the review flag and long-term memory.
  */
-function isNegativeConfirmation(message) {
-  if (!message) return false;
+export const recordAssistantReply = async (chat, result, { userId, memoryEnabled = true } = {}) => {
+  const reply = replyText(result);
+  chat.messages.push({ sender: "ai", text: encrypt(reply), timestamp: new Date() });
+  chat.pendingReview = !!result.pending_review;
+  if (result.session_complete) {
+    chat.sessionClosed = true;
+    console.log("🔒 SESSION CLOSED - Final report delivered");
+  }
+  chat.lastActive = new Date();
+  await chat.save();
 
-  // Must start with these or be very short
-  return /^(no|nothing else|only that|just that|not really|doesn't|nope|nah)\b/i.test(message.trim()) ||
-    (/\b(only|just)\b/i.test(message) && message.length < 30);
-}
+  if (result.memory_entry && memoryEnabled) {
+    await addMemoryEntry(userId || chat.userId, result.memory_entry).catch((err) =>
+      console.warn("⚠️ Could not save consultation memory:", err.message));
+  }
+  return reply;
+};
+
+/**
+ * Everything that happens after the consultation ran: saving the transcript,
+ * locking the session after a final assessment, and shaping the response.
+ */
+const completeTurn = async (turn, result) => {
+  const { chat, text, imageBase64, imageMime } = turn;
+
+  if (result.mode === "closed") {
+    chat.sessionClosed = true;
+    await chat.save();
+    return {
+      status: 403,
+      body: { error: "SESSION_COMPLETE", message: result.reply }
+    };
+  }
+
+  /* ================== SAVE TO DATABASE ================== */
+  chat.messages.push({
+    sender: "user",
+    text: encrypt(text || "Image uploaded"),
+    image: imageBase64 ? `data:${imageMime};base64,${imageBase64}` : null,
+    timestamp: new Date()
+  });
+
+  const reply = await recordAssistantReply(chat, result, turn);
+
+  /* ================== RESPONSE WITH INTELLIGENCE METADATA ================== */
+  return {
+    status: 200,
+    body: {
+      reply,
+      sessionComplete: !!result.session_complete, // Frontend can show "Start New Session" button
+      citations: result.citations || [],
+      mode: result.mode,
+      specialist: result.specialist?.name || null,
+      pendingReview: !!result.pending_review,
+      _debug: {
+        mode: result.mode,
+        userTurns: result.turn_count,
+        factsCollected: Object.keys(result.intake || {}).length,
+        intake: result.intake || {},
+        intelligence: {
+          classification: result.classification,
+          contextGrade: result.context_grade,
+          research: result.research || [],
+          handoff: !!result.handoff_note,
+          citationCount: (result.citations || []).length,
+          toolResults: (result.tool_results || []).map(t => ({ tool: t.tool, status: t.status })),
+          providers: result.providers,
+          trace: result.trace,
+          safety: result.safety,
+        },
+        sessionLocked: !!chat.sessionClosed,
+      }
+    }
+  };
+};
 
 /**
  * MAIN CHAT HANDLER
  */
 export const handleChat = async (req, res) => {
   try {
-    const { message, specialization = "General Medicine", userId, tier = "basic", userRam = 8 } = req.body;
-    if (!userId) return res.status(400).json({ error: "USER_ID_MISSING" });
+    const turn = await prepareTurn(req);
+    if (turn.error) return res.status(turn.error.status).json(turn.error.body);
 
-
-    /* ================== IMAGE HANDLING ================== */
-    let imageBase64 = null;
-    if (req.file) {
-      const buffer = await fs.promises.readFile(req.file.path);
-      imageBase64 = buffer.toString("base64");
-    }
-
-    /* ================== CHAT SESSION ================== */
-    const db = getDB();
-    let chat = await db.findOne({ userId, specialist: specialization });
-
-    if (!chat) {
-      chat = await db.create({ 
-        userId, 
-        specialist: specialization, 
-        messages: [], 
-        sessionClosed: false, 
-        lastActive: new Date() 
-      });
-    }
-
-    // 🚨 SESSION LOCK - Prevent chat after final report
-    if (chat.sessionClosed) {
-      if (req.file) fs.unlinkSync(req.file.path);
-      return res.status(403).json({
-        error: "SESSION_COMPLETE",
-        message: "This consultation is complete. Please start a new session for a fresh assessment."
-      });
-    }
-
-    // Image limit enforcement
-    if (req.file && chat.messages.some(m => m.image)) {
-      fs.unlinkSync(req.file.path);
-      return res.status(403).json({
-        error: "IMAGE_LIMIT_REACHED",
-        message: "Only one image per session is allowed."
-      });
-    }
-
-    /* ================== HISTORY CONTEXT ================== */
-    const recentMessages = chat.messages.slice(-10);
-    const historyContext = recentMessages.length
-      ? "\n\nRecent conversation:\n" +
-      recentMessages.map(m =>
-        `${m.sender === "user" ? "User" : "Assistant"}: ${sanitizeContext(decrypt(m.text))}`
-      ).join("\n")
-      : "";
-
-    /* ================== FACT EXTRACTION ================== */
-    const userTexts = recentMessages
-      .filter(m => m.sender === "user")
-      .map(m => decrypt(m.text));
-    if (message) userTexts.push(message);
-
-    const facts = extractFacts(userTexts);
-    const knownFacts = Object.values(facts).filter(Boolean).length;
-    const userTurns = chat.messages.filter(m => m.sender === "user").length + 1;
-
-    /* ================== GATE TRIGGERS (CLEAN SEPARATION) ================== */
-    const userAsksForConclusion = isAskingForConclusion(message);
-    const userSignalsComplete = isNegativeConfirmation(message);
-
-    // BALANCED THRESHOLDS (production-safe)
-    const hasEnoughFacts = knownFacts >= 3;
-    const conversationTooLong = userTurns >= 3; // ✅ UX completion gate
-
-    // Force final if ANY condition met
-    const forceFinal =
-      userAsksForConclusion ||    // User explicitly asks
-      userSignalsComplete ||       // User signals done ("no", "only that")
-      hasEnoughFacts ||            // Medical facts collected
-      conversationTooLong;         // Safety net (UX)
-
-    /* ================== DEBUG LOGGING ================== */
-    console.log("🔍 GATE DECISION:", {
-      message: message?.substring(0, 60),
-      facts,
-      knownFacts,
-      userTurns,
-      triggers: {
-        asksForConclusion: userAsksForConclusion,
-        signalsComplete: userSignalsComplete,
-        hasEnoughFacts,
-        conversationTooLong
-      },
-      DECISION: forceFinal ? '🎯 FINAL REPORT' : '❓ INVESTIGATION'
-    });
-
-    /* ================== MULTI-AGENT RAG RETRIEVAL ================== */
-    const ragQuery = [
-      message || "",
-      ...userTexts.slice(-3)
-    ].join(" ").toLowerCase();
-
-    console.log("🔍 RAG v2 QUERY:", ragQuery.substring(0, 100));
-
-    // Use the new Intelligence Hub (async, with fallback)
-    let intelligenceResult;
+    let result;
     try {
-      intelligenceResult = await retrieveIntelligence(
-        ragQuery,
-        specialization,
-        historyContext
-      );
-    } catch (ragErr) {
-      console.warn("⚠️ Intelligence Hub call failed, using sync fallback:", ragErr.message);
-      const fallbackContext = retrieveContext(ragQuery);
-      intelligenceResult = {
-        context: fallbackContext || "",
-        citations: [],
-        classification: { category: "general_medicine", urgency: "routine" },
-        hasContext: !!fallbackContext,
-        usedFallback: true
-      };
+      result = await runConsult(turn.payload);
+    } catch (consultErr) {
+      console.error("❌ CONSULT SERVICE ERROR:", consultErr.message);
+      return res.status(503).json(UNAVAILABLE_BODY);
     }
 
-    const retrievedContext = intelligenceResult.context;
-    const hasRAG = intelligenceResult.hasContext;
-    const ragCitations = intelligenceResult.citations;
-    const ragClassification = intelligenceResult.classification;
-
-    console.log("📚 RAG v2 STATUS:", {
-      found: hasRAG,
-      chunks: ragCitations.length,
-      classification: ragClassification?.category,
-      urgency: ragClassification?.urgency,
-      usedFallback: intelligenceResult.usedFallback,
-      preview: retrievedContext?.substring(0, 120)
-    });
-
-    /* ================== SYSTEM PROMPT CONSTRUCTION ================== */
-    let systemPrompt;
-
-    // Build citations reference for the LLM
-    const citationBlock = ragCitations.length > 0
-      ? `\nAvailable citations:\n${ragCitations.map((c, i) => `[${i + 1}] ${c.title} — ${c.source}`).join('\n')}\n\nIf you use a citation, format it inline as (Source: [N]).\n`
-      : '';
-
-    if (forceFinal) {
-      systemPrompt = `You are a Medical Triage Assistant specializing in ${specialization}.
-
-${hasRAG ? `
-Relevant medical context:
-${retrievedContext}
-
-${citationBlock}
-` : ''}
-MODE: FINAL MEDICAL ASSESSMENT
-
-Return a concise final assessment with these sections only:
-Summary
-General Possibilities
-Suggestions
-When to Seek Urgent Care
-Optional Follow-up
-
-Rules:
-- Do not include internal labels, debug text, source counts, legal footers, or decorative separators.
-- Do not ask more than one follow-up question.
-- Keep the language warm, factual, and non-diagnostic.
-- UNDER NO CIRCUMSTANCES should you write or suggest a medical prescription (e.g., drug names, dosages). You must explicitly refuse any request to do so by reminding the user you are an AI assistant and they must consult a Registered Medical Practitioner (RMP).
-- If citations are relevant, cite inline only as (Source: [N]).`;
-
-    } else {
-      systemPrompt = `You are a Medical Triage Assistant specializing in ${specialization}.
-
-${hasRAG ? `Relevant medical context:\n${retrievedContext}\n` : ''}
-MODE: INFORMATION GATHERING
-
-Strict rules:
-- Ask only one clear, specific question.
-- Do not provide diagnoses, possibilities, or treatment advice yet.
-- Keep it warm, conversational, and empathetic.
-- UNDER NO CIRCUMSTANCES should you write or suggest a medical prescription (e.g., drug names, dosages). You must explicitly refuse any request to do so by reminding the user you are an AI assistant and they must consult a Registered Medical Practitioner (RMP).
-
-CURRENT PRIORITY: ${!facts.location ? 'WHERE exactly is the issue located?' :
-          !facts.duration ? 'HOW LONG has this been happening?' :
-            !facts.pattern ? 'WHAT does it feel like? (describe the quality/pattern)' :
-              'WHAT makes it better or worse? (triggers/relieving factors)'
-        }`;
-    }
-
-    /* ================== BUILD FINAL PROMPT ================== */
-    const prompt = getTextPrompt(
-      specialization,
-      systemPrompt,
-      historyContext
-    ) + (message ? `\n\nUser: ${message}` : "");
-
-    /* ================== LLM CALL ================== */
-    let aiReply = await generateResponse(
-      prompt,
-      req.file ? imageBase64 : null,
-      { provider: req.file ? "gemini" : "ollama", tier, userRam }
-    );
-
-    if (req.file) fs.unlinkSync(req.file.path);
-
-    /* ================== SAFETY VERIFICATION (Multi-Agent) ================== */
-    let safetyResult = { isSafe: true, modifiedResponse: aiReply, safetyScore: 1.0, warningsAdded: [], violationsFound: [] };
-
-    try {
-      safetyResult = await verifyResponse(
-        aiReply,
-        retrievedContext,
-        message || "",
-        ragClassification?.urgency || "routine"
-      );
-
-      if (safetyResult.warningsAdded.length > 0) {
-        console.log("🛡️ Safety Agent amended response with", safetyResult.warningsAdded.length, "warnings");
-        aiReply = safetyResult.modifiedResponse;
-      }
-    } catch (safetyErr) {
-      console.warn("⚠️ Safety verification unavailable:", safetyErr.message);
-    }
-
-    /* ================== SESSION LOCK ON FINAL REPORT ================== */
-    if (forceFinal) {
-      chat.sessionClosed = true;
-      console.log("🔒 SESSION CLOSED - Final report delivered");
-    }
-
-    /* ================== SAVE TO DATABASE ================== */
-    chat.messages.push({
-      sender: "user",
-      text: encrypt(message || "Image uploaded"),
-      image: imageBase64 ? `data:${req.file?.mimetype};base64,${imageBase64}` : null,
-      timestamp: new Date()
-    });
-
-    chat.messages.push({
-      sender: "ai",
-      text: encrypt(aiReply),
-      timestamp: new Date()
-    });
-
-    chat.lastActive = new Date();
-    await chat.save();
-
-    /* ================== RESPONSE WITH INTELLIGENCE METADATA ================== */
-    return res.json({
-      reply: aiReply,
-      sessionComplete: forceFinal, // Frontend can show "Start New Session" button
-      citations: ragCitations,      // NEW: Medical source citations for frontend display
-      _debug: {
-        mode: forceFinal ? 'FINAL_REPORT' : 'INVESTIGATION',
-        userTurns,
-        factsCollected: knownFacts,
-        // RAG v2 intelligence metadata
-        intelligence: {
-          ragVersion: intelligenceResult.usedFallback ? 'v1_fallback' : 'v2_multi_agent',
-          classification: ragClassification,
-          chunksRetrieved: ragCitations.length,
-          hasContext: hasRAG,
-          citationCount: ragCitations.length,
-          safety: {
-            score: safetyResult.safetyScore,
-            isSafe: safetyResult.isSafe,
-            warningsAdded: safetyResult.warningsAdded.length,
-            violationsFound: safetyResult.violationsFound.length
-          }
-        },
-        sessionLocked: chat.sessionClosed,
-        triggers: {
-          asksForConclusion: userAsksForConclusion,
-          signalsComplete: userSignalsComplete,
-          hasEnoughFacts,
-          conversationTooLong
-        }
-      }
-    });
+    const { status, body } = await completeTurn(turn, result);
+    return res.status(status).json(body);
 
   } catch (err) {
     console.error("❌ CHAT ERROR:", err);
     return res.status(500).json({ error: "SERVER_ERROR" });
+  } finally {
+    removeUpload(req.file);
+  }
+};
+
+/**
+ * STREAMING CHAT HANDLER (Server-Sent Events)
+ * Sends `step` events while the consultation runs, then one `final` event
+ * with the same body handleChat returns, or one `error` event.
+ * The reply text is only sent after it has passed the safety checks.
+ */
+export const handleChatStream = async (req, res) => {
+  let started = false;
+  const send = (event, data) => {
+    if (!res.writableEnded) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+
+  try {
+    const turn = await prepareTurn(req);
+    if (turn.error) return res.status(turn.error.status).json(turn.error.body);
+
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      "Connection": "keep-alive",
+      "X-Accel-Buffering": "no",
+    });
+    started = true;
+
+    let result;
+    try {
+      result = await streamConsult(turn.payload, (step) => send("step", step));
+    } catch (consultErr) {
+      console.error("❌ CONSULT SERVICE ERROR:", consultErr.message);
+      send("error", UNAVAILABLE_BODY);
+      return res.end();
+    }
+
+    // Saved even if the browser has gone away, so the transcript matches the consultation state.
+    const { status, body } = await completeTurn(turn, result);
+    send(status === 200 ? "final" : "error", body);
+    return res.end();
+
+  } catch (err) {
+    console.error("❌ CHAT STREAM ERROR:", err);
+    if (!started) return res.status(500).json({ error: "SERVER_ERROR" });
+    send("error", { error: "SERVER_ERROR" });
+    return res.end();
+  } finally {
+    removeUpload(req.file);
   }
 };
 
@@ -397,10 +334,31 @@ export const getChatHistory = async (req, res) => {
         ...(m.toObject ? m.toObject() : m),
         text: decrypt(m.text)
       })),
-      sessionClosed: chat.sessionClosed || false
+      sessionClosed: chat.sessionClosed || false,
+      pendingReview: chat.pendingReview || false
     });
   } catch (err) {
     console.error("❌ GET HISTORY ERROR:", err);
+    return res.status(500).json({ error: "SERVER_ERROR" });
+  }
+};
+
+/* ================== PATIENT MEMORY ================== */
+export const getPatientMemory = async (req, res) => {
+  try {
+    res.json({ entries: await getMemory(req.params.userId) });
+  } catch (err) {
+    console.error("❌ MEMORY READ ERROR:", err);
+    return res.status(500).json({ error: "SERVER_ERROR" });
+  }
+};
+
+export const deletePatientMemory = async (req, res) => {
+  try {
+    await clearMemory(req.params.userId);
+    res.json({ message: "Health memory cleared" });
+  } catch (err) {
+    console.error("❌ MEMORY DELETE ERROR:", err);
     return res.status(500).json({ error: "SERVER_ERROR" });
   }
 };
@@ -410,8 +368,12 @@ export const deleteChat = async (req, res) => {
   try {
     const { userId, specialization } = req.params;
     const db = getDB();
+    const chat = await db.findOne({ userId, specialist: specialization });
     await db.deleteOne({ userId, specialist: specialization });
-    res.json({ message: "Chat deleted successfully" });
+    // A new chat always gets a new sessionId, so leftover state can never be
+    // picked up again; deleting it here just removes it sooner.
+    const stateDeleted = chat?.sessionId ? await deleteConsultThread(chat.sessionId) : true;
+    res.json({ message: "Chat deleted successfully", stateDeleted });
   } catch (err) {
     console.error("❌ DELETE ERROR:", err);
     return res.status(500).json({ error: "SERVER_ERROR" });
@@ -421,7 +383,7 @@ export const deleteChat = async (req, res) => {
 /* ================== FORCE FINAL REPORT (EMERGENCY) ================== */
 export const forceFinalReport = async (req, res) => {
   try {
-    const { userId, specialization } = req.body;
+    const { userId, specialization, tier = "basic", userRam = 8, memory = "on" } = req.body;
     const db = getDB();
     const chat = await db.findOne({ userId, specialist: specialization });
 
@@ -434,92 +396,54 @@ export const forceFinalReport = async (req, res) => {
         message: "Session not found, prompt to start new."
       });
     }
-
-    // Extract all user messages for context
-    const userTexts = chat.messages
-      .filter(m => m.sender === "user")
-      .map(m => decrypt(m.text));
-
-    // Build comprehensive summary context
-    const summaryContext = userTexts.join(". ");
-
-    // Get Intelligence Hub context for the final report
-    let ragContext = "";
-    let ragCitations = [];
-    try {
-      const intelligence = await retrieveIntelligence(summaryContext, specialization);
-      ragContext = intelligence.context;
-      ragCitations = intelligence.citations;
-    } catch (err) {
-      console.warn("⚠️ Intelligence unavailable for force-final:", err.message);
+    if (!chat.sessionId) chat.sessionId = crypto.randomUUID();
+    if (chat.pendingReview) {
+      return res.status(409).json({
+        error: "REVIEW_PENDING",
+        message: "Your assessment is being checked by a clinician. It will appear here once it is approved."
+      });
     }
 
-    // Force final report prompt - EXACT USER FORMAT
-    const forcedPrompt = `You are a Medical Triage Assistant - ${specialization}.
-${ragContext ? `\nRELEVANT MEDICAL PROTOCOLS:\n${ragContext}\n` : ''}
-Based on the following conversation, provide the final report EXACTLY in this format:
+    const history = chat.messages.slice(-HISTORY_MESSAGES_SENT).map(m => ({
+      role: m.sender === "user" ? "user" : "assistant",
+      content: sanitizeContext(decrypt(m.text)),
+    })).filter(m => m.content);
 
-📝 Summary:
-[One clear sentence describing what the user reported and context]
+    let result;
+    try {
+      result = await runConsult({
+        thread_id: chat.sessionId,
+        message: "",
+        force_final: true,
+        specialization,
+        tier,
+        user_ram: Number(userRam) || 8,
+        history,
+        patient_memory: memory !== "off" ? memoryDigest(await getMemory(userId)) || null : null,
+      });
+    } catch (consultErr) {
+      console.error("❌ CONSULT SERVICE ERROR:", consultErr.message);
+      return res.status(503).json(UNAVAILABLE_BODY);
+    }
 
-💡 General Possibilities:
-[List 2-3 COMMON, NON-ALARMING potential explanations]
-[Start with most benign/common causes]
-[Use accessible, non-technical language]
-
-🧠 Suggestions:
-[Practical self-care: rest, ice/heat, posture, hydration]
-[Elevate/Movement advice]
-[Monitor symptoms advice]
-
-🚨 When to Seek Urgent Care:
-[Increasing pain, swelling, redness, or warmth]
-[Inability to bear weight/function]
-[Numbness, tingling, or visible deformity]
-[Pain that does not improve]
-
-🤔 Optional Follow-up:
-[ONE gentle question about support or exercises]
-
-⸻
-
-If you want to start a new assessment, just let me know.
-
-CONTEXT:
-${summaryContext}
-`;
-
-    // Generate forced final report
-    const aiReply = await generateResponse(forcedPrompt, null, {
-      provider: "ollama"
-    });
-
-    // Mark session as closed
-    chat.sessionClosed = true;
-
-    chat.messages.push({
-      sender: "ai",
-      text: encrypt(aiReply),
-      timestamp: new Date()
-    });
-
-    chat.lastActive = new Date();
-    await chat.save();
+    // The session is closed only when an assessment was actually delivered
+    let reply = result.reply;
+    if (result.mode !== "closed") {
+      reply = await recordAssistantReply(chat, result, { userId, memoryEnabled: memory !== "off" });
+    }
 
     return res.json({
-      reply: aiReply,
-      sessionComplete: true,
-      citations: ragCitations,
-      message: "Final report generated and session closed"
+      reply,
+      sessionComplete: !!result.session_complete,
+      citations: result.citations || [],
+      mode: result.mode,
+      pendingReview: !!result.pending_review,
+      message: result.session_complete ? "Final report generated and session closed" : "Report could not be generated"
     });
 
   } catch (err) {
     console.error("❌ FORCE FINAL ERROR:", err.message, err.stack);
-    return res.status(500).json({
-      error: "SERVER_ERROR",
-      details: err.message,
-      hint: "Check server logs for LLM connection issues."
-    });
+    return res.status(500).json({ error: "SERVER_ERROR" });
   }
 };
 

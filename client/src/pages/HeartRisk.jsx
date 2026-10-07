@@ -14,7 +14,7 @@ export default function HeartRisk() {
   const labels = [
     { label: "Age", placeholder: "Years", icon: "👤" },
     { label: "Sex", placeholder: "1 = Male, 0 = Female", icon: "⚧️" },
-    { label: "Chest Pain Type", placeholder: "0-3 (Typical/Atypical/Non-anginal/Asymptomatic)", icon: "💔" },
+    { label: "Chest Pain Type", placeholder: "1-4 (Typical/Atypical/Non-anginal/Asymptomatic)", icon: "💔" },
     { label: "Resting BP", placeholder: "mm Hg", icon: "🩺" },
     { label: "Cholesterol", placeholder: "mg/dl", icon: "🍔" },
     { label: "Fasting Blood Sugar", placeholder: "1 = >120 mg/dl, 0 = <120", icon: "🍬" },
@@ -22,9 +22,9 @@ export default function HeartRisk() {
     { label: "Max Heart Rate", placeholder: "BPM", icon: "💓" },
     { label: "Exercise Induced Angina", placeholder: "1 = Yes, 0 = No", icon: "🏃" },
     { label: "Oldpeak", placeholder: "ST depression induced by exercise", icon: "📉" },
-    { label: "Slope", placeholder: "0-2 (Upsloping/Flat/Downsloping)", icon: "📐" },
+    { label: "Slope", placeholder: "1-3 (Upsloping/Flat/Downsloping)", icon: "📐" },
     { label: "CA", placeholder: "0-3 (Number of major vessels)", icon: "🩸" },
-    { label: "Thal", placeholder: "1-3 (Normal/Fixed/Reversible)", icon: "🧬" }
+    { label: "Thal", placeholder: "3 = Normal, 6 = Fixed, 7 = Reversible", icon: "🧬" }
   ];
 
   const handleChange = (index, value) => {

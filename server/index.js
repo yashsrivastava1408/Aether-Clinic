@@ -7,6 +7,9 @@ import chatRoutes from "./routes/chat.js";
 import reportRoutes from "./routes/report.js";
 import mlRoutes from "./routes/mlRoutes.js";
 import authRoutes from "./routes/auth.js";
+import reviewRoutes from "./routes/review.js";
+import followUpRoutes from "./routes/followup.js";
+import { startFollowUpScheduler } from "./services/followUpService.js";
 
 
 
@@ -98,7 +101,10 @@ app.use(helmet({
 app.use(morgan("combined", { stream }));
 
 // 3. Compression (Gzip)
-app.use(compression());
+// Event streams must not be buffered, so they are left uncompressed.
+app.use(compression({
+  filter: (req, res) => !req.path.endsWith("/stream") && compression.filter(req, res),
+}));
 
 // 4. Rate Limiting (Production-ready limits)
 const limiter = rateLimit({
@@ -151,6 +157,8 @@ app.use("/api/report", reportRoutes);
 // ML APIs (NEW)
 app.use("/api/ml", mlRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/review", reviewRoutes);       // clinician review queue (needs REVIEWER_KEY)
+app.use("/api/followup", followUpRoutes);   // opt-in check-ins after a consultation
 
 // Global Error Handler
 app.use((err, req, res, next) => {
@@ -166,4 +174,6 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5050;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  // Sends due check-in emails. Idle until MongoDB is connected.
+  if (process.env.FOLLOWUPS_ENABLED !== "false") startFollowUpScheduler();
 });

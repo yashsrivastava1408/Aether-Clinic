@@ -28,24 +28,30 @@ class JsonChatProxy {
         }
     }
 
-    async findOne({ userId, specialist }) {
+    async findOne(query) {
         const logs = this._read();
-        const chat = logs.find(c => c.userId === userId && c.specialist === specialist);
+        // Matches on every field given: { userId, specialist } or { sessionId }
+        const chat = logs.find(c => Object.entries(query).every(([key, value]) => c[key] === value));
         if (!chat) return null;
         
-        // Return object with save method to mimic Mongoose
-        return {
-            ...chat,
-            save: async function() {
-                const currentLogs = JSON.parse(fs.readFileSync(this.filePath, 'utf8') || "[]");
-                const index = currentLogs.findIndex(c => c.userId === this.userId && c.specialist === this.specialist);
-                if (index !== -1) currentLogs[index] = this;
-                else currentLogs.push(this);
-                fs.writeFileSync(this.filePath, JSON.stringify(currentLogs, null, 2), 'utf8');
-                return this;
-            }.bind({ ...chat, filePath: this.filePath }),
-            toObject: () => chat
-        };
+        // Return a document with save/toObject methods to mimic Mongoose.
+        // The methods are non-enumerable so they are never written to disk,
+        // and save() writes the document as it is now (including new fields).
+        const filePath = this.filePath;
+        const doc = { ...chat };
+        Object.defineProperty(doc, "save", {
+            enumerable: false,
+            value: async function () {
+                const currentLogs = JSON.parse(fs.readFileSync(filePath, 'utf8') || "[]");
+                const index = currentLogs.findIndex(c => c.userId === doc.userId && c.specialist === doc.specialist);
+                if (index !== -1) currentLogs[index] = doc;
+                else currentLogs.push(doc);
+                fs.writeFileSync(filePath, JSON.stringify(currentLogs, null, 2), 'utf8');
+                return doc;
+            },
+        });
+        Object.defineProperty(doc, "toObject", { enumerable: false, value: () => ({ ...doc }) });
+        return doc;
     }
 
     async create(data) {

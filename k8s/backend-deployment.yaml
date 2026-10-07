@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: aether-backend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: aether-backend
@@ -58,8 +58,8 @@ spec:
               mountPath: /app/shared
           resources:
             requests:
-              cpu: "250m"
-              memory: "512Mi"
+              cpu: "50m"
+              memory: "256Mi"
             limits:
               cpu: "1000m"
               memory: "1Gi"

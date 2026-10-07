@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: aether-ml
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: aether-ml
@@ -20,13 +20,47 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5001
+          env:
+            - name: QDRANT_HOST
+              value: "qdrant"
+            - name: QDRANT_PORT
+              value: "6333"
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-credentials
+                  key: username
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-credentials
+                  key: password
+            # Conversation state, shared by all replicas and AES-encrypted
+            - name: MONGO_URI
+              value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@mongodb:27017/ai_doctor_db?authSource=admin"
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aether-secrets
+                  key: encryption-key
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aether-secrets
+                  key: gemini-api-key
+            - name: GROQ_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aether-secrets
+                  key: groq-api-key
+                  optional: true
           volumeMounts:
             - name: shared-feedback
               mountPath: /app/shared
           resources:
             requests:
-              cpu: "500m"
-              memory: "512Mi"
+              cpu: "100m"
+              memory: "256Mi"
             limits:
               cpu: "1000m"
               memory: "1Gi"

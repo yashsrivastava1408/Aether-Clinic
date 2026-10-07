@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import ScanningHUD from "../components/ScanningHUD";
 import BiometricPulse from "../components/BiometricPulse";
 import NeuralSyncSequence from "../components/NeuralSyncSequence";
 import DOMPurify from "dompurify";
 import { useTheme } from "../context/ThemeContext";
+import { saveReportDigest } from "../utils/reportContext";
 
 export default function ReportAnalyzer() {
   const [file, setFile] = useState(null);
@@ -16,6 +18,16 @@ export default function ReportAnalyzer() {
   const [displayedResult, setDisplayedResult] = useState(null);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const navigate = useNavigate();
+
+  // Opens a consultation with the specialist the report agent suggested,
+  // with the out-of-range values ready in the message box.
+  const discussWithSpecialist = () => {
+    const { specialist, opening_message: openingMessage } = result.consult;
+    navigate(`/chatbot/${encodeURIComponent(specialist)}`, {
+      state: { specializationName: specialist, specializationRole: "Specialist", initialMessage: openingMessage, userRam: navigator.deviceMemory || 8 },
+    });
+  };
 
   // Initial Page Loading
   useEffect(() => {
@@ -60,6 +72,7 @@ export default function ReportAnalyzer() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setResult(res.data);
+      saveReportDigest(res.data); // lets a later consultation take this report into account
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.error || err.response?.data?.details || "SCANNING FAILED. SYSTEM ERROR.");
@@ -223,6 +236,16 @@ export default function ReportAnalyzer() {
                         ))}
                       </ul>
                     </div>
+                  )}
+
+                  {/* Hand over to a consultation about the out-of-range values */}
+                  {result?.consult && (
+                    <button
+                      onClick={discussWithSpecialist}
+                      className={`w-full p-4 rounded-xl border text-sm font-medium text-left transition-colors ${isDark ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20' : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'}`}
+                    >
+                      Discuss these results with our {result.consult.specialist} →
+                    </button>
                   )}
 
                   {/* Findings */}

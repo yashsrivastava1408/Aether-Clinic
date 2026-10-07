@@ -10,6 +10,25 @@ const ChatSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    // Thread id of this consultation in the Python service (one per session)
+    sessionId: {
+        type: String,
+    },
+    // True while a drafted assessment is waiting for a clinician
+    pendingReview: {
+        type: Boolean,
+        default: false,
+    },
+    // The user turned long-term memory off for this consultation
+    memoryOff: {
+        type: Boolean,
+        default: false,
+    },
+    // Set once the final assessment has been delivered
+    sessionClosed: {
+        type: Boolean,
+        default: false,
+    },
     messages: [
         {
             sender: {

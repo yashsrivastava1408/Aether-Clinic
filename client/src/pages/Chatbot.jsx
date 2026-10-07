@@ -6,6 +6,9 @@ import TiltCard from "../components/TiltCard";
 import VoiceVisualizer from "../components/VoiceVisualizer";
 import LegalModal from "../components/LegalModal";
 import { getUserId } from "../utils/user";
+import { sendChatStream } from "../utils/chatStream";
+import { loadReportDigest } from "../utils/reportContext";
+import { isMemoryEnabled } from "../utils/healthMemory";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import MLResultGauge from "../components/MLResultGauge";
@@ -16,6 +19,10 @@ export default function Chatbot({ doctor, onBack }) {
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [stepLabel, setStepLabel] = useState("");
+  const [pendingReview, setPendingReview] = useState(false);
+  const [sessionClosed, setSessionClosed] = useState(false);
+  const [followUpState, setFollowUpState] = useState("idle"); // idle | saving | scheduled | failed
   const [error, setError] = useState(null);
   const [hasConsented, setHasConsented] = useState(false);
   const [isLegalOpen, setIsLegalOpen] = useState(false);
@@ -107,6 +114,8 @@ export default function Chatbot({ doctor, onBack }) {
       const userId = getUserId();
       axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/api/chat/history/${userId}/${encodeURIComponent(activeDoctor.name)}`)
         .then(res => {
+          setPendingReview(!!res.data.pendingReview);
+          setSessionClosed(!!res.data.sessionClosed);
           if (res.data.messages && res.data.messages.length > 0) {
             setMessages(res.data.messages);
             setIsInitializing(false); // Skip intro if history exists
@@ -133,6 +142,45 @@ State your symptoms or upload a photo for analysis.`,
         });
     }
   }, [activeDoctor, hasConsented]);
+
+  // A message handed over by another page (a report, or a check-in) is put in
+  // the input box; the user still decides whether to send it.
+  useEffect(() => {
+    if (location.state?.initialMessage) setInput(location.state.initialMessage);
+  }, [location.state?.initialMessage]);
+
+  // While a clinician has the draft, look for the released assessment.
+  useEffect(() => {
+    if (!pendingReview || !activeDoctor) return undefined;
+    const timer = setInterval(() => {
+      axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/api/chat/history/${getUserId()}/${encodeURIComponent(activeDoctor.name)}`)
+        .then(res => {
+          if (!res.data.pendingReview) {
+            setMessages(res.data.messages || []);
+            setSessionClosed(!!res.data.sessionClosed);
+            setPendingReview(false);
+          }
+        })
+        .catch(() => { });
+    }, 15000);
+    return () => clearInterval(timer);
+  }, [pendingReview, activeDoctor]);
+
+  const requestFollowUp = async () => {
+    setFollowUpState("saving");
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/api/followup`, {
+        userId: getUserId(),
+        specialization: activeDoctor?.name,
+        email: user?.email,
+        days: 2
+      });
+      setFollowUpState("scheduled");
+    } catch (err) {
+      console.warn("Check-in could not be scheduled", err);
+      setFollowUpState("failed");
+    }
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -177,39 +225,57 @@ State your symptoms or upload a photo for analysis.`,
     if (image) {
       formData.append("image", image);
     }
+    formData.append("memory", isMemoryEnabled() ? "on" : "off");
+    const reportDigest = loadReportDigest();
+    if (reportDigest) {
+      formData.append("reportSummary", reportDigest);
+    }
 
     setInput("");
     removeImage();
     setIsTyping(true);
+    setStepLabel("");
     setError(null);
 
     try {
-      // REAL API CALL
-      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/api/chat`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      // REAL API CALL (progress arrives as it happens, the reply once it has passed safety checks)
+      const data = await sendChatStream(formData, (step) => setStepLabel(step.label || ""));
 
-      if (res.data.reply) {
+      if (data.reply) {
         setMessages((prev) => [
           ...prev,
           {
             sender: "ai",
-            text: res.data.reply,
-            citations: res.data.citations || [],
-            sessionComplete: !!res.data.sessionComplete
+            text: data.reply,
+            citations: data.citations || [],
+            sessionComplete: !!data.sessionComplete
           }
         ]);
 
         // Consume tokens for Input + Output (Approx output if not provided)
-        const outputCost = res.data.reply ? res.data.reply.length : 100;
+        const outputCost = data.reply ? data.reply.length : 100;
         consumeTokens(usageCost + outputCost);
+        setPendingReview(!!data.pendingReview);
+        if (data.sessionComplete) setSessionClosed(true);
       }
-      setIsTyping(false);
 
     } catch (err) {
       console.error("❌ Chat error:", err);
-      setError("CONNECTION INTERRUPTED. RETRY.");
+      if (err.code === "SESSION_COMPLETE") {
+        setError("CONSULTATION COMPLETE. START A NEW SESSION.");
+      } else if (err.code === "REVIEW_PENDING") {
+        setPendingReview(true);
+        setError("YOUR ASSESSMENT IS WITH A CLINICIAN. IT WILL APPEAR HERE ONCE APPROVED.");
+      } else if (err.code === "IMAGE_LIMIT_REACHED") {
+        setError("ONLY ONE IMAGE PER SESSION IS ALLOWED.");
+      } else if (err.code === "ASSISTANT_UNAVAILABLE") {
+        setError("ASSISTANT TEMPORARILY UNAVAILABLE. RETRY SHORTLY. IN AN EMERGENCY CALL YOUR LOCAL EMERGENCY NUMBER.");
+      } else {
+        setError("CONNECTION INTERRUPTED. RETRY.");
+      }
+    } finally {
       setIsTyping(false);
+      setStepLabel("");
     }
   };
 
@@ -367,7 +433,7 @@ State your symptoms or upload a photo for analysis.`,
                         className={`rounded-lg p-3 text-[11px] leading-relaxed ${isDark ? 'bg-black/30 border border-white/5 text-emerald-100' : 'bg-white border border-emerald-100 text-slate-700 shadow-sm'}`}
                       >
                         <div className="font-semibold text-emerald-500">
-                          {citation.title || "Medical Protocol"}
+                          {citation.index ? `[${citation.index}] ` : ""}{citation.title || "Medical Protocol"}
                         </div>
                         <div className="mt-1 opacity-90">
                           {citation.source || "Internal Medical Source"}
@@ -419,9 +485,32 @@ State your symptoms or upload a photo for analysis.`,
           </div>
         ))}
 
+        {pendingReview && !isTyping && (
+          <div className="flex justify-start items-center gap-2 ml-10">
+            <span className="text-xs font-mono animate-pulse text-amber-500">AWAITING CLINICIAN REVIEW...</span>
+          </div>
+        )}
+
+        {/* Opt-in check-in after a finished consultation (signed-in users only) */}
+        {sessionClosed && !pendingReview && !isTyping && user?.email && !user?.isGuest && (
+          <div className="flex justify-start items-center gap-3 ml-10">
+            {followUpState === "scheduled" ? (
+              <span className="text-xs font-mono text-emerald-500">CHECK-IN SCHEDULED. WE WILL EMAIL {user.email} IN 2 DAYS.</span>
+            ) : (
+              <button
+                onClick={requestFollowUp}
+                disabled={followUpState === "saving"}
+                className={`text-xs font-mono px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-50 ${isDark ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10' : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'}`}
+              >
+                {followUpState === "failed" ? "COULD NOT SCHEDULE. TRY AGAIN" : "CHECK IN WITH ME IN 2 DAYS"}
+              </button>
+            )}
+          </div>
+        )}
+
         {isTyping && (
           <div className="flex justify-start items-center gap-2 ml-10">
-            <span className={`text-xs font-mono animate-pulse transition-colors duration-500 ${isPremium ? 'text-cyan-500' : 'text-emerald-500'}`}>PROCESSING...</span>
+            <span className={`text-xs font-mono animate-pulse transition-colors duration-500 ${isPremium ? 'text-cyan-500' : 'text-emerald-500'}`}>{stepLabel ? `${stepLabel.toUpperCase()}...` : "PROCESSING..."}</span>
           </div>
         )}
         <div ref={chatEndRef} />
